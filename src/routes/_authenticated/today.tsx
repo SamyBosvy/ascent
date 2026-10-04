@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { Check } from "lucide-react";
 import { toggleCheckin } from "@/lib/checkins";
-import { isLive, minutesLabel, useDueCount, useRefresh, useRouteStats, useRoutes, useWeekMinutes } from "@/lib/data";
+import { isLive, minutesLabel, useDueCounts, useNewPerDay, useNewReviewedToday, useRefresh, useRouteStats, useRoutes, useWeekMinutes } from "@/lib/data";
 import { habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { AltitudeBar, CampBadge } from "@/components/app/Mountain";
 import { Empty, SectionTitle } from "@/components/app/fields";
@@ -17,7 +17,11 @@ function Today() {
   const { data: allRoutes } = useRoutes();
   const routes = allRoutes?.filter(isLive);
   const { data: stats } = useRouteStats();
-  const { data: due } = useDueCount();
+  const { data: dueCounts } = useDueCounts();
+  const { data: newPerDay } = useNewPerDay();
+  const { data: newToday } = useNewReviewedToday();
+  // Same number Review shows: due reviews + new cards up to what's left of today's new-card limit.
+  const due = dueCounts && newPerDay != null && newToday != null ? dueCounts.reviews + Math.min(dueCounts.fresh, Math.max(0, newPerDay - newToday)) : null;
   const { data: weekMinutes } = useWeekMinutes();
   const refresh = useRefresh();
   if (!routes || !stats || due == null || weekMinutes == null) return <p className="text-muted-foreground">Loading…</p>;

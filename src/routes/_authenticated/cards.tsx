@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cardState, fetchPaged, isLive, localDate, useRefresh, useRoutes, type Card, type CardState } from "@/lib/data";
 import { deleteCardWithUndo, setCardsState } from "@/lib/cardActions";
 import { CardDialog } from "@/components/app/CardDialog";
+import { CardText } from "@/components/app/CardText";
 import { Empty, NativeSelect } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -173,8 +174,8 @@ function CardsPage() {
                   <Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggle(c.id)} aria-label={`Select ${c.front}`} />
                 </div>
                 <button className="min-w-0 flex-1 py-2 text-left" onClick={() => setEditing(c)}>
-                  <p className="truncate font-medium">{c.front}</p>
-                  <p className="truncate text-sm text-muted-foreground">{c.back}</p>
+                  <CardText text={c.front} className="card-clamp font-medium" />
+                  <CardText text={c.back} className="card-clamp text-sm text-muted-foreground" />
                   <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <Badge variant={BADGE[st].variant}>{BADGE[st].label}</Badge>
                     <span>{routeName(c.route_id)}</span>

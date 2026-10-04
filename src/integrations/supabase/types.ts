@@ -256,6 +256,7 @@ export type Database = {
           habit_target: number | null
           id: string
           name: string
+          speech_lang: string | null
           status: Database["public"]["Enums"]["route_status"]
           summited_at: string | null
           target_date: string | null
@@ -275,6 +276,7 @@ export type Database = {
           habit_target?: number | null
           id?: string
           name: string
+          speech_lang?: string | null
           status?: Database["public"]["Enums"]["route_status"]
           summited_at?: string | null
           target_date?: string | null
@@ -294,6 +296,7 @@ export type Database = {
           habit_target?: number | null
           id?: string
           name?: string
+          speech_lang?: string | null
           status?: Database["public"]["Enums"]["route_status"]
           summited_at?: string | null
           target_date?: string | null

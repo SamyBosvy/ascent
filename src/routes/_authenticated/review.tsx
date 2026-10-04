@@ -11,6 +11,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { saveReview, undoReview, type PendingReview } from "@/lib/reviewQueue";
 import { schedule, type Rating } from "@/lib/srs";
 import { Empty, NativeSelect } from "@/components/app/fields";
+import { CardText, SpeakButton } from "@/components/app/CardText";
+import { speak, speakable, speechAvailable } from "@/lib/cardText";
 import { CardDialog } from "@/components/app/CardDialog";
 import { Button } from "@/components/ui/button";
 
@@ -48,11 +50,31 @@ function orderQueue(cards: Card[]) {
 }
 
 type UndoEntry = {
-  pending: PendingReview;
   prev: Card;
   counted: boolean;
-  inflight: { signal: { cancelled: boolean }; promise: Promise<boolean> };
+  /** Absent for cram ratings, which are never saved. */
+  saved?: { pending: PendingReview; inflight: { signal: { cancelled: boolean }; promise: Promise<boolean> } };
 };
+type Mode = "review" | "ahead" | "cram";
+
+function shuffle<X>(arr: X[]) {
+  const a = [...arr];
+  for (let k = a.length - 1; k > 0; k--) {
+    const x = Math.floor(Math.random() * (k + 1));
+    [a[k], a[x]] = [a[x]!, a[k]!];
+  }
+  return a;
+}
+
+/** Cards of live routes matching the shared "reviewable" rules (not suspended, not buried). */
+function liveCards() {
+  return supabase
+    .from("cards")
+    .select("*, routes!inner(id)")
+    .is("routes.archived_at", null)
+    .is("routes.deleted_at", null)
+    .is("suspended_at", null);
+}
 
 function isTyping(e: KeyboardEvent) {
   const t = e.target as HTMLElement | null;
@@ -92,11 +114,26 @@ function Review() {
   const [editing, setEditing] = useState<Card | null>(null);
   const [undoStack, setUndoStack] = useState<UndoEntry[]>([]);
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState<Mode>("review");
+  const [aheadDays, setAheadDays] = useState("1");
+  const [cramRoute, setCramRoute] = useState("");
+  const [loadingExtra, setLoadingExtra] = useState(false);
 
   const card = queue?.[0];
 
   function rate(c: Card, r: Rating) {
     if (busy) return;
+    if (mode === "cram") {
+      // Cram never changes scheduling and records nothing.
+      setQueue((q) => {
+        const rest = (q ?? []).slice(1);
+        return r === 0 ? [...rest, c] : rest;
+      });
+      setFlipped(false);
+      if (r !== 0) setDone((d) => d + 1);
+      setUndoStack((s) => [...s, { prev: c, counted: r !== 0 }]);
+      return;
+    }
     const next = schedule(c, r);
     const reviewedAt = new Date().toISOString();
     const updated = { ...c, ...next, last_reviewed_at: reviewedAt };
@@ -114,7 +151,7 @@ function Review() {
       if (!ok && !signal.cancelled) toast("Offline for now. Your rating is saved on this device and will sync automatically.", { id: "review-pending" });
       return ok;
     });
-    setUndoStack((s) => [...s, { pending, prev: c, counted: r !== 0, inflight: { signal, promise } }]);
+    setUndoStack((s) => [...s, { prev: c, counted: r !== 0, saved: { pending, inflight: { signal, promise } } }]);
   }
 
   async function undo() {
@@ -122,7 +159,7 @@ function Review() {
     if (!entry || busy) return;
     setBusy(true);
     try {
-      await undoReview(entry.pending, entry.prev, entry.inflight);
+      if (entry.saved) await undoReview(entry.saved.pending, entry.prev, entry.saved.inflight);
     } catch (e) {
       toast.error(`Couldn't undo: ${(e as Error).message}`);
       setBusy(false);
@@ -158,11 +195,59 @@ function Review() {
       if (flipped && ["1", "2", "3", "4"].includes(e.key)) { e.preventDefault(); rate(card, (Number(e.key) - 1) as Rating); return; }
       if (k === "e") { e.preventDefault(); setEditing(card); return; }
       if (k === "s") { e.preventDefault(); void hide(card, "suspend"); return; }
-      if (k === "b") { e.preventDefault(); void hide(card, "bury"); }
+      if (k === "b") { e.preventDefault(); void hide(card, "bury"); return; }
+      if (k === "r" && speechAvailable()) {
+        const rt = allRoutes?.find((x) => x.id === card.route_id);
+        if (rt?.type !== "language") return;
+        e.preventDefault();
+        speak(speakable(flipped ? card.back : card.front, flipped), rt.speech_lang);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
+
+  function begin(m: Mode, cards: Card[]) {
+    setUndoStack([]);
+    setDone(0);
+    setFlipped(false);
+    setMode(m);
+    setQueue(cards);
+  }
+  async function startAhead() {
+    const days = parseInt(aheadDays, 10);
+    setLoadingExtra(true);
+    try {
+      const until = new Date(Date.now() + days * 86400000).toISOString();
+      const cards = await fetchPaged<Card>((a, b) => {
+        let q = liveCards()
+          .or(`buried_until.is.null,buried_until.lte.${localDate()}`)
+          .not("last_reviewed_at", "is", null)
+          .gt("due_at", new Date().toISOString())
+          .lte("due_at", until);
+        if (route) q = q.eq("route_id", route);
+        return q.order("due_at").order("id").range(a, b);
+      });
+      if (!cards.length) { toast(`Nothing due in the next ${days} day${days === 1 ? "" : "s"}.`); return; }
+      begin("ahead", cards);
+    } catch (e) {
+      toast.error(`Couldn't load cards: ${(e as Error).message}`);
+    } finally {
+      setLoadingExtra(false);
+    }
+  }
+  async function startCram(rid: string) {
+    setLoadingExtra(true);
+    try {
+      const cards = await fetchPaged<Card>((a, b) => liveCards().eq("route_id", rid).order("id").range(a, b));
+      if (!cards.length) { toast("That route has no active cards."); return; }
+      begin("cram", shuffle(cards));
+    } catch (e) {
+      toast.error(`Couldn't load cards: ${(e as Error).message}`);
+    } finally {
+      setLoadingExtra(false);
+    }
+  }
 
   if (!routes || !stats || !dueCards || newPerDay == null || newToday == null) return <p className="text-muted-foreground">Loading…</p>;
   const dueNow = dueCards.filter((c) => new Date(c.due_at).getTime() <= Date.now());
@@ -191,7 +276,7 @@ function Review() {
       return (
         <div className="mx-auto max-w-md space-y-4 pt-10 text-center">
           <h1 className="text-3xl font-semibold">Review complete.</h1>
-          <p className="text-muted-foreground">{done} card{done === 1 ? "" : "s"} reviewed. Steady progress.</p>
+          <p className="text-muted-foreground">{done} card{done === 1 ? "" : "s"} {mode === "cram" ? "crammed" : "reviewed"}. Steady progress.</p>
           <div className="flex justify-center gap-2">
             {undoButton}
             <Button className="h-12" onClick={() => { setQueue(null); setDone(0); setUndoStack([]); refresh(); }}>Done</Button>
@@ -199,10 +284,12 @@ function Review() {
         </div>
       );
     }
+    const cardRoute = allRoutes?.find((x) => x.id === card.route_id);
+    const lang = cardRoute?.type === "language" ? cardRoute : null;
     return (
       <div className="mx-auto max-w-xl space-y-5">
         <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-          <span className="truncate">{routeName(card.route_id)}</span>
+          <span className="truncate">{mode === "cram" ? "Cram · " : mode === "ahead" ? "Ahead · " : ""}{routeName(card.route_id)}</span>
           <div className="flex items-center gap-1">
             <span className="mr-2">{queue.length} left</span>
             <Button variant="ghost" className="h-12" onClick={() => setEditing(card)}>
@@ -223,18 +310,25 @@ function Review() {
             </DropdownMenu>
           </div>
         </div>
-        <button onClick={() => setFlipped(true)} className="surface flex min-h-72 w-full flex-col items-center justify-center gap-4 p-8 text-center shadow-sm">
-          <p className="whitespace-pre-wrap font-display text-2xl font-semibold">{card.front}</p>
+        {mode === "cram" && <p className="text-center text-xs text-muted-foreground">Cram mode: ratings aren't saved and don't change your schedule.</p>}
+        <div role="button" tabIndex={-1} onClick={() => setFlipped(true)} className="surface flex min-h-72 w-full flex-col items-center justify-center gap-4 p-8 text-center shadow-sm">
+          <div className="flex items-start justify-center gap-1">
+            <CardText text={card.front} revealed={flipped} className="font-display text-2xl font-semibold" />
+            {lang && <SpeakButton text={card.front} lang={lang.speech_lang} revealed={flipped} />}
+          </div>
           {card.pronunciation && <p className="text-sm text-muted-foreground">/{card.pronunciation}/</p>}
           {flipped ? (
             <div className="w-full space-y-3 border-t pt-4">
-              <p className="whitespace-pre-wrap text-lg">{card.back}</p>
-              {card.example && <p className="text-sm italic text-muted-foreground">{card.example}</p>}
+              <div className="flex items-start justify-center gap-1">
+                <CardText text={card.back} className="text-lg" />
+                {lang && <SpeakButton text={card.back} lang={lang.speech_lang} />}
+              </div>
+              {card.example && <CardText text={card.example} className="text-sm italic text-muted-foreground" />}
             </div>
           ) : (
             <span className="text-sm text-muted-foreground">Tap to reveal</span>
           )}
-        </button>
+        </div>
         {flipped ? (
           <div className="grid grid-cols-4 gap-2">
             {RATINGS.map(({ r, label }) => (
@@ -275,11 +369,40 @@ function Review() {
         <p className="text-muted-foreground">{startCount ? `${startCount} card${startCount > 1 ? "s" : ""} due. Keep climbing.` : "Nothing due right now."}</p>
         <p className="text-sm text-muted-foreground">{newLeft} new card{newLeft === 1 ? "" : "s"} left today</p>
         {startCount ? (
-          <Button className="h-12 w-full sm:w-auto sm:px-10" onClick={() => { setUndoStack([]); setDone(0); setQueue([...orderQueue(dueReviews), ...newCards]); }}>Start review</Button>
+          <Button className="h-12 w-full sm:w-auto sm:px-10" onClick={() => begin("review", [...orderQueue(dueReviews), ...newCards])}>Start review</Button>
         ) : (
           <Button className="h-12 w-full sm:w-auto sm:px-10" disabled>Start review</Button>
         )}
       </div>
+      {totalCards > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {startCount < 10 && (
+            <div className="surface space-y-3 p-5">
+              <div>
+                <p className="font-medium">Review ahead</p>
+                <p className="text-sm text-muted-foreground">Get ahead on cards coming due soon, earliest first.</p>
+              </div>
+              <NativeSelect value={aheadDays} onChange={(e) => setAheadDays(e.target.value)} aria-label="Review ahead window">
+                <option value="1">Next 1 day</option>
+                <option value="3">Next 3 days</option>
+                <option value="7">Next 7 days</option>
+              </NativeSelect>
+              <Button variant="outline" className="h-12 w-full" disabled={loadingExtra} onClick={() => void startAhead()}>Review ahead</Button>
+            </div>
+          )}
+          <div className="surface space-y-3 p-5">
+            <div>
+              <p className="font-medium">Cram</p>
+              <p className="text-sm text-muted-foreground">All of a route's cards, shuffled. Nothing is saved; your schedule stays the same.</p>
+            </div>
+            <NativeSelect value={cramRoute || route || ""} onChange={(e) => setCramRoute(e.target.value)} aria-label="Cram route">
+              <option value="" disabled>Choose a route</option>
+              {routes.filter((r) => (stats.get(r.id)?.cards_total ?? 0) > 0).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+            </NativeSelect>
+            <Button variant="outline" className="h-12 w-full" disabled={loadingExtra || !(cramRoute || route)} onClick={() => void startCram(cramRoute || route!)}>Start cram</Button>
+          </div>
+        </div>
+      )}
       {!totalCards && (
         <Empty>
           No cards yet. Add them from a <Link to="/routes" className="text-primary underline">route</Link>, a note, or a CSV import.

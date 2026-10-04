@@ -1,13 +1,17 @@
 import type { Database } from "@/integrations/supabase/types";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Check, Info, Minus, Pause, Play, Plus, RotateCcw, Square, Trash2, Upload } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Check, Info, Minus, MoreHorizontal, Pause, Pencil, Play, Plus, RotateCcw, Square, Trash2, Upload } from "lucide-react";
 import { format } from "date-fns";
-import Papa from "papaparse";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPaged, minutesLabel, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteStatus, type Session } from "@/lib/data";
+import { fetchPaged, localDate, minutesLabel, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteStatus, type Session } from "@/lib/data";
+import { RouteDialog } from "@/components/app/RouteDialog";
+import { CsvImportDialog } from "@/components/app/CsvImportDialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
 import { CAMPS, habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { Mountain } from "@/components/app/Mountain";
@@ -36,17 +40,15 @@ function RouteDetail() {
     queryKey: ["milestones", id],
     queryFn: () => fetchPaged<Milestone>((a, b) => supabase.from("milestones").select("*").eq("route_id", id).order("position").order("id").range(a, b)),
   });
-  const { data: sessions } = useQuery({
-    queryKey: ["sessions", id, "recent"],
-    queryFn: () => must<Session[]>(supabase.from("sessions").select("*").eq("route_id", id).order("logged_at", { ascending: false }).limit(8)),
-  });
   const refresh = useRefresh();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [celebrate, setCelebrate] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [newMs, setNewMs] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editKey, setEditKey] = useState(0);
   const dismissKey = `ascent:summit-dismissed:${id}`;
   const [, setDismissTick] = useState(0);
   const dismissed = typeof sessionStorage !== "undefined" && sessionStorage.getItem(dismissKey) === "1";
@@ -55,7 +57,7 @@ function RouteDetail() {
   const agg = allStats?.get(id);
   const stats = route && allStats ? routeStats(route, agg) : null;
 
-  if (!routes || !allStats || !milestoneRows || !sessions) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !allStats || !milestoneRows) return <p className="text-muted-foreground">Loading…</p>;
   if (!route || !stats) return <Empty>This route doesn't exist.</Empty>;
 
   const milestones = [...milestoneRows].sort((a, b) => a.position - b.position);
@@ -178,21 +180,6 @@ function RouteDetail() {
     navigate({ to: "/routes" });
   }
 
-  function importCsv(file: File) {
-    Papa.parse<string[]>(file, {
-      skipEmptyLines: true,
-      complete: async (res) => {
-        let rows = res.data.filter((r) => r[0]?.trim() && r[1]?.trim());
-        if (rows[0] && rows[0][0]?.toLowerCase() === "front" && rows[0][1]?.toLowerCase() === "back") rows = rows.slice(1);
-        if (!rows.length) { toast.error("No front,back rows found."); return; }
-        const { error } = await supabase.from("cards").insert(rows.map((r) => ({ route_id: id, front: r[0]!.trim(), back: r[1]!.trim() })));
-        if (error) { toast.error(error.message); return; }
-        toast.success(`Imported ${rows.length} cards.`);
-        refresh();
-      },
-    });
-  }
-
   return (
     <div className="space-y-10">
       {celebrate && <SummitOverlay name={route.name} onDone={() => setCelebrate(false)} />}
@@ -214,7 +201,10 @@ function RouteDetail() {
       )}
       <div>
         <Link to="/routes" className="text-sm text-muted-foreground">← Routes</Link>
-        <h1 className="mt-2 text-3xl font-semibold">{route.name}</h1>
+        <div className="mt-2 flex items-start justify-between gap-3">
+          <h1 className="text-3xl font-semibold">{route.name}</h1>
+          <Button variant="outline" className="h-12 shrink-0" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4" /> Edit route</Button>
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {TYPE_LABEL[route.type]}
           {route.target_date && ` · target ${format(new Date(route.target_date), "MMM d, yyyy")}`}
@@ -300,17 +290,7 @@ function RouteDetail() {
         </form>
       </section>
 
-      <SessionsSection routeId={id} routeName={route.name} />
-      <section>
-        <ul className="space-y-1 text-sm">
-          {sessions.slice(0, 8).map((s) => (
-            <li key={s.id} className="flex justify-between gap-3 border-b py-2 last:border-0">
-              <span className="truncate text-muted-foreground">{format(new Date(s.logged_at), "EEE MMM d")}{s.note && ` · ${s.note}`}</span>
-              <span className="shrink-0 font-medium">{minutesLabel(s.minutes)}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <SessionsSection routeId={id} routeName={route.name} totalMinutes={stats.minutes} />
 
       <section>
         <SectionTitle
@@ -324,8 +304,7 @@ function RouteDetail() {
         </SectionTitle>
         <div className="surface flex flex-wrap items-center gap-2 p-4">
           <p className="mr-auto text-sm">{stats.cards} cards · {due} due</p>
-          <Button variant="outline" className="h-12" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4" /> Import CSV</Button>
-          <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => e.target.files?.[0] && importCsv(e.target.files[0])} />
+          <Button variant="outline" className="h-12" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4" /> Import CSV</Button>
           <Button asChild variant="outline" className="h-12">
             <Link to="/cards" search={{ route: id }}>Browse cards</Link>
           </Button>
@@ -368,6 +347,13 @@ function RouteDetail() {
       </div>
 
       <CardDialog open={cardOpen} onOpenChange={setCardOpen} routeId={id} />
+      <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} routeId={id} />
+      <RouteDialog
+        key={`${editKey}-${route.updated_at}`}
+        route={route}
+        open={editOpen}
+        onOpenChange={(o) => { setEditOpen(o); if (!o) setTimeout(() => setEditKey((k) => k + 1), 200); }}
+      />
     </div>
   );
 }
@@ -436,8 +422,23 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SessionsSection({ routeId, routeName }: { routeId: string; routeName: string }) {
-  const refresh = useRefresh();
+const MAX_MIN = 1440;
+const minutesError = (v: string) => {
+  if (!/^\d+$/.test(v.trim())) return "Minutes must be a whole number.";
+  const n = parseInt(v, 10);
+  return n < 1 || n > MAX_MIN ? `Minutes must be between 1 and ${MAX_MIN}.` : null;
+};
+/** Today keeps the current time of day; past dates are saved at noon local time. */
+function loggedAtFor(day: string) {
+  if (!day || day === localDate()) return new Date().toISOString();
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(y!, m! - 1, d!, 12, 0, 0).toISOString();
+}
+const toLocalInput = (iso: string) => format(new Date(iso), "yyyy-MM-dd'T'HH:mm");
+const SESSION_PAGE = 50;
+
+function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string; routeName: string; totalMinutes: number }) {
+  const qc = useQueryClient();
   const { state, elapsed } = useTimer();
   const mine = state?.routeId === routeId ? state : null;
   const shown = mine ? elapsed : 0;
@@ -445,17 +446,52 @@ function SessionsSection({ routeId, routeName }: { routeId: string; routeName: s
   const other = state && state.routeId !== routeId ? state : null;
   const [manual, setManual] = useState("");
   const [note, setNote] = useState("");
+  const [day, setDay] = useState(localDate());
   const [confirmSwitch, setConfirmSwitch] = useState(false);
+  const [limit, setLimit] = useState(8);
+  const [editing, setEditing] = useState<Session | null>(null);
 
-  async function save(minutes: number, forRoute = routeId) {
-    if (minutes < 1) { toast.error("Log at least one minute."); return false; }
-    const { error } = await supabase.from("sessions").insert({ route_id: forRoute, minutes, note: note.trim() || null });
+  const { data: list } = useQuery({
+    queryKey: ["sessions", routeId, "list", limit],
+    queryFn: () => must<Session[]>(supabase.from("sessions").select("*").eq("route_id", routeId).order("logged_at", { ascending: false }).order("id").limit(limit + 1)),
+    placeholderData: (prev) => prev,
+  });
+  const rows = list?.slice(0, limit) ?? [];
+  const more = (list?.length ?? 0) > limit;
+
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ["sessions"] });
+    void qc.invalidateQueries({ queryKey: ["route-stats"] });
+    void qc.invalidateQueries({ queryKey: ["insights"] });
+  };
+
+  async function save(minutes: number, forRoute = routeId, loggedAt?: string) {
+    if (minutes < 1 || minutes > MAX_MIN) { toast.error(`Log between 1 and ${MAX_MIN} minutes.`); return false; }
+    const { error } = await supabase.from("sessions").insert({ route_id: forRoute, minutes, note: note.trim() || null, ...(loggedAt ? { logged_at: loggedAt } : {}) });
     if (error) { toast.error(error.message); return false; }
     toast.success(`${minutesLabel(minutes)} logged. Keep climbing.`);
     setNote("");
     setManual("");
-    refresh();
+    setDay(localDate());
+    invalidate();
     return true;
+  }
+
+  async function del(s: Session) {
+    const { error } = await supabase.from("sessions").delete().eq("id", s.id);
+    if (error) { toast.error(`Couldn't delete the session: ${error.message}`); return; }
+    invalidate();
+    toast(`Deleted ${minutesLabel(s.minutes)} session`, {
+      duration: 8000,
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          const { error: e } = await supabase.from("sessions").insert({ id: s.id, route_id: s.route_id, minutes: s.minutes, note: s.note, logged_at: s.logged_at });
+          if (e) toast.error(`Couldn't restore the session: ${e.message}`);
+          invalidate();
+        },
+      },
+    });
   }
 
   function start() {
@@ -467,12 +503,14 @@ function SessionsSection({ routeId, routeName }: { routeId: string; routeName: s
   async function stopOtherAndStart() {
     const s = timer.get();
     if (s) {
-      const ok = await save(Math.max(1, Math.round(elapsed / 60000)), s.routeId);
+      const ok = await save(Math.min(MAX_MIN, Math.max(1, Math.round(elapsed / 60000))), s.routeId);
       if (!ok) return;
     }
     timer.start(routeId, routeName);
     setConfirmSwitch(false);
   }
+
+  const manualErr = manual.trim() ? minutesError(manual) : null;
 
   return (
     <section>
@@ -507,19 +545,57 @@ function SessionsSection({ routeId, routeName }: { routeId: string; routeName: s
             disabled={!mine || shown < 1000}
             onClick={async () => {
               timer.pause();
-              const ok = await save(Math.max(1, Math.round(elapsedMs(timer.get()) / 60000)));
+              const ok = await save(Math.min(MAX_MIN, Math.max(1, Math.round(elapsedMs(timer.get()) / 60000))));
               if (ok) timer.clear();
             }}
           >
             <Square className="h-5 w-5" />
           </Button>
         </div>
-        <div className="flex gap-2">
-          <Input className="h-12 w-28" type="number" inputMode="numeric" min={1} placeholder="Minutes" value={manual} onChange={(e) => setManual(e.target.value)} />
-          <Input className="h-12" placeholder="One-line note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
-          <Button variant="outline" className="h-12" disabled={!manual} onClick={() => save(parseInt(manual) || 0)}>Log</Button>
-        </div>
+        <form
+          className="space-y-2"
+          onSubmit={(e) => { e.preventDefault(); if (manual && !manualErr) void save(parseInt(manual, 10), routeId, loggedAtFor(day)); }}
+        >
+          <div className="flex flex-wrap gap-2">
+            <Input className="h-12 w-28" type="number" inputMode="numeric" min={1} max={MAX_MIN} placeholder="Minutes" aria-label="Minutes" value={manual} onChange={(e) => setManual(e.target.value)} aria-invalid={!!manualErr} />
+            <Input className="h-12 w-40" type="date" aria-label="Date" value={day} max={localDate()} onChange={(e) => setDay(e.target.value && e.target.value > localDate() ? localDate() : e.target.value)} />
+            <Input className="h-12 min-w-40 flex-1" placeholder="One-line note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+            <Button type="submit" variant="outline" className="h-12" disabled={!manual || !!manualErr}>Log</Button>
+          </div>
+          {manualErr && <p className="text-xs text-destructive">{manualErr}</p>}
+        </form>
       </div>
+
+      <div className="mt-4">
+        <p className="mb-1 text-sm text-muted-foreground">Total on this route: <span className="font-medium text-foreground">{minutesLabel(totalMinutes)}</span></p>
+        {list && rows.length === 0 && <p className="py-2 text-sm text-muted-foreground">No sessions logged yet.</p>}
+        <ul className="space-y-1 text-sm">
+          {rows.map((s) => (
+            <li key={s.id} className="flex items-center justify-between gap-3 border-b py-1 last:border-0">
+              <span className="truncate text-muted-foreground">{format(new Date(s.logged_at), "EEE MMM d, HH:mm")}{s.note && ` · ${s.note}`}</span>
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="font-medium">{minutesLabel(s.minutes)}</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-12 w-12" aria-label="Session actions"><MoreHorizontal className="h-4 w-4" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem className="min-h-12" onSelect={() => setEditing(s)}>Edit</DropdownMenuItem>
+                    <DropdownMenuItem className="min-h-12 text-destructive" onSelect={() => void del(s)}>Delete</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </span>
+            </li>
+          ))}
+        </ul>
+        {more && (
+          <Button variant="ghost" className="mt-2 h-12" onClick={() => setLimit((l) => (l === 8 ? SESSION_PAGE : l + SESSION_PAGE))}>
+            {limit === 8 ? "Show all" : "Load more"}
+          </Button>
+        )}
+      </div>
+
+      <EditSessionDialog session={editing} onClose={() => setEditing(null)} onSaved={invalidate} />
       <AlertDialog open={confirmSwitch} onOpenChange={setConfirmSwitch}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -535,5 +611,55 @@ function SessionsSection({ routeId, routeName }: { routeId: string; routeName: s
         </AlertDialogContent>
       </AlertDialog>
     </section>
+  );
+}
+
+function EditSessionDialog({ session, onClose, onSaved }: { session: Session | null; onClose: () => void; onSaved: () => void }) {
+  const [minutes, setMinutes] = useState("");
+  const [note, setNote] = useState("");
+  const [when, setWhen] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (session) { setMinutes(String(session.minutes)); setNote(session.note ?? ""); setWhen(toLocalInput(session.logged_at)); }
+  }, [session]);
+  const maxWhen = toLocalInput(new Date().toISOString());
+  const errs = {
+    minutes: minutesError(minutes),
+    when: !when ? "Pick a date and time." : new Date(when).getTime() > Date.now() + 60000 ? "Sessions can't be in the future." : null,
+  };
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!session || errs.minutes || errs.when || busy) return;
+    setBusy(true);
+    const { error } = await supabase.from("sessions").update({ minutes: parseInt(minutes, 10), note: note.trim() || null, logged_at: new Date(when).toISOString() }).eq("id", session.id);
+    setBusy(false);
+    if (error) { toast.error(`Couldn't save the session: ${error.message}`); return; }
+    toast.success("Session updated.");
+    onSaved();
+    onClose();
+  }
+  return (
+    <Dialog open={!!session} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader><DialogTitle>Edit session</DialogTitle></DialogHeader>
+        <form onSubmit={save} noValidate className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="sm">Minutes</Label>
+            <Input id="sm" className="h-12" type="number" inputMode="numeric" min={1} max={MAX_MIN} value={minutes} onChange={(e) => setMinutes(e.target.value)} aria-invalid={!!errs.minutes} />
+            {errs.minutes && <p className="text-xs text-destructive">{errs.minutes}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="sw">Date and time</Label>
+            <Input id="sw" className="h-12" type="datetime-local" max={maxWhen} value={when} onChange={(e) => setWhen(e.target.value)} aria-invalid={!!errs.when} />
+            {errs.when && <p className="text-xs text-destructive">{errs.when}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="sn">Note (optional)</Label>
+            <Input id="sn" className="h-12" value={note} onChange={(e) => setNote(e.target.value)} />
+          </div>
+          <Button type="submit" className="h-12 w-full" disabled={busy || !!errs.minutes || !!errs.when}>Save</Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

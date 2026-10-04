@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "./fields";
+import { CardText } from "./CardText";
+import { Checkbox } from "@/components/ui/checkbox";
+import { hasCloze } from "@/lib/cardText";
 
 export function CardDialog({
   open,
@@ -34,6 +37,7 @@ export function CardDialog({
   const [back, setBack] = useState("");
   const [example, setExample] = useState("");
   const [pron, setPron] = useState("");
+  const [reverse, setReverse] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -41,6 +45,7 @@ export function CardDialog({
       setBack(card?.back ?? "");
       setExample(card?.example ?? "");
       setPron(card?.pronunciation ?? "");
+      setReverse(false);
       setRouteId(card?.route_id ?? fixedRoute ?? data?.routes[0]?.id ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,15 +71,12 @@ export function CardDialog({
       onOpenChange(false);
       return;
     }
-    const { error } = await supabase.from("cards").insert({
-      route_id: routeId,
-      front: front.trim(),
-      back: back.trim(),
-      example: isLang && example ? example : null,
-      pronunciation: isLang && pron ? pron : null,
-    });
+    const base = { route_id: routeId, example: isLang && example ? example : null, pronunciation: isLang && pron ? pron : null };
+    const rows = [{ ...base, front: front.trim(), back: back.trim() }];
+    if (reverse && !hasCloze(front)) rows.push({ ...base, front: back.trim(), back: front.trim(), pronunciation: null });
+    const { error } = await supabase.from("cards").insert(rows);
     if (error) { toast.error(error.message); return; }
-    toast.success("Card added.");
+    toast.success(reverse ? "Card and reverse card added." : "Card added.");
     refresh();
     if (again) {
       setFront("");
@@ -86,7 +88,7 @@ export function CardDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{card ? "Edit flashcard" : "New flashcard"}</DialogTitle>
         </DialogHeader>
@@ -118,6 +120,20 @@ export function CardDialog({
                 <Input id="cp" className="h-12" value={pron} onChange={(e) => setPron(e.target.value)} />
               </div>
             </>
+          )}
+          <p className="text-xs text-muted-foreground">Markdown works: **bold**, *italics*, lists, `code`. Cloze: {"{{c1::answer}}"} or {"{{c1::answer::hint}}"} in the front.</p>
+          {!card && (
+            <label className="flex min-h-12 items-center gap-3 text-sm">
+              <Checkbox checked={reverse} disabled={hasCloze(front)} onCheckedChange={(v) => setReverse(!!v)} /> Also create reverse card
+            </label>
+          )}
+          {(front.trim() || back.trim()) && (
+            <div className="space-y-2 rounded-md border border-dashed p-3 text-sm">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Preview</p>
+              {front.trim() && <CardText text={front} revealed={false} className="font-medium" />}
+              {back.trim() && <CardText text={back} className="border-t pt-2" />}
+              {isLang && example.trim() && <CardText text={example} className="italic text-muted-foreground" />}
+            </div>
           )}
           <div className="flex gap-2">
             {!card && <Button type="button" variant="outline" className="h-12 flex-1" onClick={(e) => front && back && save(e, true)}>Save & add another</Button>}
