@@ -112,7 +112,7 @@ export function useNewPerDay() {
   return useQuery({
     queryKey: ["user-settings"],
     queryFn: async () => {
-      const row = await must(supabase.from("user_settings").select("new_per_day").maybeSingle());
+      const row = await must<{ new_per_day: number }>(supabase.from("user_settings").select("new_per_day").maybeSingle());
       return row?.new_per_day ?? DEFAULT_NEW_PER_DAY;
     },
   });
