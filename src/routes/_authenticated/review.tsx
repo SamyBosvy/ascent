@@ -25,7 +25,7 @@ const RATINGS: { r: Rating; label: string }[] = [
 ];
 
 /** Most overdue first; cards due on the same local day are Fisher-Yates shuffled. */
-export function orderQueue(cards: Card[]) {
+function orderQueue(cards: Card[]) {
   const sorted = [...cards].sort((a, b) => a.due_at.localeCompare(b.due_at));
   const out: Card[] = [];
   let i = 0;
