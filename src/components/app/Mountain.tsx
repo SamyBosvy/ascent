@@ -20,7 +20,7 @@ export function Mountain({ camp, className }: { camp: number; className?: string
           opacity="0.6"
         />
         {xs.map((x, i) => (
-          <circle key={i} cx={x} cy={ys[i]} r={i === 4 ? 7 : 5} className={i <= camp ? (i === 4 ? "fill-gold" : "fill-primary") : "fill-muted-foreground/40"} />
+          <circle key={i} cx={x} cy={ys[i]} r={i === 4 ? 7 : 5} className={i <= camp ? (i === 4 ? "fill-gold-text" : "fill-primary") : "fill-muted-foreground/40"} />
         ))}
         <g transform={`translate(${xs[camp]!}, ${ys[camp]! - 6})`}>
           <circle r="10" className={camp === 4 ? "fill-gold" : "fill-primary"} opacity="0.25">
@@ -37,7 +37,7 @@ export function Mountain({ camp, className }: { camp: number; className?: string
       </svg>
       <ol className="flex flex-col-reverse justify-between py-3 text-sm">
         {CAMPS.map((c, i) => (
-          <li key={c} className={cn(i === camp ? "font-semibold text-foreground" : "text-muted-foreground", i === 4 && camp === 4 && "text-gold")}>
+          <li key={c} className={cn(i === camp ? "font-semibold text-foreground" : "text-muted-foreground", i === 4 && camp === 4 && "text-gold-text")}>
             {c}
           </li>
         ))}
@@ -54,7 +54,7 @@ export function CampBadge({ camp }: { camp: number }) {
         camp === 4 ? "bg-gold/20 text-foreground" : "bg-accent text-accent-foreground",
       )}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full", camp === 4 ? "bg-gold" : "bg-primary")} />
+      <span className={cn("h-1.5 w-1.5 rounded-full", camp === 4 ? "bg-gold-text" : "bg-primary")} />
       {CAMPS[camp]}
     </span>
   );
@@ -64,7 +64,7 @@ export function AltitudeBar({ camp }: { camp: number }) {
   return (
     <div className="flex gap-1" aria-hidden>
       {CAMPS.map((_, i) => (
-        <div key={i} className={cn("h-1.5 flex-1 rounded-full", i <= camp ? (camp === 4 ? "bg-gold" : "bg-primary") : "bg-muted")} />
+        <div key={i} className={cn("h-1.5 flex-1 rounded-full", i <= camp ? (camp === 4 ? "bg-gold-text" : "bg-primary") : "bg-muted")} />
       ))}
     </div>
   );

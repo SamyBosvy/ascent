@@ -29,3 +29,4 @@
 - Card text renders through `CardText` (react-markdown, raw HTML skipped, images dropped); cloze `{{cN::answer::hint}}` is rewritten to private `#cloze` links in `src/lib/cardText.ts` — one renderer for Review, Cards and the dialog preview, no HTML injection.
 - Cram sessions record nothing (no review rows, no schedule change); Review-ahead ratings use the normal `record_review` path — so retention stats never include cram.
 - Route create/edit share `RouteDialog` (type read-only when editing); CSV import goes through `CsvImportDialog` (papaparse, column mapping, 500-row batches) and accepts the Settings export format.
+- Color utilities for primary/destructive text resolve to independent ink tokens; gold text/informative marks use gold-text, decorative gold stays gold — preserves brand fills while meeting contrast in both themes.
