@@ -22,3 +22,7 @@
 - Routes are archived via `archived_at` (hidden from Today/Routes/Review, data kept) and deleted via `deleted_at` soft delete; every query excludes soft-deleted routes, and `purge_deleted_routes` hard-deletes (cascade) after the undo window (toast close + on app load) — gives undo without a scheduler.
 - Milestone reorder goes through the atomic `swap_milestones` RPC — positions can never end up half-swapped.
 - New notes start as drafts (`/notes/new`) and are inserted on the first real edit via `NoteEditor`; saves run only after user edits — no empty rows, no save-on-open.
+- Undoing a rating goes through the atomic, idempotent `undo_review` RPC after cancelling/awaiting the queued save (`undoReview` in `reviewQueue.ts`) — a card is never left updated without its review row or vice versa.
+- Cards carry `suspended_at`, `buried_until` and `last_reviewed_at` (null = new); due counts, the review queue and `route_stats.cards_due` exclude suspended/buried cards — one definition of "due" everywhere.
+- Single-card delete snapshots the card + its reviews and re-inserts both (same ids) on Undo; moving cards uses the `move_cards` RPC so review rows follow their card.
+- Interval fuzz lives in `schedule()` (srs.ts) wrapping the unchanged `sm2()`; the per-user new-card limit is in `user_settings`.
