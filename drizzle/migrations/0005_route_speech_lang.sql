@@ -1,0 +1,1 @@
+ALTER TABLE public.routes ADD COLUMN IF NOT EXISTS speech_lang text CHECK (speech_lang IS NULL OR speech_lang ~ '^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$');
