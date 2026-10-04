@@ -1,3 +1,4 @@
+import type { Database } from "@/integrations/supabase/types";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Check, Pause, Play, Plus, Square, Trash2, Upload } from "lucide-react";
@@ -57,7 +58,7 @@ function RouteDetail() {
   const sessions = data.sessions.filter((s) => s.route_id === id);
   const due = data.cards.filter((c) => c.route_id === id && new Date(c.due_at).getTime() <= Date.now()).length;
 
-  async function update(patch: Parameters<ReturnType<typeof supabase.from<"routes">>["update"]>[0]) {
+  async function update(patch: Database["public"]["Tables"]["routes"]["Update"]) {
     const { error } = await supabase.from("routes").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) toast.error(error.message);
     refresh();

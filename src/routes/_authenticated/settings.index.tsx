@@ -12,7 +12,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export const Route = createFileRoute("/_authenticated/settings")({
+export const Route = createFileRoute("/_authenticated/settings/")({
   head: () => ({ meta: [{ title: "Settings — Ascent" }, { name: "description", content: "Your account, data and privacy." }] }),
   component: Settings,
 });
