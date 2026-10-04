@@ -22,7 +22,7 @@ type Status = "saved" | "pending" | "saving" | "draft";
  * Note editor. `note` undefined = draft: no row exists until the first real edit.
  * Saves only after user edits (never on load), serialised through one promise chain.
  */
-export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?: string }) {
+export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?: string | undefined }) {
   const qc = useQueryClient();
   const nav = useNavigate();
   const { data: routes } = useRoutes();
