@@ -35,6 +35,7 @@ export type Database = {
       cards: {
         Row: {
           back: string
+          buried_until: string | null
           created_at: string
           due_at: string
           ease: number
@@ -42,13 +43,16 @@ export type Database = {
           front: string
           id: string
           interval_days: number
+          last_reviewed_at: string | null
           pronunciation: string | null
           reps: number
           route_id: string
+          suspended_at: string | null
           user_id: string
         }
         Insert: {
           back: string
+          buried_until?: string | null
           created_at?: string
           due_at?: string
           ease?: number
@@ -56,13 +60,16 @@ export type Database = {
           front: string
           id?: string
           interval_days?: number
+          last_reviewed_at?: string | null
           pronunciation?: string | null
           reps?: number
           route_id: string
+          suspended_at?: string | null
           user_id?: string
         }
         Update: {
           back?: string
+          buried_until?: string | null
           created_at?: string
           due_at?: string
           ease?: number
@@ -70,9 +77,11 @@ export type Database = {
           front?: string
           id?: string
           interval_days?: number
+          last_reviewed_at?: string | null
           pronunciation?: string | null
           reps?: number
           route_id?: string
+          suspended_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -351,6 +360,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          new_per_day: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          new_per_day?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          new_per_day?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -365,6 +392,8 @@ export type Database = {
         Returns: boolean
       }
       minutes_since: { Args: { _since: string }; Returns: number }
+      move_cards: { Args: { _ids: string[]; _route: string }; Returns: number }
+      new_cards_reviewed_since: { Args: { _since: string }; Returns: number }
       purge_deleted_routes: {
         Args: { _older_than_seconds?: number }
         Returns: number
@@ -410,6 +439,17 @@ export type Database = {
         }[]
       }
       swap_milestones: { Args: { _a: string; _b: string }; Returns: undefined }
+      undo_review: {
+        Args: {
+          _card_id: string
+          _due_at: string
+          _ease: number
+          _interval_days: number
+          _reps: number
+          _review_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "owner" | "member"
