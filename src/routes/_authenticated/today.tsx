@@ -9,7 +9,7 @@ import { Empty, SectionTitle } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/today")({
-  head: () => ({ meta: [{ title: "Today — Ascent" }, { name: "description", content: "Your reviews, habits and routes for today." }, { property: "og:title", content: "Today — Ascent" }, { property: "og:description", content: "Your reviews, habits and routes for today." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "Today — Ascent" }, { name: "description", content: "Your reviews, habits and routes for today." }] }),
   component: Today,
 });
 

@@ -5,7 +5,7 @@ import { must, type Note } from "@/lib/data";
 import { NoteEditor } from "@/components/app/NoteEditor";
 
 export const Route = createFileRoute("/_authenticated/notes/$id")({
-  head: () => ({ meta: [{ title: "Note — Ascent" }, { name: "description", content: "Write and review a note." }, { property: "og:title", content: "Note — Ascent" }, { property: "og:description", content: "Write and review a note." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "Note — Ascent" }, { name: "description", content: "Write and review a note." }] }),
   component: NotePage,
 });
 

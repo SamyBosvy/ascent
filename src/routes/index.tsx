@@ -16,8 +16,6 @@ export const Route = createFileRoute("/")({
   }),
   head: () => ({
     meta: [
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
       { title: "Ascent — sign in" },
       { name: "description", content: "Track what you're mastering. Keep what you learn." },
       { property: "og:title", content: "Ascent" },

@@ -8,7 +8,7 @@ import { habitConsistency } from "@/lib/camp";
 import { Empty, SectionTitle } from "@/components/app/fields";
 
 export const Route = createFileRoute("/_authenticated/insights")({
-  head: () => ({ meta: [{ title: "Insights — Ascent" }, { name: "description", content: "Time, retention and consistency over time." }, { property: "og:title", content: "Insights — Ascent" }, { property: "og:description", content: "Time, retention and consistency over time." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "Insights — Ascent" }, { name: "description", content: "Time, retention and consistency over time." }] }),
   component: Insights,
 });
 
