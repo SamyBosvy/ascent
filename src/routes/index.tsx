@@ -112,6 +112,22 @@ function Landing() {
           <p className="mt-2 text-muted-foreground">Track what you're mastering. Keep what you learn.</p>
         </div>
         <form onSubmit={submit} className="surface space-y-4 p-6 shadow-sm">
+          {mode !== "reset" && (
+            <div role="tablist" aria-label="Account" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+              {([["in", "Sign in"], ["up", "Set up account"]] as const).map(([m, label]) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === m}
+                  onClick={() => { setMode(m); setError(null); }}
+                  className={`h-11 rounded-md text-sm font-medium transition-colors ${mode === m ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="h-12" />
@@ -134,16 +150,26 @@ function Landing() {
                   </button>
                 )}
               </div>
+              <div className="relative">
               <Input
                 id="password"
-                type="password"
+                type={show ? "text" : "password"}
                 autoComplete={mode === "up" ? "new-password" : "current-password"}
                 minLength={mode === "up" ? 8 : undefined}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-12"
+                className="h-12 pr-12"
               />
+                <button
+                  type="button"
+                  onClick={() => setShow((v) => !v)}
+                  aria-label={show ? "Hide password" : "Show password"}
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
+                >
+                  {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
             </div>
           )}
           {error && <p className="rounded-lg bg-muted p-3 text-sm" role="alert">{error}</p>}
@@ -169,17 +195,15 @@ function Landing() {
               <Button type="submit" className="h-12 w-full text-base" disabled={busy}>
                 {busy ? "One moment…" : mode === "in" ? "Sign in" : mode === "up" ? "Create account" : "Send reset link"}
               </Button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode(mode === "in" ? "up" : "in");
-                  setError(null);
-                  setResetSent(false);
-                }}
-                className="tap w-full text-sm text-muted-foreground hover:text-foreground"
-              >
-                {mode === "reset" ? "Back to sign in" : mode === "in" ? "Invited? Set up your account" : "Already have an account? Sign in"}
-              </button>
+              {mode === "reset" && (
+                <button
+                  type="button"
+                  onClick={() => { setMode("in"); setError(null); setResetSent(false); }}
+                  className="tap w-full text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Back to sign in
+                </button>
+              )}
             </>
           )}
         </form>
