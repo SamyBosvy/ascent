@@ -79,20 +79,27 @@ export function useRouteStats() {
   });
 }
 
-export function useDueCount() {
+/** Due cards split into reviews (seen before) and new cards; same filters as the Review queue. */
+export function useDueCounts() {
   return useQuery({
     queryKey: ["cards", "due-count"],
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from("cards")
-        .select("id, routes!inner(id)", { count: "exact", head: true })
-        .is("routes.archived_at", null)
-        .is("routes.deleted_at", null)
-        .is("suspended_at", null)
-        .or(`buried_until.is.null,buried_until.lte.${localDate()}`)
-        .lte("due_at", new Date().toISOString());
-      if (error) throw new Error(error.message);
-      return count ?? 0;
+      const count = async (isNew: boolean) => {
+        let q = supabase
+          .from("cards")
+          .select("id, routes!inner(id)", { count: "exact", head: true })
+          .is("routes.archived_at", null)
+          .is("routes.deleted_at", null)
+          .is("suspended_at", null)
+          .or(`buried_until.is.null,buried_until.lte.${localDate()}`)
+          .lte("due_at", new Date().toISOString());
+        q = isNew ? q.is("last_reviewed_at", null) : q.not("last_reviewed_at", "is", null);
+        const { count: n, error } = await q;
+        if (error) throw new Error(error.message);
+        return n ?? 0;
+      };
+      const [reviews, fresh] = await Promise.all([count(false), count(true)]);
+      return { reviews, fresh };
     },
   });
 }
