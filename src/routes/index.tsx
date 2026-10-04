@@ -23,7 +23,8 @@ export const Route = createFileRoute("/")({
 function Landing() {
   const navigate = useNavigate();
   const { revoked } = Route.useSearch();
-  const [mode, setMode] = useState<"in" | "up">("in");
+  const [mode, setMode] = useState<"in" | "up" | "reset">("in");
+  const [resetSent, setResetSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(revoked ? "Your access to Ascent has ended." : null);
