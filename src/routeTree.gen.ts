@@ -10,33 +10,168 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
+import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
+import { Route as AuthenticatedSummitsRouteImport } from './routes/_authenticated/summits'
+import { Route as AuthenticatedTodayRouteImport } from './routes/_authenticated/today'
+import { Route as AuthenticatedNotesIndexRouteImport } from './routes/_authenticated/notes.index'
+import { Route as AuthenticatedNotesIdRouteImport } from './routes/_authenticated/notes.$id'
+import { Route as AuthenticatedRoutesIndexRouteImport } from './routes/_authenticated/routes.index'
+import { Route as AuthenticatedRoutesIdRouteImport } from './routes/_authenticated/routes.$id'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedSettingsAccessRouteImport } from './routes/_authenticated/settings.access'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReviewRoute = AuthenticatedReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSummitsRoute = AuthenticatedSummitsRouteImport.update({
+  id: '/summits',
+  path: '/summits',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTodayRoute = AuthenticatedTodayRouteImport.update({
+  id: '/today',
+  path: '/today',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNotesIndexRoute = AuthenticatedNotesIndexRouteImport.update({
+  id: '/notes/',
+  path: '/notes/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNotesIdRoute = AuthenticatedNotesIdRouteImport.update({
+  id: '/notes/$id',
+  path: '/notes/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRoutesIndexRoute =
+  AuthenticatedRoutesIndexRouteImport.update({
+    id: '/routes/',
+    path: '/routes/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRoutesIdRoute = AuthenticatedRoutesIdRouteImport.update({
+  id: '/routes/$id',
+  path: '/routes/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsAccessRoute =
+  AuthenticatedSettingsAccessRouteImport.update({
+    id: '/settings/access',
+    path: '/settings/access',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/insights': typeof AuthenticatedInsightsRoute
+  '/review': typeof AuthenticatedReviewRoute
+  '/summits': typeof AuthenticatedSummitsRoute
+  '/today': typeof AuthenticatedTodayRoute
+  '/notes/$id': typeof AuthenticatedNotesIdRoute
+  '/routes/$id': typeof AuthenticatedRoutesIdRoute
+  '/settings/access': typeof AuthenticatedSettingsAccessRoute
+  '/notes/': typeof AuthenticatedNotesIndexRoute
+  '/routes/': typeof AuthenticatedRoutesIndexRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/insights': typeof AuthenticatedInsightsRoute
+  '/review': typeof AuthenticatedReviewRoute
+  '/summits': typeof AuthenticatedSummitsRoute
+  '/today': typeof AuthenticatedTodayRoute
+  '/notes/$id': typeof AuthenticatedNotesIdRoute
+  '/routes/$id': typeof AuthenticatedRoutesIdRoute
+  '/settings/access': typeof AuthenticatedSettingsAccessRoute
+  '/notes': typeof AuthenticatedNotesIndexRoute
+  '/routes': typeof AuthenticatedRoutesIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/insights': typeof AuthenticatedInsightsRoute
+  '/_authenticated/review': typeof AuthenticatedReviewRoute
+  '/_authenticated/summits': typeof AuthenticatedSummitsRoute
+  '/_authenticated/today': typeof AuthenticatedTodayRoute
+  '/_authenticated/notes/$id': typeof AuthenticatedNotesIdRoute
+  '/_authenticated/routes/$id': typeof AuthenticatedRoutesIdRoute
+  '/_authenticated/settings/access': typeof AuthenticatedSettingsAccessRoute
+  '/_authenticated/notes/': typeof AuthenticatedNotesIndexRoute
+  '/_authenticated/routes/': typeof AuthenticatedRoutesIndexRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/insights'
+    | '/review'
+    | '/summits'
+    | '/today'
+    | '/notes/$id'
+    | '/routes/$id'
+    | '/settings/access'
+    | '/notes/'
+    | '/routes/'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/insights'
+    | '/review'
+    | '/summits'
+    | '/today'
+    | '/notes/$id'
+    | '/routes/$id'
+    | '/settings/access'
+    | '/notes'
+    | '/routes'
+    | '/settings'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/_authenticated/insights'
+    | '/_authenticated/review'
+    | '/_authenticated/summits'
+    | '/_authenticated/today'
+    | '/_authenticated/notes/$id'
+    | '/_authenticated/routes/$id'
+    | '/_authenticated/settings/access'
+    | '/_authenticated/notes/'
+    | '/_authenticated/routes/'
+    | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +183,118 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/insights': {
+      id: '/_authenticated/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof AuthenticatedInsightsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/review': {
+      id: '/_authenticated/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof AuthenticatedReviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/summits': {
+      id: '/_authenticated/summits'
+      path: '/summits'
+      fullPath: '/summits'
+      preLoaderRoute: typeof AuthenticatedSummitsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/today': {
+      id: '/_authenticated/today'
+      path: '/today'
+      fullPath: '/today'
+      preLoaderRoute: typeof AuthenticatedTodayRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notes/': {
+      id: '/_authenticated/notes/'
+      path: '/notes'
+      fullPath: '/notes/'
+      preLoaderRoute: typeof AuthenticatedNotesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notes/$id': {
+      id: '/_authenticated/notes/$id'
+      path: '/notes/$id'
+      fullPath: '/notes/$id'
+      preLoaderRoute: typeof AuthenticatedNotesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/routes/': {
+      id: '/_authenticated/routes/'
+      path: '/routes'
+      fullPath: '/routes/'
+      preLoaderRoute: typeof AuthenticatedRoutesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/routes/$id': {
+      id: '/_authenticated/routes/$id'
+      path: '/routes/$id'
+      fullPath: '/routes/$id'
+      preLoaderRoute: typeof AuthenticatedRoutesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/access': {
+      id: '/_authenticated/settings/access'
+      path: '/settings/access'
+      fullPath: '/settings/access'
+      preLoaderRoute: typeof AuthenticatedSettingsAccessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
+  AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
+  AuthenticatedSummitsRoute: typeof AuthenticatedSummitsRoute
+  AuthenticatedTodayRoute: typeof AuthenticatedTodayRoute
+  AuthenticatedNotesIdRoute: typeof AuthenticatedNotesIdRoute
+  AuthenticatedRoutesIdRoute: typeof AuthenticatedRoutesIdRoute
+  AuthenticatedSettingsAccessRoute: typeof AuthenticatedSettingsAccessRoute
+  AuthenticatedNotesIndexRoute: typeof AuthenticatedNotesIndexRoute
+  AuthenticatedRoutesIndexRoute: typeof AuthenticatedRoutesIndexRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
+  AuthenticatedReviewRoute: AuthenticatedReviewRoute,
+  AuthenticatedSummitsRoute: AuthenticatedSummitsRoute,
+  AuthenticatedTodayRoute: AuthenticatedTodayRoute,
+  AuthenticatedNotesIdRoute: AuthenticatedNotesIdRoute,
+  AuthenticatedRoutesIdRoute: AuthenticatedRoutesIdRoute,
+  AuthenticatedSettingsAccessRoute: AuthenticatedSettingsAccessRoute,
+  AuthenticatedNotesIndexRoute: AuthenticatedNotesIndexRoute,
+  AuthenticatedRoutesIndexRoute: AuthenticatedRoutesIndexRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
