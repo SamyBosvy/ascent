@@ -53,7 +53,7 @@ export async function fetchPaged<R>(
 
 export const routesQuery = {
   queryKey: ["routes"],
-  queryFn: () => fetchPaged<RouteRow>((a, b) => supabase.from("routes").select("*").order("created_at").order("id").range(a, b)),
+  queryFn: () => fetchPaged<RouteRow>((a, b) => supabase.from("routes").select("*").is("deleted_at", null).order("created_at").order("id").range(a, b)),
 };
 export function useRoutes() {
   return useQuery(routesQuery);
@@ -83,7 +83,12 @@ export function useDueCount() {
   return useQuery({
     queryKey: ["cards", "due-count"],
     queryFn: async () => {
-      const { count, error } = await supabase.from("cards").select("id", { count: "exact", head: true }).lte("due_at", new Date().toISOString());
+      const { count, error } = await supabase
+        .from("cards")
+        .select("id, routes!inner(id)", { count: "exact", head: true })
+        .is("routes.archived_at", null)
+        .is("routes.deleted_at", null)
+        .lte("due_at", new Date().toISOString());
       if (error) throw new Error(error.message);
       return count ?? 0;
     },
@@ -96,6 +101,9 @@ export function useWeekMinutes() {
     queryFn: async () => Number(await must(supabase.rpc("minutes_since", { _since: startOfWeek().toISOString() }))),
   });
 }
+
+/** Routes still on the mountain: not archived (deleted ones are already excluded by routesQuery). */
+export const isLive = (r: RouteRow) => !r.archived_at;
 
 export function useRefresh() {
   const qc = useQueryClient();
