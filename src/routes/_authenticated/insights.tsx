@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { startOfWeek, useAll } from "@/lib/data";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchPaged, startOfWeek, useRouteStats, useRoutes } from "@/lib/data";
 import { habitConsistency } from "@/lib/camp";
 import { Empty, SectionTitle } from "@/components/app/fields";
 
@@ -12,10 +14,37 @@ export const Route = createFileRoute("/_authenticated/insights")({
 
 const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 
+function eightWeeks() {
+  return Array.from({ length: 8 }, (_, i) => {
+    const s = startOfWeek();
+    s.setDate(s.getDate() - (7 - i) * 7);
+    return s;
+  });
+}
+
+// Only the window the charts show: sessions + reviews from the first charted week onward.
+function useInsightRows() {
+  return useQuery({
+    queryKey: ["insights", "rows"],
+    queryFn: async () => {
+      const from = eightWeeks()[0]!.toISOString();
+      const [sessions, reviews] = await Promise.all([
+        fetchPaged<{ route_id: string; minutes: number; logged_at: string }>((a, b) =>
+          supabase.from("sessions").select("route_id, minutes, logged_at").gte("logged_at", from).order("logged_at").order("id").range(a, b)),
+        fetchPaged<{ rating: number; reviewed_at: string }>((a, b) =>
+          supabase.from("reviews").select("rating, reviewed_at").gte("reviewed_at", from).order("reviewed_at").order("id").range(a, b)),
+      ]);
+      return { sessions, reviews };
+    },
+  });
+}
+
 function Insights() {
-  const { data } = useAll();
+  const { data: routes } = useRoutes();
+  const { data: stats } = useRouteStats();
+  const { data: rows } = useInsightRows();
   const { user } = Route.useRouteContext();
-  if (!data) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !stats || !rows) return <p className="text-muted-foreground">Loading…</p>;
 
   const ageDays = (Date.now() - new Date(user.created_at).getTime()) / 86400000;
   if (ageDays < 7) {
@@ -28,18 +57,18 @@ function Insights() {
   }
 
   // Weekly minutes per route, last 8 weeks
-  const weeks = Array.from({ length: 8 }, (_, i) => {
-    const s = startOfWeek();
-    s.setDate(s.getDate() - (7 - i) * 7);
-    return s;
-  });
-  const routeIds = [...new Set(data.sessions.map((s) => s.route_id))];
-  const name = (id: string) => data.routes.find((r) => r.id === id)?.name ?? "Route";
+  const weeks = eightWeeks();
+  // Every route with any session ever, most recently logged first (same order as before).
+  const routeIds = [...stats.values()]
+    .filter((a) => a.session_count > 0)
+    .sort((a, b) => (b.last_session_at ?? "").localeCompare(a.last_session_at ?? ""))
+    .map((a) => a.route_id);
+  const name = (id: string) => routes.find((r) => r.id === id)?.name ?? "Route";
   const timeData = weeks.map((w) => {
     const end = w.getTime() + 7 * 86400000;
     const row: Record<string, string | number> = { week: format(w, "MMM d") };
     for (const rid of routeIds) {
-      const m = data.sessions.filter((s) => s.route_id === rid && new Date(s.logged_at).getTime() >= w.getTime() && new Date(s.logged_at).getTime() < end).reduce((a, s) => a + s.minutes, 0);
+      const m = rows.sessions.filter((s) => s.route_id === rid && new Date(s.logged_at).getTime() >= w.getTime() && new Date(s.logged_at).getTime() < end).reduce((a, s) => a + s.minutes, 0);
       row[name(rid)] = Math.round((m / 60) * 10) / 10;
     }
     return row;
@@ -47,12 +76,12 @@ function Insights() {
 
   const retention = weeks.map((w) => {
     const end = w.getTime() + 7 * 86400000;
-    const rs = data.reviews.filter((r) => new Date(r.reviewed_at).getTime() >= w.getTime() && new Date(r.reviewed_at).getTime() < end);
+    const rs = rows.reviews.filter((r) => new Date(r.reviewed_at).getTime() >= w.getTime() && new Date(r.reviewed_at).getTime() < end);
     return { week: format(w, "MMM d"), retention: rs.length ? Math.round((rs.filter((r) => r.rating >= 2).length / rs.length) * 100) : null };
   });
 
-  const habits = data.routes.filter((r) => r.type === "habit");
-  const summits = data.routes.filter((r) => r.summited_at).sort((a, b) => b.summited_at!.localeCompare(a.summited_at!));
+  const habits = routes.filter((r) => r.type === "habit");
+  const summits = routes.filter((r) => r.summited_at).sort((a, b) => b.summited_at!.localeCompare(a.summited_at!));
   const axis = { stroke: "var(--muted-foreground)", fontSize: 12 };
 
   return (
@@ -94,7 +123,7 @@ function Insights() {
         {habits.length ? (
           <ul className="space-y-3">
             {habits.map((h) => {
-              const pct = Math.round(habitConsistency(h, data) * 100);
+              const pct = Math.round(habitConsistency(h, stats.get(h.id)) * 100);
               return (
                 <li key={h.id} className="surface p-4">
                   <div className="mb-2 flex justify-between text-sm"><span className="font-medium">{h.name}</span><span>{pct}%</span></div>
