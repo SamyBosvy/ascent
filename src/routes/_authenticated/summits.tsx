@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { minutesLabel, TYPE_LABEL, useAll } from "@/lib/data";
+import { minutesLabel, TYPE_LABEL, useRouteStats, useRoutes } from "@/lib/data";
 import { Empty } from "@/components/app/fields";
 
 export const Route = createFileRoute("/_authenticated/summits")({
@@ -9,9 +9,10 @@ export const Route = createFileRoute("/_authenticated/summits")({
 });
 
 function Summits() {
-  const { data } = useAll();
-  if (!data) return <p className="text-muted-foreground">Loading…</p>;
-  const list = data.routes.filter((r) => r.summited_at).sort((a, b) => b.summited_at!.localeCompare(a.summited_at!));
+  const { data: routes } = useRoutes();
+  const { data: stats } = useRouteStats();
+  if (!routes || !stats) return <p className="text-muted-foreground">Loading…</p>;
+  const list = routes.filter((r) => r.summited_at).sort((a, b) => b.summited_at!.localeCompare(a.summited_at!));
   return (
     <div className="space-y-6">
       <Link to="/routes" className="text-sm text-muted-foreground">← Routes</Link>
@@ -21,7 +22,7 @@ function Summits() {
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
           {list.map((r) => {
-            const mins = data.sessions.filter((s) => s.route_id === r.id).reduce((a, s) => a + s.minutes, 0);
+            const mins = Number(stats.get(r.id)?.minutes ?? 0);
             return (
               <li key={r.id}>
                 <Link to="/routes/$id" params={{ id: r.id }} className="surface relative block overflow-hidden p-5">

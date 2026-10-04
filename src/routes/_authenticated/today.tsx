@@ -3,7 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { localDate, minutesLabel, startOfWeek, useAll, useRefresh } from "@/lib/data";
+import { localDate, minutesLabel, useDueCount, useRefresh, useRouteStats, useRoutes, useWeekMinutes } from "@/lib/data";
 import { habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { AltitudeBar, CampBadge } from "@/components/app/Mountain";
 import { Empty, SectionTitle } from "@/components/app/fields";
@@ -15,17 +15,16 @@ export const Route = createFileRoute("/_authenticated/today")({
 });
 
 function Today() {
-  const { data, isLoading } = useAll();
+  const { data: routes } = useRoutes();
+  const { data: stats } = useRouteStats();
+  const { data: due } = useDueCount();
+  const { data: weekMinutes } = useWeekMinutes();
   const refresh = useRefresh();
-  if (isLoading || !data) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !stats || due == null || weekMinutes == null) return <p className="text-muted-foreground">Loading…</p>;
 
-  const now = Date.now();
-  const due = data.cards.filter((c) => new Date(c.due_at).getTime() <= now).length;
-  const habits = data.routes.filter((r) => r.type === "habit" && r.status === "active");
-  const dueHabits = habits.filter((h) => habitDueToday(h, data));
-  const active = data.routes.filter((r) => r.status === "active" && r.type !== "habit");
-  const weekStart = startOfWeek().getTime();
-  const weekMinutes = data.sessions.filter((s) => new Date(s.logged_at).getTime() >= weekStart).reduce((a, s) => a + s.minutes, 0);
+  const habits = routes.filter((r) => r.type === "habit" && r.status === "active");
+  const dueHabits = habits.filter((h) => habitDueToday(h, stats.get(h.id)));
+  const active = routes.filter((r) => r.status === "active" && r.type !== "habit");
 
   async function checkIn(routeId: string) {
     const { error } = await supabase.from("checkins").insert({ route_id: routeId, checked_on: localDate() });
@@ -73,7 +72,7 @@ function Today() {
                 <li key={h.id} className="surface flex items-center gap-3 p-3 pl-4">
                   <Link to="/routes/$id" params={{ id: h.id }} className="min-w-0 flex-1">
                     <p className="truncate font-medium">{h.name}</p>
-                    <p className="text-xs text-muted-foreground">{Math.round(habitConsistency(h, data) * 100)}% over the last 30 days</p>
+                    <p className="text-xs text-muted-foreground">{Math.round(habitConsistency(h, stats.get(h.id)) * 100)}% over the last 30 days</p>
                   </Link>
                   {isDue ? (
                     <Button onClick={() => checkIn(h.id)} variant="outline" className="h-12 px-4">
@@ -98,7 +97,7 @@ function Today() {
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
             {active.map((r) => {
-              const s = routeStats(r, data);
+              const s = routeStats(r, stats.get(r.id));
               return (
                 <li key={r.id}>
                   <Link to="/routes/$id" params={{ id: r.id }} className="surface block space-y-3 p-4 transition-colors hover:border-primary/50">

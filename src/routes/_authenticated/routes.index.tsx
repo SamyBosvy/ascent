@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Plus, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { STATUS_LABEL, TYPE_LABEL, useAll, useRefresh, type RouteStatus, type RouteType } from "@/lib/data";
+import { STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type RouteStatus, type RouteType } from "@/lib/data";
 import { routeStats } from "@/lib/camp";
 import { AltitudeBar, CampBadge } from "@/components/app/Mountain";
 import { Empty, NativeSelect } from "@/components/app/fields";
@@ -21,9 +21,10 @@ export const Route = createFileRoute("/_authenticated/routes/")({
 const ORDER: RouteStatus[] = ["active", "paused", "summited", "abandoned"];
 
 function RoutesPage() {
-  const { data } = useAll();
+  const { data: routes } = useRoutes();
+  const { data: stats } = useRouteStats();
   const [open, setOpen] = useState(false);
-  if (!data) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !stats) return <p className="text-muted-foreground">Loading…</p>;
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-3">
@@ -35,16 +36,16 @@ function RoutesPage() {
           <Button className="h-12" onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> New route</Button>
         </div>
       </div>
-      {data.routes.length === 0 && <Empty>Every climb starts at base camp. Add a book, language, skill, course, paper or habit.</Empty>}
+      {routes.length === 0 && <Empty>Every climb starts at base camp. Add a book, language, skill, course, paper or habit.</Empty>}
       {ORDER.map((status) => {
-        const list = data.routes.filter((r) => r.status === status);
+        const list = routes.filter((r) => r.status === status);
         if (!list.length) return null;
         return (
           <section key={status}>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{STATUS_LABEL[status]}</h2>
             <ul className="grid gap-3 sm:grid-cols-2">
               {list.map((r) => {
-                const s = routeStats(r, data);
+                const s = routeStats(r, stats.get(r.id));
                 return (
                   <li key={r.id}>
                     <Link to="/routes/$id" params={{ id: r.id }} className="surface block space-y-3 p-4 hover:border-primary/50">

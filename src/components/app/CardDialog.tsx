@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAll, useRefresh } from "@/lib/data";
+import { useRefresh, useRoutes } from "@/lib/data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,8 @@ export function CardDialog({
   routeId?: string;
   initialFront?: string;
 }) {
-  const { data } = useAll();
+  const { data: routes_ } = useRoutes();
+  const data = routes_ ? { routes: routes_ } : undefined;
   const refresh = useRefresh();
   const [routeId, setRouteId] = useState(fixedRoute ?? "");
   const [front, setFront] = useState("");
