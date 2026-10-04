@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useRefresh, useRoutes } from "@/lib/data";
+import { isLive, useRefresh, useRoutes, type Card } from "@/lib/data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,14 +14,20 @@ export function CardDialog({
   onOpenChange,
   routeId: fixedRoute,
   initialFront = "",
+  card,
+  onSaved,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   routeId?: string;
   initialFront?: string;
+  /** Edit mode: the card to edit. */
+  card?: Card | null;
+  onSaved?: (card: Card) => void;
 }) {
   const { data: routes_ } = useRoutes();
-  const data = routes_ ? { routes: routes_ } : undefined;
+  // Archived routes are hidden, except the one the edited card already belongs to.
+  const data = routes_ ? { routes: routes_.filter((r) => isLive(r) || r.id === card?.route_id) } : undefined;
   const refresh = useRefresh();
   const [routeId, setRouteId] = useState(fixedRoute ?? "");
   const [front, setFront] = useState("");
@@ -31,11 +37,11 @@ export function CardDialog({
 
   useEffect(() => {
     if (open) {
-      setFront(initialFront);
-      setBack("");
-      setExample("");
-      setPron("");
-      setRouteId(fixedRoute ?? data?.routes[0]?.id ?? "");
+      setFront(card?.front ?? initialFront);
+      setBack(card?.back ?? "");
+      setExample(card?.example ?? "");
+      setPron(card?.pronunciation ?? "");
+      setRouteId(card?.route_id ?? fixedRoute ?? data?.routes[0]?.id ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -45,6 +51,21 @@ export function CardDialog({
 
   async function save(e: React.FormEvent, again = false) {
     e.preventDefault();
+    if (!front.trim() || !back.trim() || !routeId) return;
+    if (card) {
+      const patch = { front: front.trim(), back: back.trim(), example: isLang && example ? example : null, pronunciation: isLang && pron ? pron : null };
+      const { error } = await supabase.from("cards").update(patch).eq("id", card.id);
+      if (error) { toast.error(error.message); return; }
+      if (routeId !== card.route_id) {
+        const { error: mErr } = await supabase.rpc("move_cards", { _ids: [card.id], _route: routeId });
+        if (mErr) { toast.error(`Saved, but couldn't move it: ${mErr.message}`); }
+      }
+      toast.success("Card updated.");
+      onSaved?.({ ...card, ...patch, route_id: routeId });
+      refresh();
+      onOpenChange(false);
+      return;
+    }
     const { error } = await supabase.from("cards").insert({
       route_id: routeId,
       front: front.trim(),
@@ -67,10 +88,10 @@ export function CardDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>New flashcard</DialogTitle>
+          <DialogTitle>{card ? "Edit flashcard" : "New flashcard"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={(e) => save(e)} className="space-y-4">
-          {!fixedRoute && (
+          {(!fixedRoute || card) && (
             <div className="space-y-2">
               <Label>Route</Label>
               <NativeSelect value={routeId} onChange={(e) => setRouteId(e.target.value)}>
@@ -99,7 +120,7 @@ export function CardDialog({
             </>
           )}
           <div className="flex gap-2">
-            <Button type="button" variant="outline" className="h-12 flex-1" onClick={(e) => front && back && save(e, true)}>Save & add another</Button>
+            {!card && <Button type="button" variant="outline" className="h-12 flex-1" onClick={(e) => front && back && save(e, true)}>Save & add another</Button>}
             <Button type="submit" className="h-12 flex-1">Save</Button>
           </div>
         </form>
