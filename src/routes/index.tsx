@@ -41,6 +41,17 @@ function Landing() {
     setBusy(true);
     setError(null);
     try {
+      if (mode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) {
+          setError(error.message);
+          return;
+        }
+        setResetSent(true);
+        return;
+      }
       if (mode === "up") {
         const res = await registerAccount({ data: { email, password } });
         if (!res.ok) {
