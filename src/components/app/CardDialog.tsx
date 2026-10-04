@@ -73,7 +73,7 @@ export function CardDialog({
     }
     const base = { route_id: routeId, example: isLang && example ? example : null, pronunciation: isLang && pron ? pron : null };
     const rows = [{ ...base, front: front.trim(), back: back.trim() }];
-    if (reverse) rows.push({ ...base, front: back.trim(), back: front.trim(), pronunciation: null });
+    if (reverse && !hasCloze(front)) rows.push({ ...base, front: back.trim(), back: front.trim(), pronunciation: null });
     const { error } = await supabase.from("cards").insert(rows);
     if (error) { toast.error(error.message); return; }
     toast.success(reverse ? "Card and reverse card added." : "Card added.");
