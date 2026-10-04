@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
-import { BarChart3, BookOpen, Layers, Mountain, Plus, Settings, Sun } from "lucide-react";
+import { BarChart3, BookOpen, Layers, Library, Mountain, Plus, Settings, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ const NAV = [
   { to: "/today", label: "Today", icon: Sun },
   { to: "/routes", label: "Routes", icon: Mountain },
   { to: "/review", label: "Review", icon: Layers },
+  { to: "/cards", label: "Cards", icon: Library, desktopOnly: true },
   { to: "/notes", label: "Notes", icon: BookOpen },
   { to: "/insights", label: "Insights", icon: BarChart3 },
 ] as const;
@@ -106,7 +107,7 @@ function Shell() {
       </button>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        {NAV.map(({ to, label, icon: Icon }) => (
+        {NAV.filter((n) => !("desktopOnly" in n)).map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}

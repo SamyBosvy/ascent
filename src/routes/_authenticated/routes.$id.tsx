@@ -326,6 +326,9 @@ function RouteDetail() {
           <p className="mr-auto text-sm">{stats.cards} cards · {due} due</p>
           <Button variant="outline" className="h-12" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4" /> Import CSV</Button>
           <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => e.target.files?.[0] && importCsv(e.target.files[0])} />
+          <Button asChild variant="outline" className="h-12">
+            <Link to="/cards" search={{ route: id }}>Browse cards</Link>
+          </Button>
           <Button variant="outline" className="h-12" onClick={() => setCardOpen(true)}><Plus className="h-4 w-4" /> Card</Button>
           {due && !route.archived_at ? (
             <Button asChild className="h-12">

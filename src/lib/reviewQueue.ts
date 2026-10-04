@@ -48,10 +48,11 @@ async function send(p: PendingReview) {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Queue + send with 3 attempts and backoff. Resolves true when saved, false when left in the queue. */
-export async function saveReview(p: PendingReview): Promise<boolean> {
+/** Queue + send with 3 attempts and backoff. Resolves true when saved, false when left in the queue (or cancelled). */
+export async function saveReview(p: PendingReview, signal?: { cancelled: boolean }): Promise<boolean> {
   write([...read().filter((x) => x.id !== p.id), p]);
   for (let attempt = 0; attempt < 3; attempt++) {
+    if (signal?.cancelled) return false;
     try {
       await send(p);
       remove(p.id);
@@ -71,6 +72,7 @@ export async function flushPendingReviews(): Promise<number> {
   let saved = 0;
   try {
     for (const p of read()) {
+      if (!read().some((x) => x.id === p.id)) continue; // undone meanwhile
       try {
         const r = await send(p);
         remove(p.id);
@@ -86,3 +88,35 @@ export async function flushPendingReviews(): Promise<number> {
 }
 
 export const hasPendingReviews = () => read().length > 0;
+
+/** Drop a rating that hasn't reached the server yet. Returns true if it was still queued. */
+export function cancelPendingReview(id: string) {
+  const had = read().some((p) => p.id === id);
+  remove(id);
+  return had;
+}
+
+/**
+ * Undo a rating. Stops any retries, waits for an in-flight send to settle, removes it from the
+ * local queue, then calls the idempotent undo_review RPC (a no-op if the review never landed).
+ */
+export async function undoReview(
+  p: PendingReview,
+  prev: { ease: number; interval_days: number; due_at: string; reps: number },
+  inflight: { signal: { cancelled: boolean }; promise: Promise<boolean> },
+) {
+  inflight.signal.cancelled = true;
+  cancelPendingReview(p.id);
+  const landed = await inflight.promise.catch(() => false);
+  cancelPendingReview(p.id);
+  const { error } = await supabase.rpc("undo_review", {
+    _review_id: p.id,
+    _card_id: p.card_id,
+    _ease: prev.ease,
+    _interval_days: prev.interval_days,
+    _due_at: prev.due_at,
+    _reps: prev.reps,
+  });
+  // If it never reached the server there's nothing to revert there; only a confirmed save must be undone.
+  if (error && landed) throw new Error(error.message);
+}

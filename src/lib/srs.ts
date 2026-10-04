@@ -25,3 +25,18 @@ export function sm2(
   }
   return { ease, interval_days: interval, reps, due_at: due.toISOString() };
 }
+
+/** ±~5% (min ±1 day) jitter for intervals ≥ 3 days so batches don't all land on one day. Never below 1. */
+export function fuzzInterval(interval: number, rand = Math.random) {
+  if (interval < 3) return interval;
+  const spread = Math.max(1, Math.round(interval * 0.05));
+  return Math.max(1, interval + Math.floor(rand() * (2 * spread + 1)) - spread);
+}
+
+/** SM-2 (unchanged) followed by interval fuzz. */
+export function schedule(card: { ease: number; interval_days: number; reps: number }, rating: Rating, now = new Date()) {
+  const next = sm2(card, rating, now);
+  if (next.interval_days < 3) return next;
+  const interval_days = fuzzInterval(next.interval_days);
+  return { ...next, interval_days, due_at: new Date(now.getTime() + interval_days * 86400000).toISOString() };
+}

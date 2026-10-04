@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useRefresh, useRoutes } from "@/lib/data";
+import { isLive, useRefresh, useRoutes } from "@/lib/data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ export function QuickCapture({ open, onOpenChange }: { open: boolean; onOpenChan
   const { data: routes_ } = useRoutes();
   const data = routes_ ? { routes: routes_ } : undefined;
   const refresh = useRefresh();
-  const routes = (data?.routes ?? []).filter((r) => r.status === "active" || r.status === "paused");
+  const routes = (data?.routes ?? []).filter((r) => isLive(r) && (r.status === "active" || r.status === "paused"));
   const [kind, setKind] = useState<"note" | "session">("note");
   const [routeId, setRouteId] = useState("");
   const [text, setText] = useState("");

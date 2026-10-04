@@ -176,3 +176,17 @@
 @utility animate-flag-rise { animation: flag-rise 0.9s cubic-bezier(.2,.8,.2,1) both; transform-origin: bottom; }
 @utility animate-flag-wave { animation: flag-wave 1.6s ease-in-out infinite; transform-origin: left center; }
 @utility animate-glow-in { animation: glow-in 0.8s ease-out 0.4s both; }
+
+/* Keyboard hints: desktop pointers only */
+.kbd-hint {
+  display: none;
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+  font-family: inherit;
+  opacity: 0.65;
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 768px) {
+  .kbd-hint {
+    display: inline;
+  }
+}
