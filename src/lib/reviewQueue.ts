@@ -107,7 +107,7 @@ export async function undoReview(
 ) {
   inflight.signal.cancelled = true;
   cancelPendingReview(p.id);
-  await inflight.promise.catch(() => false);
+  const landed = await inflight.promise.catch(() => false);
   cancelPendingReview(p.id);
   const { error } = await supabase.rpc("undo_review", {
     _review_id: p.id,
@@ -117,5 +117,6 @@ export async function undoReview(
     _due_at: prev.due_at,
     _reps: prev.reps,
   });
-  if (error) throw new Error(error.message);
+  // If it never reached the server there's nothing to revert there; only a confirmed save must be undone.
+  if (error && landed) throw new Error(error.message);
 }
