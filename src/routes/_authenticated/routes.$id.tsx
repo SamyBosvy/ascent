@@ -8,7 +8,7 @@ import Papa from "papaparse";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPaged, localDate, minutesLabel, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteStatus, type Session } from "@/lib/data";
-import { clockLabel, timer, useTimer } from "@/lib/timer";
+import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
 import { CAMPS, habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { Mountain } from "@/components/app/Mountain";
 import { SummitOverlay } from "@/components/app/SummitOverlay";
@@ -45,7 +45,8 @@ function RouteDetail() {
   const [newMs, setNewMs] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const dismissKey = `ascent:summit-dismissed:${id}`;
-  const [dismissed, setDismissed] = useState(() => typeof sessionStorage !== "undefined" && sessionStorage.getItem(dismissKey) === "1");
+  const [, setDismissTick] = useState(0);
+  const dismissed = typeof sessionStorage !== "undefined" && sessionStorage.getItem(dismissKey) === "1";
 
   const route = routes?.find((r) => r.id === id);
   const agg = allStats?.get(id);
@@ -67,7 +68,7 @@ function RouteDetail() {
   }
   function notYet() {
     sessionStorage.setItem(dismissKey, "1");
-    setDismissed(true);
+    setDismissTick((t) => t + 1);
   }
 
   async function update(patch: Database["public"]["Tables"]["routes"]["Update"]) {
@@ -372,7 +373,7 @@ function SessionsSection({ routeId, routeName }: { routeId: string; routeName: s
             disabled={!mine || shown < 1000}
             onClick={async () => {
               timer.pause();
-              const ok = await save(Math.max(1, Math.round(elapsedNow() / 60000)));
+              const ok = await save(Math.max(1, Math.round(elapsedMs(timer.get()) / 60000)));
               if (ok) timer.clear();
             }}
           >
@@ -401,9 +402,4 @@ function SessionsSection({ routeId, routeName }: { routeId: string; routeName: s
       </AlertDialog>
     </section>
   );
-}
-
-function elapsedNow() {
-  const s = timer.get();
-  return s ? s.accumulatedMs + (!s.paused && s.startedAt != null ? Date.now() - s.startedAt : 0) : 0;
 }
