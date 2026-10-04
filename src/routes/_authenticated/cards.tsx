@@ -1,3 +1,4 @@
+import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -32,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/cards")({
     sort: z.enum(SORTS).optional(),
     q: z.string().optional(),
   }),
-  head: () => ({ meta: [{ title: "Cards — Ascent" }, { name: "description", content: "Browse, edit and organise your flashcards." }] }),
+  head: () => ({ meta: [{ property: "og:title", content: "Cards — Ascent" }, { property: "og:description", content: "Browse, edit and organise your flashcards." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Cards — Ascent" }, { name: "description", content: "Browse, edit and organise your flashcards." }] }),
   component: CardsPage,
 });
 
@@ -89,7 +90,7 @@ function CardsPage() {
   const [bulkDelete, setBulkDelete] = useState(false);
   useEffect(() => setSelected(new Set()), [search.route, state, sort, term]);
 
-  if (!routes || !cards) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !cards) return <ScreenSkeleton screen="cards" />;
   const live = routes.filter(isLive);
   const archived = routes.filter((r) => !isLive(r));
   const routeName = (id: string) => routes.find((r) => r.id === id)?.name ?? "";

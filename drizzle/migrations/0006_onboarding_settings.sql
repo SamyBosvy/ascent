@@ -1,0 +1,3 @@
+ALTER TABLE public.user_settings ADD COLUMN onboarding_done_at timestamptz, ADD COLUMN onboarding_started_at timestamptz;
+COMMENT ON COLUMN public.user_settings.onboarding_started_at IS 'Explicit first-route onboarding action; distinguishes continuing onboarding from existing users.';
+COMMENT ON COLUMN public.user_settings.onboarding_done_at IS 'Account-scoped dismissal or completion of first-run onboarding.';

@@ -1,17 +1,18 @@
+import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { minutesLabel, TYPE_LABEL, useRouteStats, useRoutes } from "@/lib/data";
 import { Empty } from "@/components/app/fields";
 
 export const Route = createFileRoute("/_authenticated/summits")({
-  head: () => ({ meta: [{ title: "Summits — Ascent" }, { name: "description", content: "Everything you've mastered." }] }),
+  head: () => ({ meta: [{ property: "og:title", content: "Summits — Ascent" }, { property: "og:description", content: "Everything you've mastered." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Summits — Ascent" }, { name: "description", content: "Everything you've mastered." }] }),
   component: Summits,
 });
 
 function Summits() {
   const { data: routes } = useRoutes();
   const { data: stats } = useRouteStats();
-  if (!routes || !stats) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !stats) return <ScreenSkeleton screen="summits" />;
   const list = routes.filter((r) => r.summited_at).sort((a, b) => b.summited_at!.localeCompare(a.summited_at!));
   return (
     <div className="space-y-6">

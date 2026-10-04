@@ -1,3 +1,4 @@
+import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -8,7 +9,7 @@ import { habitConsistency } from "@/lib/camp";
 import { Empty, SectionTitle } from "@/components/app/fields";
 
 export const Route = createFileRoute("/_authenticated/insights")({
-  head: () => ({ meta: [{ title: "Insights — Ascent" }, { name: "description", content: "Time, retention and consistency over time." }] }),
+  head: () => ({ meta: [{ property: "og:title", content: "Insights — Ascent" }, { property: "og:description", content: "Time, retention and consistency over time." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Insights — Ascent" }, { name: "description", content: "Time, retention and consistency over time." }] }),
   component: Insights,
 });
 
@@ -46,7 +47,7 @@ function Insights() {
   const { data: routes } = useRoutes();
   const { data: stats } = useRouteStats();
   const { data: rows } = useInsightRows();
-  if (!routes || !stats || !rows) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !stats || !rows) return <ScreenSkeleton screen="insights" />;
 
   const sessionCount = [...stats.values()].reduce((a, s) => a + s.session_count, 0);
   if (sessionCount < 3 && rows.reviewCount < 10) {

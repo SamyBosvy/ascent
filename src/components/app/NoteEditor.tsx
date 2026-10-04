@@ -1,3 +1,4 @@
+import { ScreenSkeleton } from "./ScreenSkeleton";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -132,6 +133,8 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
   const needsRoute = !routeId;
   const label = status === "saved" ? "Saved" : status === "saving" ? "Saving…" : status === "draft" ? "Draft" : needsRoute ? "Pick a route to save" : "Saving…";
 
+  if (!routes) return <ScreenSkeleton screen="editor" />;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
@@ -179,7 +182,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
           onChange={(e) => { setBody(e.target.value); edit(); }}
           onSelect={captureTextarea}
           placeholder="Write in markdown…"
-          className="min-h-[55vh] w-full resize-y rounded-xl border bg-card p-4 font-mono text-[15px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-h-[55vh] w-full resize-y rounded-xl border border-input bg-card p-4 font-mono text-[15px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       ) : (
         <article className="prose-note surface min-h-[55vh] p-5">

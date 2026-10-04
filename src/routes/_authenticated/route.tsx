@@ -1,3 +1,4 @@
+import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
 import { BarChart3, BookOpen, Layers, Library, Mountain, Plus, Settings, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/_authenticated")({
     }
     return { user: data.user, role: role.role };
   },
+  pendingComponent: () => <main className="mx-auto max-w-4xl px-4 py-10"><ScreenSkeleton screen="today" /></main>,
   component: Shell,
 });
 

@@ -1,9 +1,10 @@
+import { markOnboarding, useOnboarding } from "@/lib/onboarding";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { TYPE_LABEL, type RouteRow, type RouteType } from "@/lib/data";
+import { useRoutes, TYPE_LABEL, type RouteRow, type RouteType } from "@/lib/data";
 import { SPEECH_LANGS, SPEECH_LANG_RE } from "@/lib/cardText";
 import { NativeSelect } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,8 @@ function wholeError(v: string, min: number, max: number, label: string) {
  */
 export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOpenChange: (o: boolean) => void; route?: RouteRow }) {
   const qc = useQueryClient();
+  const { data: existingRoutes } = useRoutes();
+  const { data: onboarding } = useOnboarding();
   const navigate = useNavigate();
   const editing = !!route;
   const [name, setName] = useState(route?.name ?? "");
@@ -91,6 +94,9 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
       setBusy(false);
       toast.error(error?.message ?? "Could not create route");
       return;
+    }
+    if (existingRoutes?.length === 0 && !onboarding?.onboarding_done_at && !onboarding?.onboarding_started_at) {
+      try { await markOnboarding(qc, "start"); } catch (e) { toast.error(`Route created, but onboarding could not be saved: ${(e as Error).message}`); }
     }
     const n = parseInt(chapters, 10);
     if (type === "book" && n > 0) {

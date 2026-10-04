@@ -1,3 +1,4 @@
+import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -13,7 +14,7 @@ import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/notes/")({
   validateSearch: z.object({ route: z.string().optional() }),
-  head: () => ({ meta: [{ title: "Notes — Ascent" }, { name: "description", content: "Your notes across every route." }] }),
+  head: () => ({ meta: [{ property: "og:title", content: "Notes — Ascent" }, { property: "og:description", content: "Your notes across every route." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Notes — Ascent" }, { name: "description", content: "Your notes across every route." }] }),
   component: Notes,
 });
 
@@ -37,6 +38,8 @@ function Notes() {
     // Draft: nothing is saved until the first keystroke.
     nav({ to: "/notes/new", search: { route } });
   }
+
+  if (!notes || !routes) return <ScreenSkeleton screen="notes" />;
 
   return (
     <div className="space-y-6">

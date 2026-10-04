@@ -1,3 +1,5 @@
+import { Onboarding } from "@/components/app/Onboarding";
+import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { Check } from "lucide-react";
@@ -9,7 +11,7 @@ import { Empty, SectionTitle } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/today")({
-  head: () => ({ meta: [{ title: "Today — Ascent" }, { name: "description", content: "Your reviews, habits and routes for today." }] }),
+  head: () => ({ meta: [{ property: "og:title", content: "Today — Ascent" }, { property: "og:description", content: "Your reviews, habits and routes for today." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Today — Ascent" }, { name: "description", content: "Your reviews, habits and routes for today." }] }),
   component: Today,
 });
 
@@ -24,7 +26,7 @@ function Today() {
   const due = dueCounts && newPerDay != null && newToday != null ? dueCounts.reviews + Math.min(dueCounts.fresh, Math.max(0, newPerDay - newToday)) : null;
   const { data: weekMinutes } = useWeekMinutes();
   const refresh = useRefresh();
-  if (!routes || !stats || due == null || weekMinutes == null) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !stats || due == null || weekMinutes == null) return <ScreenSkeleton screen="today" />;
 
   const habits = routes.filter((r) => r.type === "habit" && r.status === "active");
   const dueHabits = habits.filter((h) => habitDueToday(h, stats.get(h.id)));
@@ -40,6 +42,8 @@ function Today() {
         <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
         <h1 className="mt-1 text-3xl font-semibold">{greeting}.</h1>
       </div>
+
+      <Onboarding routes={allRoutes ?? routes} stats={stats} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="surface flex flex-col justify-between gap-4 p-5">
