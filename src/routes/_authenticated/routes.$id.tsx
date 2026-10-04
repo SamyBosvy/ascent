@@ -78,6 +78,7 @@ function RouteDetail() {
     const { error } = await supabase.from("routes").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) toast.error(error.message);
     refresh();
+    return !error;
   }
 
   const msKey = ["milestones", id];
@@ -157,7 +158,7 @@ function RouteDetail() {
     if (error) { toast.error(`Couldn't delete the route: ${error.message}`); return; }
     const name = route!.name;
     let undone = false;
-    const purge = () => { if (!undone) void supabase.rpc("purge_deleted_routes", { _older_than_seconds: 10 }); };
+    const purge = () => { if (!undone) void supabase.rpc("purge_deleted_routes", { _older_than_seconds: 9 }); };
     toast(`Deleted "${name}"`, {
       duration: 10000,
       onAutoClose: purge,
@@ -389,14 +390,14 @@ function CampsInfo() {
   );
 }
 
-function BookPages({ current, total, onSave }: { current: number; total: number; onSave: (p: number) => void }) {
+function BookPages({ current, total, onSave }: { current: number; total: number; onSave: (p: number) => Promise<boolean> }) {
   const [value, setValue] = useState(String(current));
   useEffect(() => setValue(String(current)), [current]);
   const clamp = (n: number) => Math.max(0, Math.min(total, Math.round(n)));
   function commit(n: number) {
     const next = clamp(Number.isFinite(n) ? n : current);
     setValue(String(next));
-    if (next !== current) onSave(next);
+    if (next !== current) void onSave(next).then((ok) => { if (!ok) setValue(String(current)); });
   }
   const shown = clamp(parseInt(value, 10) || 0);
   return (
