@@ -358,6 +358,47 @@ export type Database = {
         }
         Returns: boolean
       }
+      minutes_since: { Args: { _since: string }; Returns: number }
+      record_review: {
+        Args: {
+          _card_id: string
+          _due_at: string
+          _ease: number
+          _interval_days: number
+          _rating: number
+          _reps: number
+          _review_id: string
+          _reviewed_at: string
+        }
+        Returns: boolean
+      }
+      route_stats: {
+        Args: {
+          _since_date: string
+          _since_ts: string
+          _today: string
+          _week_date: string
+        }
+        Returns: {
+          cards_due: number
+          cards_mature: number
+          cards_total: number
+          checked_today: boolean
+          checkins_recent: number
+          checkins_week: number
+          last_checkin_on: string
+          last_milestone_at: string
+          last_review_at: string
+          last_session_at: string
+          milestones_done: number
+          milestones_total: number
+          minutes: number
+          reviews_recent: number
+          reviews_recent_good: number
+          route_id: string
+          session_count: number
+        }[]
+      }
     }
     Enums: {
       app_role: "owner" | "member"

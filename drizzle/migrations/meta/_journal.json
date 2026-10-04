@@ -15,6 +15,13 @@
       "when": 1791103781530,
       "tag": "0001_get_user_id_by_email",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791104021697,
+      "tag": "0002_stats_and_record_review",
+      "breakpoints": true
     }
   ]
 }
