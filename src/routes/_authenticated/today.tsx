@@ -29,7 +29,7 @@ function Today() {
 
   async function checkIn(routeId: string) {
     const { error } = await supabase.from("checkins").insert({ route_id: routeId, checked_on: localDate() });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Checked in.");
     refresh();
   }

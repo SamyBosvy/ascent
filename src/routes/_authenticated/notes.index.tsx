@@ -33,9 +33,9 @@ function Notes() {
 
   async function create() {
     const rid = route ?? all?.routes[0]?.id;
-    if (!rid) return toast.error("Create a Route first.");
+    if (!rid) { toast.error("Create a Route first."); return; }
     const { data, error } = await supabase.from("notes").insert({ route_id: rid, title: "", body: "" }).select().single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     nav({ to: "/notes/$id", params: { id: data.id } });
   }
 

@@ -101,7 +101,7 @@ function NewRouteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
       .single();
     if (error || !route) {
       setBusy(false);
-      return toast.error(error?.message ?? "Could not create route");
+      { toast.error(error?.message ?? "Could not create route"); return; }
     }
     const n = parseInt(chapters);
     if (type === "book" && n > 0) {

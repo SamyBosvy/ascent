@@ -95,10 +95,10 @@ function RouteDetail() {
       skipEmptyLines: true,
       complete: async (res) => {
         let rows = res.data.filter((r) => r[0]?.trim() && r[1]?.trim());
-        if (rows[0] && rows[0][0].toLowerCase() === "front" && rows[0][1].toLowerCase() === "back") rows = rows.slice(1);
-        if (!rows.length) return toast.error("No front,back rows found.");
-        const { error } = await supabase.from("cards").insert(rows.map((r) => ({ route_id: id, front: r[0].trim(), back: r[1].trim() })));
-        if (error) return toast.error(error.message);
+        if (rows[0] && rows[0][0]?.toLowerCase() === "front" && rows[0][1]?.toLowerCase() === "back") rows = rows.slice(1);
+        if (!rows.length) { toast.error("No front,back rows found."); return; }
+        const { error } = await supabase.from("cards").insert(rows.map((r) => ({ route_id: id, front: r[0]!.trim(), back: r[1]!.trim() })));
+        if (error) { toast.error(error.message); return; }
         toast.success(`Imported ${rows.length} cards.`);
         refresh();
       },
@@ -292,9 +292,9 @@ function SessionsSection({ routeId }: { routeId: string }) {
   }, [running, startedAt]);
 
   async function save(minutes: number) {
-    if (minutes < 1) return toast.error("Log at least one minute.");
+    if (minutes < 1) { toast.error("Log at least one minute."); return; }
     const { error } = await supabase.from("sessions").insert({ route_id: routeId, minutes, note: note.trim() || null });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`${minutesLabel(minutes)} logged. Keep climbing.`);
     setNote("");
     setManual("");

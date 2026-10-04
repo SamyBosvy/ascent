@@ -37,10 +37,10 @@ export function QuickCapture({ open, onOpenChange }: { open: boolean; onOpenChan
     localStorage.setItem(LAST_KEY, routeId);
     const { error } =
       kind === "note"
-        ? await supabase.from("notes").insert({ route_id: routeId, title: text.split("\n")[0].slice(0, 80), body: text })
+        ? await supabase.from("notes").insert({ route_id: routeId, title: (text.split("\n")[0] ?? "").slice(0, 80), body: text })
         : await supabase.from("sessions").insert({ route_id: routeId, minutes: Math.max(1, parseInt(minutes) || 0), note: text || null });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(kind === "note" ? "Note saved." : "Session logged. Keep climbing.");
     refresh();
     onOpenChange(false);

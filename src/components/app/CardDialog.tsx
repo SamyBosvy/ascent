@@ -51,7 +51,7 @@ export function CardDialog({
       example: isLang && example ? example : null,
       pronunciation: isLang && pron ? pron : null,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Card added.");
     refresh();
     if (again) {

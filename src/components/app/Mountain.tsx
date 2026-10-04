@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 /** Vertical mountain with camps; climber sits at `camp` (0-4), nudged by `score` progress. */
 export function Mountain({ camp, className }: { camp: number; className?: string }) {
   const H = 320;
-  const ys = CAMPS.map((_, i) => H - 30 - i * ((H - 60) / 4));
+  const ys: number[] = CAMPS.map((_, i) => H - 30 - i * ((H - 60) / 4));
   const xs = [70, 110, 80, 120, 100];
   return (
     <div className={cn("flex items-stretch gap-4", className)}>
@@ -22,14 +22,14 @@ export function Mountain({ camp, className }: { camp: number; className?: string
         {xs.map((x, i) => (
           <circle key={i} cx={x} cy={ys[i]} r={i === 4 ? 7 : 5} className={i <= camp ? (i === 4 ? "fill-gold" : "fill-primary") : "fill-muted-foreground/40"} />
         ))}
-        <g transform={`translate(${xs[camp]}, ${ys[camp] - 6})`}>
+        <g transform={`translate(${xs[camp]!}, ${ys[camp]! - 6})`}>
           <circle r="10" className={camp === 4 ? "fill-gold" : "fill-primary"} opacity="0.25">
             <animate attributeName="r" values="9;14;9" dur="2.4s" repeatCount="indefinite" />
           </circle>
           <circle r="6" className="fill-foreground" />
         </g>
         {camp === 4 && (
-          <g transform={`translate(${xs[4]}, ${ys[4] - 4})`}>
+          <g transform={`translate(${xs[4]}, ${ys[4]! - 4})`}>
             <line x1="0" y1="0" x2="0" y2="-26" className="stroke-foreground" strokeWidth="2" />
             <path d="M0 -26 L16 -21 L0 -16 Z" className="fill-gold" />
           </g>
