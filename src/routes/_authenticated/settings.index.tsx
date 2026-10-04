@@ -1,9 +1,10 @@
+import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Download, LogOut, ShieldCheck, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPaged } from "@/lib/data";
+import { useNewPerDay, fetchPaged } from "@/lib/data";
 import { deleteMyAccount } from "@/lib/access.functions";
 import { AccountSection } from "@/components/app/AccountSection";
 import { ReviewSettings } from "@/components/app/ReviewSettings";
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
-  head: () => ({ meta: [{ title: "Settings — Ascent" }, { name: "description", content: "Your account, data and privacy." }] }),
+  head: () => ({ meta: [{ property: "og:title", content: "Settings — Ascent" }, { property: "og:description", content: "Your account, data and privacy." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Settings — Ascent" }, { name: "description", content: "Your account, data and privacy." }] }),
   component: Settings,
 });
 
@@ -34,6 +35,7 @@ function Settings() {
   const { user, role } = Route.useRouteContext();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { data: newPerDay } = useNewPerDay();
 
   async function signOut() {
     await qc.cancelQueries();
@@ -70,6 +72,8 @@ function Settings() {
       toast.error(e instanceof Error ? e.message : "Could not delete account");
     }
   }
+
+  if (newPerDay == null) return <ScreenSkeleton screen="settings" />;
 
   return (
     <div className="space-y-10">

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -9,16 +9,18 @@ import { setCardsState } from "@/lib/cardActions";
 import { MoreHorizontal, Moon, PauseCircle, Pencil, Undo2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { saveReview, undoReview, type PendingReview } from "@/lib/reviewQueue";
-import { schedule, type Rating } from "@/lib/srs";
+import { type Rating } from "@/lib/srs";
 import { Empty, NativeSelect } from "@/components/app/fields";
 import { CardText, SpeakButton } from "@/components/app/CardText";
 import { speak, speakable, speechAvailable } from "@/lib/cardText";
 import { CardDialog } from "@/components/app/CardDialog";
 import { Button } from "@/components/ui/button";
+import { previewSchedules, intervalLabel } from "@/lib/reviewPreview";
+import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 
 export const Route = createFileRoute("/_authenticated/review")({
   validateSearch: z.object({ route: z.string().optional() }),
-  head: () => ({ meta: [{ title: "Review — Ascent" }, { name: "description", content: "Spaced-repetition review of your due cards." }] }),
+  head: () => ({ meta: [{ property: "og:title", content: "Review — Ascent" }, { property: "og:description", content: "Spaced-repetition review of your due cards." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Review — Ascent" }, { name: "description", content: "Spaced-repetition review of your due cards." }] }),
   component: Review,
 });
 
@@ -120,6 +122,37 @@ function Review() {
   const [loadingExtra, setLoadingExtra] = useState(false);
 
   const card = queue?.[0];
+  // Each card appearance gets one shared fuzz sample per rating, reused verbatim by save.
+  const previews = useMemo(() => card && mode !== "cram" ? previewSchedules(card) : null, [card, mode]);
+  const touch = useRef<{ x: number; y: number; horizontal: boolean; vertical: boolean } | null>(null);
+  const [drag, setDrag] = useState(0);
+  const suppressClick = useRef(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReducedMotion(media.matches);
+    update(); media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  function touchStart(e: React.TouchEvent<HTMLDivElement>) {
+    if (!flipped || busy || (e.target as HTMLElement).closest('button,a')) return;
+    const t = e.touches[0];
+    if (t) touch.current = { x: t.clientX, y: t.clientY, horizontal: false, vertical: false };
+  }
+  function touchMove(e: React.TouchEvent<HTMLDivElement>) {
+    const start = touch.current; const t = e.touches[0];
+    if (!start || !t || start.vertical) return;
+    const dx = t.clientX - start.x, dy = t.clientY - start.y;
+    if (!start.horizontal && Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) { start.vertical = true; setDrag(0); return; }
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.3) start.horizontal = true;
+    if (start.horizontal && !reducedMotion) setDrag(Math.max(-120, Math.min(120, dx)));
+  }
+  function touchEnd(e: React.TouchEvent<HTMLDivElement>) {
+    const start = touch.current; const t = e.changedTouches[0];
+    touch.current = null; setDrag(0);
+    if (start?.horizontal || start?.vertical) { suppressClick.current = true; setTimeout(() => { suppressClick.current = false; }, 400); }
+    if (start?.horizontal && !start.vertical && t && card && flipped && Math.abs(t.clientX - start.x) >= 56) rate(card, t.clientX > start.x ? 2 : 0);
+  }
 
   function rate(c: Card, r: Rating) {
     if (busy) return;
@@ -134,7 +167,8 @@ function Review() {
       setUndoStack((s) => [...s, { prev: c, counted: r !== 0 }]);
       return;
     }
-    const next = schedule(c, r);
+    const next = previews?.[r];
+    if (!next || card !== c) return;
     const reviewedAt = new Date().toISOString();
     const updated = { ...c, ...next, last_reviewed_at: reviewedAt };
     // Optimistic: move on immediately with the new schedule applied locally.
@@ -148,6 +182,7 @@ function Review() {
     const pending: PendingReview = { id: crypto.randomUUID(), card_id: c.id, rating: r, ...next, reviewed_at: reviewedAt };
     const signal = { cancelled: false };
     const promise = saveReview(pending, signal).then((ok) => {
+      if (ok) refresh();
       if (!ok && !signal.cancelled) toast("Offline for now. Your rating is saved on this device and will sync automatically.", { id: "review-pending" });
       return ok;
     });
@@ -249,7 +284,7 @@ function Review() {
     }
   }
 
-  if (!routes || !stats || !dueCards || newPerDay == null || newToday == null) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !stats || !dueCards || newPerDay == null || newToday == null) return <ScreenSkeleton screen="review" />;
   const dueNow = dueCards.filter((c) => new Date(c.due_at).getTime() <= Date.now());
   const dueReviews = dueNow.filter((c) => c.last_reviewed_at);
   const newLeft = Math.max(0, newPerDay - newToday);
@@ -291,7 +326,7 @@ function Review() {
         <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
           <span className="truncate">{mode === "cram" ? "Cram · " : mode === "ahead" ? "Ahead · " : ""}{routeName(card.route_id)}</span>
           <div className="flex items-center gap-1">
-            <span className="mr-2">{queue.length} left</span>
+            <span className="mr-2 whitespace-nowrap">{queue.length} left</span>
             <Button variant="ghost" className="h-12" onClick={() => setEditing(card)}>
               <Pencil className="h-4 w-4" /> Edit <kbd className="kbd-hint">E</kbd>
             </Button>
@@ -310,15 +345,18 @@ function Review() {
             </DropdownMenu>
           </div>
         </div>
+        <div role="progressbar" aria-label="Session progress" aria-valuemin={0} aria-valuemax={done + queue.length} aria-valuenow={done} aria-valuetext={`${done} done, ${queue.length} remaining`} className="h-1.5 overflow-hidden rounded-full bg-muted">
+          <div className="h-full bg-primary" style={{ width: `${100 * done / (done + queue.length)}%` }} />
+        </div>
         {mode === "cram" && <p className="text-center text-xs text-muted-foreground">Cram mode: ratings aren't saved and don't change your schedule.</p>}
-        <div role="button" tabIndex={-1} onClick={() => setFlipped(true)} className="surface flex min-h-72 w-full flex-col items-center justify-center gap-4 p-8 text-center shadow-sm">
+        <div role="button" aria-label={flipped ? 'Revealed flashcard' : 'Reveal flashcard'} tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFlipped(true); } }} onClick={() => { if (!suppressClick.current) setFlipped(true); }} onTouchStart={touchStart} onTouchMove={touchMove} onTouchEnd={touchEnd} onTouchCancel={() => { touch.current = null; setDrag(0); }} style={{ transform: reducedMotion ? undefined : `translateX(${drag}px)`, touchAction: 'pan-y' }} className="surface flex min-h-72 w-full flex-col items-center justify-center gap-4 p-8 text-center shadow-sm">
           <div className="flex items-start justify-center gap-1">
             <CardText text={card.front} revealed={flipped} className="font-display text-2xl font-semibold" />
             {lang && <SpeakButton text={card.front} lang={lang.speech_lang} revealed={flipped} />}
           </div>
           {card.pronunciation && <p className="text-sm text-muted-foreground">/{card.pronunciation}/</p>}
           {flipped ? (
-            <div className="w-full space-y-3 border-t pt-4">
+            <div className="review-reveal w-full space-y-3 border-t pt-4">
               <div className="flex items-start justify-center gap-1">
                 <CardText text={card.back} className="text-lg" />
                 {lang && <SpeakButton text={card.back} lang={lang.speech_lang} />}
@@ -332,9 +370,12 @@ function Review() {
         {flipped ? (
           <div className="grid grid-cols-4 gap-2">
             {RATINGS.map(({ r, label }) => (
-              <Button key={r} variant={r === 2 ? "default" : "outline"} className="h-14" disabled={busy} onClick={() => rate(card, r)}>
-                {label} <kbd className="kbd-hint">{r + 1}</kbd>
-              </Button>
+              <div key={r} className="space-y-1 text-center">
+                <Button variant={r === 2 ? "default" : "outline"} className="h-14 w-full" disabled={busy} onClick={() => rate(card, r)} aria-describedby={mode !== 'cram' ? `interval-${r}` : undefined}>
+                  {label} <kbd className="kbd-hint">{r + 1}</kbd>
+                </Button>
+                {mode !== 'cram' && previews && <p id={`interval-${r}`} className="text-xs text-muted-foreground" data-due-at={previews[r].due_at}>{intervalLabel(previews[r])}</p>}
+              </div>
             ))}
           </div>
         ) : (

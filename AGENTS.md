@@ -30,3 +30,7 @@
 - Cram sessions record nothing (no review rows, no schedule change); Review-ahead ratings use the normal `record_review` path — so retention stats never include cram.
 - Route create/edit share `RouteDialog` (type read-only when editing); CSV import goes through `CsvImportDialog` (papaparse, column mapping, 500-row batches) and accepts the Settings export format.
 - Primary/destructive text uses explicit strong utilities mapped to independent ink tokens; gold text/informative marks use gold-text, decorative gold stays gold — preserves brand fills while meeting contrast in both themes.
+
+- Review interval previews are cached per card appearance and reused verbatim for record_review — random fuzz cannot disagree with the displayed schedule.
+- Screen loading placeholders share ScreenSkeleton and respect reduced motion — loading semantics and shapes stay consistent.
+- Onboarding timestamps live in user_settings and are written only from explicit user actions; route aggregates drive step progression — state follows the account without save-on-render.

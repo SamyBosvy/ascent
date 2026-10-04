@@ -43,6 +43,13 @@
       "when": 1791107427902,
       "tag": "0005_route_speech_lang",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791111480726,
+      "tag": "0006_onboarding_settings",
+      "breakpoints": true
     }
   ]
 }

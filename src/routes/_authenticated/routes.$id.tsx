@@ -1,3 +1,4 @@
+import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import type { Database } from "@/integrations/supabase/types";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -28,7 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/routes/$id")({
-  head: () => ({ meta: [{ title: "Route — Ascent" }, { name: "description", content: "Progress, milestones, sessions and cards." }] }),
+  head: () => ({ meta: [{ property: "og:title", content: "Route — Ascent" }, { property: "og:description", content: "Progress, milestones, sessions and cards." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Route — Ascent" }, { name: "description", content: "Progress, milestones, sessions and cards." }] }),
   component: RouteDetail,
 });
 
@@ -57,7 +58,7 @@ function RouteDetail() {
   const agg = allStats?.get(id);
   const stats = route && allStats ? routeStats(route, agg) : null;
 
-  if (!routes || !allStats || !milestoneRows) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !allStats || !milestoneRows) return <ScreenSkeleton screen="route" />;
   if (!route || !stats) return <Empty>This route doesn't exist.</Empty>;
 
   const milestones = [...milestoneRows].sort((a, b) => a.position - b.position);

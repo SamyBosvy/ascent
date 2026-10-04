@@ -366,16 +366,22 @@ export type Database = {
       user_settings: {
         Row: {
           new_per_day: number
+          onboarding_done_at: string | null
+          onboarding_started_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           new_per_day?: number
+          onboarding_done_at?: string | null
+          onboarding_started_at?: string | null
           updated_at?: string
           user_id?: string
         }
         Update: {
           new_per_day?: number
+          onboarding_done_at?: string | null
+          onboarding_started_at?: string | null
           updated_at?: string
           user_id?: string
         }

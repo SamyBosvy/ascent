@@ -1,3 +1,4 @@
+import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArchiveRestore, Plus, Trophy } from "lucide-react";
@@ -11,7 +12,7 @@ import { Empty } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/routes/")({
-  head: () => ({ meta: [{ title: "Routes — Ascent" }, { name: "description", content: "Everything you're mastering." }] }),
+  head: () => ({ meta: [{ property: "og:title", content: "Routes — Ascent" }, { property: "og:description", content: "Everything you're mastering." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Routes — Ascent" }, { name: "description", content: "Everything you're mastering." }] }),
   component: RoutesPage,
 });
 
@@ -24,7 +25,7 @@ function RoutesPage() {
   const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [showArchived, setShowArchived] = useState(false);
-  if (!routes || !stats) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !stats) return <ScreenSkeleton screen="routes" />;
   const live = routes.filter(isLive);
   const archived = routes.filter((r) => !isLive(r));
 

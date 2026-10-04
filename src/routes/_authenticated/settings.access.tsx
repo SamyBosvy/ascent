@@ -1,3 +1,4 @@
+import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/settings/access")({
   beforeLoad: ({ context }) => {
     if (context.role !== "owner") throw redirect({ to: "/settings" });
   },
-  head: () => ({ meta: [{ title: "Access — Ascent" }, { name: "description", content: "Manage who can use Ascent." }] }),
+  head: () => ({ meta: [{ property: "og:title", content: "Access — Ascent" }, { property: "og:description", content: "Manage who can use Ascent." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Access — Ascent" }, { name: "description", content: "Manage who can use Ascent." }] }),
   component: Access,
 });
 
@@ -70,7 +71,7 @@ function Access() {
 
       <section>
         <SectionTitle>Allowlist</SectionTitle>
-        {!data ? <p className="text-muted-foreground">Loading…</p> : data.allowlist.length === 0 ? <Empty>No one invited yet.</Empty> : (
+        {!data ? <ScreenSkeleton screen="settings" /> : data.allowlist.length === 0 ? <Empty>No one invited yet.</Empty> : (
           <ul className="surface divide-y">
             {data.allowlist.map((a) => (
               <li key={a.id} className="flex items-center gap-3 p-2 pl-4">
