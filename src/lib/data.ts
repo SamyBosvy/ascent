@@ -88,6 +88,8 @@ export function useDueCount() {
         .select("id, routes!inner(id)", { count: "exact", head: true })
         .is("routes.archived_at", null)
         .is("routes.deleted_at", null)
+        .is("suspended_at", null)
+        .or(`buried_until.is.null,buried_until.lte.${localDate()}`)
         .lte("due_at", new Date().toISOString());
       if (error) throw new Error(error.message);
       return count ?? 0;
@@ -104,6 +106,37 @@ export function useWeekMinutes() {
 
 /** Routes still on the mountain: not archived (deleted ones are already excluded by routesQuery). */
 export const isLive = (r: RouteRow) => !r.archived_at;
+
+export const DEFAULT_NEW_PER_DAY = 20;
+export function useNewPerDay() {
+  return useQuery({
+    queryKey: ["user-settings"],
+    queryFn: async () => {
+      const row = await must(supabase.from("user_settings").select("new_per_day").maybeSingle());
+      return row?.new_per_day ?? DEFAULT_NEW_PER_DAY;
+    },
+  });
+}
+export function startOfToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+/** New cards (never reviewed before) whose first review happened today. */
+export function useNewReviewedToday() {
+  return useQuery({
+    queryKey: ["reviews", "new-today"],
+    queryFn: async () => Number(await must(supabase.rpc("new_cards_reviewed_since", { _since: startOfToday().toISOString() }))),
+  });
+}
+export type CardState = "new" | "due" | "suspended" | "buried" | "scheduled";
+export function cardState(c: Card): CardState {
+  if (c.suspended_at) return "suspended";
+  if (c.buried_until && c.buried_until > localDate()) return "buried";
+  if (!c.last_reviewed_at) return "new";
+  if (new Date(c.due_at).getTime() <= Date.now()) return "due";
+  return "scheduled";
+}
 
 export function useRefresh() {
   const qc = useQueryClient();
