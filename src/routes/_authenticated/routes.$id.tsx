@@ -1,13 +1,17 @@
 import type { Database } from "@/integrations/supabase/types";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Check, Info, Minus, Pause, Play, Plus, RotateCcw, Square, Trash2, Upload } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Check, Info, Minus, MoreHorizontal, Pause, Pencil, Play, Plus, RotateCcw, Square, Trash2, Upload } from "lucide-react";
 import { format } from "date-fns";
-import Papa from "papaparse";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPaged, minutesLabel, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteStatus, type Session } from "@/lib/data";
+import { fetchPaged, localDate, minutesLabel, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteStatus, type Session } from "@/lib/data";
+import { RouteDialog } from "@/components/app/RouteDialog";
+import { CsvImportDialog } from "@/components/app/CsvImportDialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
 import { CAMPS, habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { Mountain } from "@/components/app/Mountain";
@@ -36,17 +40,15 @@ function RouteDetail() {
     queryKey: ["milestones", id],
     queryFn: () => fetchPaged<Milestone>((a, b) => supabase.from("milestones").select("*").eq("route_id", id).order("position").order("id").range(a, b)),
   });
-  const { data: sessions } = useQuery({
-    queryKey: ["sessions", id, "recent"],
-    queryFn: () => must<Session[]>(supabase.from("sessions").select("*").eq("route_id", id).order("logged_at", { ascending: false }).limit(8)),
-  });
   const refresh = useRefresh();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [celebrate, setCelebrate] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [newMs, setNewMs] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editKey, setEditKey] = useState(0);
   const dismissKey = `ascent:summit-dismissed:${id}`;
   const [, setDismissTick] = useState(0);
   const dismissed = typeof sessionStorage !== "undefined" && sessionStorage.getItem(dismissKey) === "1";
@@ -55,7 +57,7 @@ function RouteDetail() {
   const agg = allStats?.get(id);
   const stats = route && allStats ? routeStats(route, agg) : null;
 
-  if (!routes || !allStats || !milestoneRows || !sessions) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !allStats || !milestoneRows) return <p className="text-muted-foreground">Loading…</p>;
   if (!route || !stats) return <Empty>This route doesn't exist.</Empty>;
 
   const milestones = [...milestoneRows].sort((a, b) => a.position - b.position);
@@ -178,21 +180,6 @@ function RouteDetail() {
     navigate({ to: "/routes" });
   }
 
-  function importCsv(file: File) {
-    Papa.parse<string[]>(file, {
-      skipEmptyLines: true,
-      complete: async (res) => {
-        let rows = res.data.filter((r) => r[0]?.trim() && r[1]?.trim());
-        if (rows[0] && rows[0][0]?.toLowerCase() === "front" && rows[0][1]?.toLowerCase() === "back") rows = rows.slice(1);
-        if (!rows.length) { toast.error("No front,back rows found."); return; }
-        const { error } = await supabase.from("cards").insert(rows.map((r) => ({ route_id: id, front: r[0]!.trim(), back: r[1]!.trim() })));
-        if (error) { toast.error(error.message); return; }
-        toast.success(`Imported ${rows.length} cards.`);
-        refresh();
-      },
-    });
-  }
-
   return (
     <div className="space-y-10">
       {celebrate && <SummitOverlay name={route.name} onDone={() => setCelebrate(false)} />}
@@ -214,7 +201,10 @@ function RouteDetail() {
       )}
       <div>
         <Link to="/routes" className="text-sm text-muted-foreground">← Routes</Link>
-        <h1 className="mt-2 text-3xl font-semibold">{route.name}</h1>
+        <div className="mt-2 flex items-start justify-between gap-3">
+          <h1 className="text-3xl font-semibold">{route.name}</h1>
+          <Button variant="outline" className="h-12 shrink-0" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4" /> Edit route</Button>
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {TYPE_LABEL[route.type]}
           {route.target_date && ` · target ${format(new Date(route.target_date), "MMM d, yyyy")}`}
@@ -300,17 +290,7 @@ function RouteDetail() {
         </form>
       </section>
 
-      <SessionsSection routeId={id} routeName={route.name} />
-      <section>
-        <ul className="space-y-1 text-sm">
-          {sessions.slice(0, 8).map((s) => (
-            <li key={s.id} className="flex justify-between gap-3 border-b py-2 last:border-0">
-              <span className="truncate text-muted-foreground">{format(new Date(s.logged_at), "EEE MMM d")}{s.note && ` · ${s.note}`}</span>
-              <span className="shrink-0 font-medium">{minutesLabel(s.minutes)}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <SessionsSection routeId={id} routeName={route.name} totalMinutes={stats.minutes} />
 
       <section>
         <SectionTitle
@@ -324,8 +304,7 @@ function RouteDetail() {
         </SectionTitle>
         <div className="surface flex flex-wrap items-center gap-2 p-4">
           <p className="mr-auto text-sm">{stats.cards} cards · {due} due</p>
-          <Button variant="outline" className="h-12" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4" /> Import CSV</Button>
-          <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => e.target.files?.[0] && importCsv(e.target.files[0])} />
+          <Button variant="outline" className="h-12" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4" /> Import CSV</Button>
           <Button asChild variant="outline" className="h-12">
             <Link to="/cards" search={{ route: id }}>Browse cards</Link>
           </Button>
@@ -368,6 +347,13 @@ function RouteDetail() {
       </div>
 
       <CardDialog open={cardOpen} onOpenChange={setCardOpen} routeId={id} />
+      <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} routeId={id} />
+      <RouteDialog
+        key={`${editKey}-${route.updated_at}`}
+        route={route}
+        open={editOpen}
+        onOpenChange={(o) => { setEditOpen(o); if (!o) setTimeout(() => setEditKey((k) => k + 1), 200); }}
+      />
     </div>
   );
 }
