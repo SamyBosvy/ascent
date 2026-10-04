@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { registerAccount } from "@/lib/access.functions";
@@ -8,7 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/")({
-  validateSearch: z.object({ revoked: z.coerce.boolean().optional() }),
+  validateSearch: z.object({
+    revoked: z.coerce.boolean().optional(),
+    setup: z.coerce.boolean().optional(),
+    email: z.string().max(255).optional(),
+  }),
   head: () => ({
     meta: [
       { title: "Ascent — sign in" },
@@ -20,21 +25,39 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
+function friendly(msg: string) {
+  const m = msg.toLowerCase();
+  if (m.includes("invite-only") || m.includes("not been invited")) return "This email hasn't been invited yet. Ask the owner for an invite.";
+  if (m.includes("already") && (m.includes("registered") || m.includes("exists"))) return "An account with this email already exists. Sign in instead.";
+  if (m.includes("password") && (m.includes("8") || m.includes("short") || m.includes("least"))) return "Password must be at least 8 characters.";
+  if (m.includes("weak") || m.includes("pwned") || m.includes("leaked")) return "That password is too common. Choose a different one.";
+  if (m.includes("invalid") && m.includes("email")) return "Enter a valid email address.";
+  if (m.includes("rate") || m.includes("too many")) return "Too many attempts. Wait a minute and try again.";
+  if (m.includes("banned")) return "Your access to Ascent has ended.";
+  return "Something went wrong. Try again.";
+}
+
 function Landing() {
   const navigate = useNavigate();
-  const { revoked } = Route.useSearch();
-  const [mode, setMode] = useState<"in" | "up" | "reset">("in");
+  const { revoked, setup, email: presetEmail } = Route.useSearch();
+  const [mode, setMode] = useState<"in" | "up" | "reset">(setup ? "up" : "in");
   const [resetSent, setResetSent] = useState(false);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(presetEmail ?? "");
+  const [show, setShow] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(revoked ? "Your access to Ascent has ended." : null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
+      // Invite links sign the user in before they have a password; drop that session and show setup.
+      if (setup) {
+        if (data.user) void supabase.auth.signOut({ scope: "local" });
+        return;
+      }
       if (data.user && !revoked) navigate({ to: "/today", replace: true });
     });
-  }, [navigate, revoked]);
+  }, [navigate, revoked, setup]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,7 +69,7 @@ function Landing() {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) {
-          setError(error.message);
+          setError(friendly(error.message));
           return;
         }
         setResetSent(true);
@@ -55,7 +78,11 @@ function Landing() {
       if (mode === "up") {
         const res = await registerAccount({ data: { email, password } });
         if (!res.ok) {
-          setError(res.error);
+          setError(
+            res.code === "not_invited" ? "This email hasn't been invited yet. Ask the owner for an invite."
+            : res.code === "exists" ? "An account with this email already exists. Sign in instead."
+            : friendly(res.error),
+          );
           return;
         }
       }
@@ -66,7 +93,7 @@ function Landing() {
       }
       navigate({ to: "/today", replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(friendly(err instanceof Error ? err.message : ""));
     } finally {
       setBusy(false);
     }
