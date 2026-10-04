@@ -1,0 +1,92 @@
+import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { Timer } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { minutesLabel, useRefresh } from "@/lib/data";
+import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+/** Small "session running" pill that links back to the route being timed. */
+export function SessionPill({ className = "" }: { className?: string }) {
+  const { state, elapsed } = useTimer();
+  if (!state) return null;
+  return (
+    <Link
+      to="/routes/$id"
+      params={{ id: state.routeId }}
+      className={`flex min-h-12 items-center gap-2 rounded-full border bg-background px-4 text-sm shadow-sm ${className}`}
+      aria-label={`Session ${state.paused ? "paused" : "running"} on ${state.routeName}, ${clockLabel(elapsed)}`}
+    >
+      <span className={`h-2 w-2 shrink-0 rounded-full ${state.paused ? "bg-muted-foreground" : "animate-pulse bg-primary"}`} />
+      <Timer className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <span className="min-w-0 truncate">{state.routeName}</span>
+      <span className="font-medium tabular-nums">{clockLabel(elapsed)}</span>
+    </Link>
+  );
+}
+
+const TWELVE_H = 12 * 3600 * 1000;
+
+/** On app open, ask what to do with a session left running for more than 12 hours. */
+export function StaleSessionPrompt() {
+  const refresh = useRefresh();
+  const [open, setOpen] = useState(false);
+  const [hours, setHours] = useState(0);
+  const [adjust, setAdjust] = useState(false);
+  const [minutes, setMinutes] = useState("");
+
+  useEffect(() => {
+    const s = timer.get();
+    const ms = elapsedMs(s);
+    if (s && ms > TWELVE_H) {
+      setHours(Math.floor(ms / 3600000));
+      setOpen(true);
+    }
+  }, []);
+
+  async function save(mins: number) {
+    const s = timer.get();
+    if (!s) { setOpen(false); return; }
+    if (mins < 1) { toast.error("Log at least one minute."); return; }
+    const { error } = await supabase.from("sessions").insert({ route_id: s.routeId, minutes: mins });
+    if (error) { toast.error(error.message); return; }
+    timer.clear();
+    toast.success(`${minutesLabel(mins)} logged.`);
+    refresh();
+    setOpen(false);
+  }
+
+  const name = timer.get()?.routeName ?? "";
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Session still running</DialogTitle>
+          <DialogDescription>You left a session running for {hours}h{name && ` on ${name}`}. Save it, adjust the time, or discard?</DialogDescription>
+        </DialogHeader>
+        {adjust ? (
+          <form
+            className="space-y-4"
+            onSubmit={(e) => { e.preventDefault(); void save(parseInt(minutes) || 0); }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="stale-min">Minutes actually spent</Label>
+              <Input id="stale-min" type="number" inputMode="numeric" min={1} required className="h-12" value={minutes} onChange={(e) => setMinutes(e.target.value)} />
+            </div>
+            <Button type="submit" className="h-12 w-full">Save adjusted time</Button>
+          </form>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-3">
+            <Button className="h-12" onClick={() => save(Math.max(1, Math.round(elapsedMs(timer.get()) / 60000)))}>Save</Button>
+            <Button variant="outline" className="h-12" onClick={() => setAdjust(true)}>Adjust</Button>
+            <Button variant="outline" className="h-12 text-destructive" onClick={() => { timer.clear(); setOpen(false); }}>Discard</Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
