@@ -83,7 +83,7 @@ export function StaleSessionPrompt() {
           <div className="grid gap-2 sm:grid-cols-3">
             <Button className="h-12" onClick={() => save(Math.max(1, Math.round(elapsedMs(timer.get()) / 60000)))}>Save</Button>
             <Button variant="outline" className="h-12" onClick={() => setAdjust(true)}>Adjust</Button>
-            <Button variant="outline" className="h-12 text-destructive" onClick={() => { timer.clear(); setOpen(false); }}>Discard</Button>
+            <Button variant="outline" className="h-12 text-destructive-strong" onClick={() => { timer.clear(); setOpen(false); }}>Discard</Button>
           </div>
         )}
       </DialogContent>

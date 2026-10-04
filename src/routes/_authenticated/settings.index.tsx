@@ -80,7 +80,7 @@ function Settings() {
 
       {role === "owner" && (
         <Link to="/settings/access" className="surface tap flex items-center gap-3 p-4 hover:border-primary/50">
-          <Users className="h-5 w-5 text-primary" />
+          <Users className="h-5 w-5 text-primary-strong" />
           <div className="flex-1">
             <p className="font-medium">Access</p>
             <p className="text-sm text-muted-foreground">Invite people, see who's joined, revoke access.</p>
@@ -95,7 +95,7 @@ function Settings() {
       <section>
         <SectionTitle>Privacy</SectionTitle>
         <div className="surface flex gap-3 p-4 text-sm leading-relaxed">
-          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary-strong" />
           <p>
             Your routes, notes, cards and sessions are private to you. The owner of this Ascent only manages who has access and can see members' email and sign-up date, never anyone's content. Nothing is shared, sold or used for anything else, and there are no analytics or trackers.
           </p>
@@ -110,7 +110,7 @@ function Settings() {
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="h-12 w-full justify-start text-destructive">
+              <Button variant="outline" className="h-12 w-full justify-start text-destructive-strong">
                 <Trash2 className="h-4 w-4" /> Delete my account and all data
               </Button>
             </AlertDialogTrigger>

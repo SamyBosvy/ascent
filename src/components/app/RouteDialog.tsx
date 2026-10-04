@@ -104,7 +104,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
     navigate({ to: "/routes/$id", params: { id: created.id } });
   }
 
-  const err = (k: keyof typeof errors) => (show(k) ? <p className="text-xs text-destructive">{errors[k]}</p> : null);
+  const err = (k: keyof typeof errors) => (show(k) ? <p className="text-xs text-destructive-strong">{errors[k]}</p> : null);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

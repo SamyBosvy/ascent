@@ -114,6 +114,7 @@
     --muted-foreground: oklch(0.72 0.02 245);
     --accent: oklch(0.34 0.05 252);
     --accent-foreground: oklch(0.95 0.008 240);
+    --destructive: oklch(0.58 0.2 27);
     --destructive-text: oklch(0.73 0.16 27);
     --border: oklch(0.35 0.03 255);
     --input: oklch(0.63 0.03 255);
@@ -157,10 +158,6 @@
   min-height: 48px;
   min-width: 48px;
 }
-
-/* Keep existing text utilities on accessible ink tokens, independent of fills. */
-@utility text-primary { color: var(--primary-text); }
-@utility text-destructive { color: var(--destructive-text); }
 
 @utility surface {
   background-color: var(--color-card);
