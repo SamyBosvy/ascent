@@ -67,7 +67,7 @@ function Review() {
 
   if (!routes || !stats || !dueCards) return <p className="text-muted-foreground">Loading…</p>;
   const dueAll = dueCards.filter((c) => new Date(c.due_at).getTime() <= Date.now());
-  const totalCards = [...stats.values()].reduce((a, s) => a + s.cards_total, 0);
+  const totalCards = routes.reduce((a, r) => a + (stats.get(r.id)?.cards_total ?? 0), 0);
   const routeName = (rid: string) => routes.find((r) => r.id === rid)?.name ?? "";
 
   function rate(card: Card, r: Rating) {
