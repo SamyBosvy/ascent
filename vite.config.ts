@@ -12,4 +12,22 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    optimizeDeps: {
+      include: [
+        "@radix-ui/react-tabs",
+        "@radix-ui/react-dialog",
+        "@radix-ui/react-alert-dialog",
+        "@radix-ui/react-checkbox",
+        "@radix-ui/react-label",
+        "@radix-ui/react-slot",
+        "react-markdown",
+        "papaparse",
+        "recharts",
+        "date-fns",
+        "sonner",
+        "lucide-react",
+      ],
+    },
+  },
 });
