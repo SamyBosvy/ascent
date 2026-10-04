@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { registerAccount } from "@/lib/access.functions";
@@ -8,7 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/")({
-  validateSearch: z.object({ revoked: z.coerce.boolean().optional() }),
+  validateSearch: z.object({
+    revoked: z.coerce.boolean().optional(),
+    setup: z.coerce.boolean().optional(),
+    email: z.string().max(255).optional(),
+  }),
   head: () => ({
     meta: [
       { title: "Ascent — sign in" },
@@ -20,21 +25,39 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
+function friendly(msg: string) {
+  const m = msg.toLowerCase();
+  if (m.includes("invite-only") || m.includes("not been invited")) return "This email hasn't been invited yet. Ask the owner for an invite.";
+  if (m.includes("already") && (m.includes("registered") || m.includes("exists"))) return "An account with this email already exists. Sign in instead.";
+  if (m.includes("password") && (m.includes("8") || m.includes("short") || m.includes("least"))) return "Password must be at least 8 characters.";
+  if (m.includes("weak") || m.includes("pwned") || m.includes("leaked")) return "That password is too common. Choose a different one.";
+  if (m.includes("invalid") && m.includes("email")) return "Enter a valid email address.";
+  if (m.includes("rate") || m.includes("too many")) return "Too many attempts. Wait a minute and try again.";
+  if (m.includes("banned")) return "Your access to Ascent has ended.";
+  return "Something went wrong. Try again.";
+}
+
 function Landing() {
   const navigate = useNavigate();
-  const { revoked } = Route.useSearch();
-  const [mode, setMode] = useState<"in" | "up" | "reset">("in");
+  const { revoked, setup, email: presetEmail } = Route.useSearch();
+  const [mode, setMode] = useState<"in" | "up" | "reset">(setup ? "up" : "in");
   const [resetSent, setResetSent] = useState(false);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(presetEmail ?? "");
+  const [show, setShow] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(revoked ? "Your access to Ascent has ended." : null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
+      // Invite links sign the user in before they have a password; drop that session and show setup.
+      if (setup) {
+        if (data.user) void supabase.auth.signOut({ scope: "local" });
+        return;
+      }
       if (data.user && !revoked) navigate({ to: "/today", replace: true });
     });
-  }, [navigate, revoked]);
+  }, [navigate, revoked, setup]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,7 +69,7 @@ function Landing() {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) {
-          setError(error.message);
+          setError(friendly(error.message));
           return;
         }
         setResetSent(true);
@@ -55,7 +78,11 @@ function Landing() {
       if (mode === "up") {
         const res = await registerAccount({ data: { email, password } });
         if (!res.ok) {
-          setError(res.error);
+          setError(
+            res.code === "not_invited" ? "This email hasn't been invited yet. Ask the owner for an invite."
+            : res.code === "exists" ? "An account with this email already exists. Sign in instead."
+            : friendly(res.error),
+          );
           return;
         }
       }
@@ -66,7 +93,7 @@ function Landing() {
       }
       navigate({ to: "/today", replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(friendly(err instanceof Error ? err.message : ""));
     } finally {
       setBusy(false);
     }
@@ -85,6 +112,22 @@ function Landing() {
           <p className="mt-2 text-muted-foreground">Track what you're mastering. Keep what you learn.</p>
         </div>
         <form onSubmit={submit} className="surface space-y-4 p-6 shadow-sm">
+          {mode !== "reset" && (
+            <div role="tablist" aria-label="Account" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+              {([["in", "Sign in"], ["up", "Set up account"]] as const).map(([m, label]) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === m}
+                  onClick={() => { setMode(m); setError(null); }}
+                  className={`h-11 rounded-md text-sm font-medium transition-colors ${mode === m ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="h-12" />
@@ -107,16 +150,26 @@ function Landing() {
                   </button>
                 )}
               </div>
+              <div className="relative">
               <Input
                 id="password"
-                type="password"
+                type={show ? "text" : "password"}
                 autoComplete={mode === "up" ? "new-password" : "current-password"}
                 minLength={mode === "up" ? 8 : undefined}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-12"
+                className="h-12 pr-12"
               />
+                <button
+                  type="button"
+                  onClick={() => setShow((v) => !v)}
+                  aria-label={show ? "Hide password" : "Show password"}
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
+                >
+                  {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
             </div>
           )}
           {error && <p className="rounded-lg bg-muted p-3 text-sm" role="alert">{error}</p>}
@@ -142,17 +195,15 @@ function Landing() {
               <Button type="submit" className="h-12 w-full text-base" disabled={busy}>
                 {busy ? "One moment…" : mode === "in" ? "Sign in" : mode === "up" ? "Create account" : "Send reset link"}
               </Button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode(mode === "in" ? "up" : "in");
-                  setError(null);
-                  setResetSent(false);
-                }}
-                className="tap w-full text-sm text-muted-foreground hover:text-foreground"
-              >
-                {mode === "reset" ? "Back to sign in" : mode === "in" ? "Invited? Set up your account" : "Already have an account? Sign in"}
-              </button>
+              {mode === "reset" && (
+                <button
+                  type="button"
+                  onClick={() => { setMode("in"); setError(null); setResetSent(false); }}
+                  className="tap w-full text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Back to sign in
+                </button>
+              )}
             </>
           )}
         </form>

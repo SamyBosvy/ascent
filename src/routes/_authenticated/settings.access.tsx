@@ -37,9 +37,12 @@ function Access() {
   async function invite(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await add({ data: { email } });
+      const res = await add({ data: { email, origin: window.location.origin } });
       setEmail("");
-      toast.success("Invitation added. They can now set up their account.");
+      const copy = { label: "Copy link", onClick: () => { void navigator.clipboard.writeText(res.link); toast.success("Link copied"); } };
+      if (res.restored) toast.success("Access restored. They can sign in again.");
+      else if (res.emailSent) toast.success("Invitation sent. They'll get an email to set up their account.");
+      else toast.warning("Invite saved, but the email couldn't be sent. Share the link manually.", { action: copy, duration: 15000 });
       reload();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not add");
@@ -76,7 +79,7 @@ function Access() {
                   <p className="text-xs text-muted-foreground">{memberEmails.has(a.email) ? "Joined" : "Invited, not joined yet"}</p>
                 </div>
                 {a.email !== user.email?.toLowerCase() && (
-                  <Button variant="ghost" className="h-12 w-12" aria-label="Remove from allowlist" onClick={async () => { await remove({ data: { id: a.id } }); reload(); }}>
+                  <Button variant="ghost" className="h-12 w-12" aria-label="Remove from allowlist" onClick={async () => { try { await remove({ data: { id: a.id } }); toast.success("Removed from allowlist."); } catch (err) { toast.error(err instanceof Error ? err.message : "Could not remove"); } reload(); }}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
@@ -99,7 +102,7 @@ function Access() {
                     Joined {format(new Date(m.created_at), "MMM d, yyyy")}{m.revoked && " · access revoked"}
                   </p>
                 </div>
-                {!m.revoked && <RevokeButton email={m.email} onConfirm={async (del) => { await revoke({ data: { userId: m.id, deleteData: del } }); toast.success(del ? "Access revoked and data deleted." : "Access revoked."); reload(); }} />}
+                {!m.revoked && <RevokeButton email={m.email} onConfirm={async (del) => { try { await revoke({ data: { userId: m.id, deleteData: del } }); toast.success(del ? "Access revoked and data deleted." : "Access revoked."); } catch (err) { toast.error(err instanceof Error ? err.message : "Could not revoke"); } reload(); }} />}
               </li>
             ))}
           </ul>
