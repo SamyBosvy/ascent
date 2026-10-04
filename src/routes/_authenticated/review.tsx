@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPaged, localDate, useRefresh, useRouteStats, useRoutes, type Card } from "@/lib/data";
+import { fetchPaged, localDate, useRefresh, useRouteStats, useRoutes, isLive, type Card } from "@/lib/data";
 import { saveReview } from "@/lib/reviewQueue";
 import { sm2, type Rating } from "@/lib/srs";
 import { Empty, NativeSelect } from "@/components/app/fields";
@@ -47,13 +47,14 @@ function orderQueue(cards: Card[]) {
 function Review() {
   const { route } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { data: routes } = useRoutes();
+  const { data: allRoutes } = useRoutes();
+  const routes = allRoutes?.filter(isLive);
   const { data: stats } = useRouteStats();
   const { data: dueCards } = useQuery({
     queryKey: ["cards", "due", route ?? "all"],
     queryFn: () =>
       fetchPaged<Card>((a, b) => {
-        let q = supabase.from("cards").select("*").lte("due_at", new Date().toISOString());
+        let q = supabase.from("cards").select("*, routes!inner(id)").is("routes.archived_at", null).is("routes.deleted_at", null).lte("due_at", new Date().toISOString());
         if (route) q = q.eq("route_id", route);
         return q.order("due_at").order("id").range(a, b);
       }),
@@ -66,7 +67,7 @@ function Review() {
 
   if (!routes || !stats || !dueCards) return <p className="text-muted-foreground">Loading…</p>;
   const dueAll = dueCards.filter((c) => new Date(c.due_at).getTime() <= Date.now());
-  const totalCards = [...stats.values()].reduce((a, s) => a + s.cards_total, 0);
+  const totalCards = routes.reduce((a, r) => a + (stats.get(r.id)?.cards_total ?? 0), 0);
   const routeName = (rid: string) => routes.find((r) => r.id === rid)?.name ?? "";
 
   function rate(card: Card, r: Rating) {

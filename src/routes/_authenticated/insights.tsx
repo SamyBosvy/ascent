@@ -30,11 +30,14 @@ function useInsightRows() {
       const from = eightWeeks()[0]!.toISOString();
       const [sessions, reviews] = await Promise.all([
         fetchPaged<{ route_id: string; minutes: number; logged_at: string }>((a, b) =>
-          supabase.from("sessions").select("route_id, minutes, logged_at").gte("logged_at", from).order("logged_at").order("id").range(a, b)),
+          supabase.from("sessions").select("route_id, minutes, logged_at, routes!inner(id)").is("routes.deleted_at", null).gte("logged_at", from).order("logged_at").order("id").range(a, b)),
         fetchPaged<{ rating: number; reviewed_at: string }>((a, b) =>
-          supabase.from("reviews").select("rating, reviewed_at").gte("reviewed_at", from).order("reviewed_at").order("id").range(a, b)),
+          supabase.from("reviews").select("rating, reviewed_at, routes!inner(id)").is("routes.deleted_at", null).gte("reviewed_at", from).order("reviewed_at").order("id").range(a, b)),
       ]);
-      return { sessions, reviews };
+      // Unlock counts (all time, not just the window).
+      const { count: reviewCount, error } = await supabase.from("reviews").select("id, routes!inner(id)", { count: "exact", head: true }).is("routes.deleted_at", null);
+      if (error) throw new Error(error.message);
+      return { sessions, reviews, reviewCount: reviewCount ?? 0 };
     },
   });
 }
@@ -43,15 +46,14 @@ function Insights() {
   const { data: routes } = useRoutes();
   const { data: stats } = useRouteStats();
   const { data: rows } = useInsightRows();
-  const { user } = Route.useRouteContext();
   if (!routes || !stats || !rows) return <p className="text-muted-foreground">Loading…</p>;
 
-  const ageDays = (Date.now() - new Date(user.created_at).getTime()) / 86400000;
-  if (ageDays < 7) {
+  const sessionCount = [...stats.values()].reduce((a, s) => a + s.session_count, 0);
+  if (sessionCount < 3 && rows.reviewCount < 10) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-semibold">Insights</h1>
-        <Empty>Insights unlock after your first week.</Empty>
+        <Empty>Log 3 sessions or do 10 reviews to unlock Insights.</Empty>
       </div>
     );
   }
@@ -107,6 +109,9 @@ function Insights() {
       <section>
         <SectionTitle>Flashcard retention</SectionTitle>
         <div className="surface h-64 p-3">
+          {retention.every((r) => r.retention == null) ? (
+            <Empty>No reviews in the last 8 weeks. Retention appears here once you review cards.</Empty>
+          ) : (
           <ResponsiveContainer>
             <LineChart data={retention}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
@@ -116,6 +121,7 @@ function Insights() {
               <Line type="monotone" dataKey="retention" stroke="var(--chart-1)" strokeWidth={2.5} connectNulls dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
+          )}
         </div>
       </section>
       <section>

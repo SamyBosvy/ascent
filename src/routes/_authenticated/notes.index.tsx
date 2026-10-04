@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/notes/")({
   component: Notes,
 });
 
-export const notesQuery = { queryKey: ["notes"], queryFn: () => fetchPaged<Note>((a, b) => supabase.from("notes").select("*").order("updated_at", { ascending: false }).order("id").range(a, b)) };
+export const notesQuery = { queryKey: ["notes"], queryFn: () => fetchPaged<Note>((a, b) => supabase.from("notes").select("*, routes!inner(id)").is("routes.deleted_at", null).order("updated_at", { ascending: false }).order("id").range(a, b)) };
 
 function Notes() {
   const { route } = Route.useSearch();
@@ -32,12 +32,10 @@ function Notes() {
   );
   const routeName = (id: string) => all?.routes.find((r) => r.id === id)?.name ?? "";
 
-  async function create() {
-    const rid = route ?? all?.routes[0]?.id;
-    if (!rid) { toast.error("Create a Route first."); return; }
-    const { data, error } = await supabase.from("notes").insert({ route_id: rid, title: "", body: "" }).select().single();
-    if (error) { toast.error(error.message); return; }
-    nav({ to: "/notes/$id", params: { id: data.id } });
+  function create() {
+    if (!all?.routes.length) { toast.error("Create a Route first."); return; }
+    // Draft: nothing is saved until the first keystroke.
+    nav({ to: "/notes/new", search: { route } });
   }
 
   return (

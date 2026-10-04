@@ -19,3 +19,6 @@
 - Reviews save through the idempotent `record_review` RPC via a localStorage-backed queue (`src/lib/reviewQueue.ts`) — ratings are never lost and never double-counted.
 - The study timer lives in localStorage (`src/lib/timer.ts`), time derived from timestamps — survives navigation and refresh; one session at a time.
 - Never write to the database from render or effects based on computed scores; summits need explicit user confirmation.
+- Routes are archived via `archived_at` (hidden from Today/Routes/Review, data kept) and deleted via `deleted_at` soft delete; every query excludes soft-deleted routes, and `purge_deleted_routes` hard-deletes (cascade) after the undo window (toast close + on app load) — gives undo without a scheduler.
+- Milestone reorder goes through the atomic `swap_milestones` RPC — positions can never end up half-swapped.
+- New notes start as drafts (`/notes/new`) and are inserted on the first real edit via `NoteEditor`; saves run only after user edits — no empty rows, no save-on-open.

@@ -18,6 +18,7 @@ import { Route as AuthenticatedSummitsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedTodayRouteImport } from './routes/_authenticated/today'
 import { Route as AuthenticatedNotesIndexRouteImport } from './routes/_authenticated/notes.index'
 import { Route as AuthenticatedNotesIdRouteImport } from './routes/_authenticated/notes.$id'
+import { Route as AuthenticatedNotesNewRouteImport } from './routes/_authenticated/notes.new'
 import { Route as AuthenticatedRoutesIndexRouteImport } from './routes/_authenticated/routes.index'
 import { Route as AuthenticatedRoutesIdRouteImport } from './routes/_authenticated/routes.$id'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
@@ -67,6 +68,11 @@ const AuthenticatedNotesIdRoute = AuthenticatedNotesIdRouteImport.update({
   path: '/notes/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNotesNewRoute = AuthenticatedNotesNewRouteImport.update({
+  id: '/notes/new',
+  path: '/notes/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRoutesIndexRoute =
   AuthenticatedRoutesIndexRouteImport.update({
     id: '/routes/',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/summits': typeof AuthenticatedSummitsRoute
   '/today': typeof AuthenticatedTodayRoute
   '/notes/$id': typeof AuthenticatedNotesIdRoute
+  '/notes/new': typeof AuthenticatedNotesNewRoute
   '/routes/$id': typeof AuthenticatedRoutesIdRoute
   '/settings/access': typeof AuthenticatedSettingsAccessRoute
   '/notes/': typeof AuthenticatedNotesIndexRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/summits': typeof AuthenticatedSummitsRoute
   '/today': typeof AuthenticatedTodayRoute
   '/notes/$id': typeof AuthenticatedNotesIdRoute
+  '/notes/new': typeof AuthenticatedNotesNewRoute
   '/routes/$id': typeof AuthenticatedRoutesIdRoute
   '/settings/access': typeof AuthenticatedSettingsAccessRoute
   '/notes': typeof AuthenticatedNotesIndexRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/_authenticated/summits': typeof AuthenticatedSummitsRoute
   '/_authenticated/today': typeof AuthenticatedTodayRoute
   '/_authenticated/notes/$id': typeof AuthenticatedNotesIdRoute
+  '/_authenticated/notes/new': typeof AuthenticatedNotesNewRoute
   '/_authenticated/routes/$id': typeof AuthenticatedRoutesIdRoute
   '/_authenticated/settings/access': typeof AuthenticatedSettingsAccessRoute
   '/_authenticated/notes/': typeof AuthenticatedNotesIndexRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/summits'
     | '/today'
     | '/notes/$id'
+    | '/notes/new'
     | '/routes/$id'
     | '/settings/access'
     | '/notes/'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/summits'
     | '/today'
     | '/notes/$id'
+    | '/notes/new'
     | '/routes/$id'
     | '/settings/access'
     | '/notes'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/_authenticated/summits'
     | '/_authenticated/today'
     | '/_authenticated/notes/$id'
+    | '/_authenticated/notes/new'
     | '/_authenticated/routes/$id'
     | '/_authenticated/settings/access'
     | '/_authenticated/notes/'
@@ -252,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/notes/new': {
+      id: '/_authenticated/notes/new'
+      path: '/notes/new'
+      fullPath: '/notes/new'
+      preLoaderRoute: typeof AuthenticatedNotesNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/routes/': {
       id: '/_authenticated/routes/'
       path: '/routes'
@@ -289,6 +308,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSummitsRoute: typeof AuthenticatedSummitsRoute
   AuthenticatedTodayRoute: typeof AuthenticatedTodayRoute
   AuthenticatedNotesIdRoute: typeof AuthenticatedNotesIdRoute
+  AuthenticatedNotesNewRoute: typeof AuthenticatedNotesNewRoute
   AuthenticatedRoutesIdRoute: typeof AuthenticatedRoutesIdRoute
   AuthenticatedSettingsAccessRoute: typeof AuthenticatedSettingsAccessRoute
   AuthenticatedNotesIndexRoute: typeof AuthenticatedNotesIndexRoute
@@ -302,6 +322,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSummitsRoute: AuthenticatedSummitsRoute,
   AuthenticatedTodayRoute: AuthenticatedTodayRoute,
   AuthenticatedNotesIdRoute: AuthenticatedNotesIdRoute,
+  AuthenticatedNotesNewRoute: AuthenticatedNotesNewRoute,
   AuthenticatedRoutesIdRoute: AuthenticatedRoutesIdRoute,
   AuthenticatedSettingsAccessRoute: AuthenticatedSettingsAccessRoute,
   AuthenticatedNotesIndexRoute: AuthenticatedNotesIndexRoute,

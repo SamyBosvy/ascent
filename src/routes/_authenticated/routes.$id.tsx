@@ -1,16 +1,18 @@
 import type { Database } from "@/integrations/supabase/types";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Check, Pause, Play, Plus, RotateCcw, Square, Trash2, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Check, Info, Minus, Pause, Play, Plus, RotateCcw, Square, Trash2, Upload } from "lucide-react";
 import { format } from "date-fns";
 import Papa from "papaparse";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPaged, localDate, minutesLabel, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteStatus, type Session } from "@/lib/data";
+import { fetchPaged, minutesLabel, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteStatus, type Session } from "@/lib/data";
 import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
 import { CAMPS, habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { Mountain } from "@/components/app/Mountain";
+import { toggleCheckin } from "@/lib/checkins";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SummitOverlay } from "@/components/app/SummitOverlay";
 import { CardDialog } from "@/components/app/CardDialog";
 import { Empty, NativeSelect, SectionTitle } from "@/components/app/fields";
@@ -39,6 +41,7 @@ function RouteDetail() {
     queryFn: () => must<Session[]>(supabase.from("sessions").select("*").eq("route_id", id).order("logged_at", { ascending: false }).limit(8)),
   });
   const refresh = useRefresh();
+  const qc = useQueryClient();
   const navigate = useNavigate();
   const [celebrate, setCelebrate] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
@@ -75,32 +78,104 @@ function RouteDetail() {
     const { error } = await supabase.from("routes").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) toast.error(error.message);
     refresh();
+    return !error;
   }
 
-  async function toggleMs(mid: string, done: boolean) {
-    await supabase.from("milestones").update({ done, done_at: done ? new Date().toISOString() : null }).eq("id", mid);
-    refresh();
+  const msKey = ["milestones", id];
+  const setMs = (fn: (rows: Milestone[]) => Milestone[]) => qc.setQueryData<Milestone[]>(msKey, (old) => fn(old ?? []));
+  const msRefresh = () => {
+    void qc.invalidateQueries({ queryKey: msKey });
+    void qc.invalidateQueries({ queryKey: ["route-stats"] });
+  };
+
+  async function toggleMs(m: Milestone, done: boolean) {
+    const done_at = done ? new Date().toISOString() : null;
+    setMs((rows) => rows.map((r) => (r.id === m.id ? { ...r, done, done_at } : r)));
+    const { error } = await supabase.from("milestones").update({ done, done_at }).eq("id", m.id);
+    if (error) {
+      setMs((rows) => rows.map((r) => (r.id === m.id ? m : r)));
+      toast.error(`Couldn't update the milestone: ${error.message}`);
+    }
+    msRefresh();
   }
   async function addMs(e: React.FormEvent) {
     e.preventDefault();
-    if (!newMs.trim()) return;
-    await supabase.from("milestones").insert({ route_id: id, title: newMs.trim(), position: (milestones.at(-1)?.position ?? -1) + 1 });
+    const title = newMs.trim();
+    if (!title) return;
+    const { error } = await supabase.from("milestones").insert({ route_id: id, title, position: (milestones.at(-1)?.position ?? -1) + 1 });
+    if (error) { toast.error(`Couldn't add the milestone: ${error.message}`); return; }
     setNewMs("");
-    refresh();
+    msRefresh();
   }
   async function moveMs(i: number, dir: -1 | 1) {
     const a = milestones[i];
     const b = milestones[i + dir];
     if (!a || !b) return;
-    await Promise.all([
-      supabase.from("milestones").update({ position: b.position }).eq("id", a.id),
-      supabase.from("milestones").update({ position: a.position }).eq("id", b.id),
-    ]);
+    const before = milestoneRows;
+    setMs((rows) => rows.map((r) => (r.id === a.id ? { ...r, position: b.position } : r.id === b.id ? { ...r, position: a.position } : r)));
+    const { error } = await supabase.rpc("swap_milestones", { _a: a.id, _b: b.id });
+    if (error) {
+      qc.setQueryData(msKey, before);
+      toast.error(`Couldn't reorder: ${error.message}`);
+    }
+    msRefresh();
+  }
+  async function delMs(m: Milestone) {
+    setMs((rows) => rows.filter((r) => r.id !== m.id));
+    const { error } = await supabase.from("milestones").delete().eq("id", m.id);
+    if (error) {
+      setMs((rows) => [...rows, m]);
+      toast.error(`Couldn't delete the milestone: ${error.message}`);
+      msRefresh();
+      return;
+    }
+    msRefresh();
+    toast(`Deleted "${m.title}"`, {
+      duration: 8000,
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          const { error: e } = await supabase.from("milestones").insert({
+            id: m.id, route_id: m.route_id, title: m.title, done: m.done, done_at: m.done_at, position: m.position, created_at: m.created_at,
+          });
+          if (e) toast.error(`Couldn't restore the milestone: ${e.message}`);
+          msRefresh();
+        },
+      },
+    });
+  }
+
+  async function setArchived(archived: boolean) {
+    const { error } = await supabase.from("routes").update({ archived_at: archived ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(archived ? "Route archived. Find it under Archived on Routes." : "Route restored.");
     refresh();
   }
-  async function delMs(mid: string) {
-    await supabase.from("milestones").delete().eq("id", mid);
+
+  async function deleteRoute() {
+    // Soft delete now; the row (and everything under it) is hard-deleted after the undo window.
+    const { error } = await supabase.from("routes").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+    if (error) { toast.error(`Couldn't delete the route: ${error.message}`); return; }
+    const name = route!.name;
+    let undone = false;
+    const purge = () => { if (!undone) void supabase.rpc("purge_deleted_routes", { _older_than_seconds: 9 }); };
+    toast(`Deleted "${name}"`, {
+      duration: 10000,
+      onAutoClose: purge,
+      onDismiss: purge,
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          undone = true;
+          const { error: e } = await supabase.from("routes").update({ deleted_at: null }).eq("id", id);
+          if (e) toast.error(`Couldn't restore the route: ${e.message}`);
+          else toast.success(`"${name}" restored.`);
+          refresh();
+        },
+      },
+    });
     refresh();
+    navigate({ to: "/routes" });
   }
 
   function importCsv(file: File) {
@@ -131,6 +206,12 @@ function RouteDetail() {
           </div>
         </div>
       )}
+      {route.archived_at && (
+        <div className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center" role="status">
+          <p className="flex-1 text-sm">This route is archived. It's hidden from Today, Routes and Review, and all its data is kept.</p>
+          <Button variant="outline" className="h-12" onClick={() => setArchived(false)}><ArchiveRestore className="h-4 w-4" /> Restore</Button>
+        </div>
+      )}
       <div>
         <Link to="/routes" className="text-sm text-muted-foreground">← Routes</Link>
         <h1 className="mt-2 text-3xl font-semibold">{route.name}</h1>
@@ -142,8 +223,9 @@ function RouteDetail() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-[auto_1fr]">
-        <div className="surface p-5">
+        <div className="surface relative p-5">
           <Mountain camp={stats.camp} />
+          <CampsInfo />
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
@@ -171,18 +253,7 @@ function RouteDetail() {
             </label>
           </div>
           {route.type === "book" && route.total_pages ? (
-            <div className="surface flex items-center gap-3 p-4">
-              <span className="text-sm text-muted-foreground">Page</span>
-              <Input
-                type="number"
-                className="h-12 w-28"
-                defaultValue={route.current_page ?? 0}
-                min={0}
-                max={route.total_pages}
-                onBlur={(e) => update({ current_page: Math.min(route.total_pages!, parseInt(e.target.value) || 0) })}
-              />
-              <span className="text-sm text-muted-foreground">of {route.total_pages}</span>
-            </div>
+            <BookPages current={route.current_page ?? 0} total={route.total_pages} onSave={(p) => update({ current_page: p })} />
           ) : null}
           {route.type === "habit" && (
             <div className="surface flex items-center justify-between gap-3 p-4">
@@ -190,14 +261,12 @@ function RouteDetail() {
                 <p className="font-medium">{Math.round(habitConsistency(route, agg) * 100)}% consistency</p>
                 <p className="text-xs text-muted-foreground">Last 30 days · {route.habit_frequency === "x_per_week" ? `${route.habit_target}× per week` : route.habit_frequency}</p>
               </div>
-              {habitDueToday(route, agg) ? (
-                <Button
-                  className="h-12"
-                  onClick={async () => {
-                    await supabase.from("checkins").insert({ route_id: id, checked_on: localDate() });
-                    refresh();
-                  }}
-                >
+              {agg?.checked_today ? (
+                <Button variant="ghost" className="h-12 text-primary" onClick={() => toggleCheckin(id, true, refresh)} aria-label="Checked in today. Tap to undo.">
+                  <Check className="h-4 w-4" /> Checked in today
+                </Button>
+              ) : habitDueToday(route, agg) ? (
+                <Button className="h-12" onClick={() => toggleCheckin(id, false, refresh)}>
                   <Check className="h-4 w-4" /> Check in
                 </Button>
               ) : (
@@ -213,7 +282,7 @@ function RouteDetail() {
         <ul className="space-y-2">
           {milestones.map((m, i) => (
             <li key={m.id} className="surface flex items-center gap-1 p-1 pl-2">
-              <button onClick={() => toggleMs(m.id, !m.done)} className="tap flex flex-1 items-center gap-3 text-left" aria-pressed={m.done}>
+              <button onClick={() => toggleMs(m, !m.done)} className="tap flex flex-1 items-center gap-3 text-left" aria-pressed={m.done}>
                 <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${m.done ? "border-primary bg-primary text-primary-foreground" : "border-input"}`}>
                   {m.done && <Check className="h-4 w-4" />}
                 </span>
@@ -221,7 +290,7 @@ function RouteDetail() {
               </button>
               <button className="tap flex items-center justify-center text-muted-foreground disabled:opacity-30" disabled={i === 0} onClick={() => moveMs(i, -1)} aria-label="Move up"><ArrowUp className="h-4 w-4" /></button>
               <button className="tap flex items-center justify-center text-muted-foreground disabled:opacity-30" disabled={i === milestones.length - 1} onClick={() => moveMs(i, 1)} aria-label="Move down"><ArrowDown className="h-4 w-4" /></button>
-              <button className="tap flex items-center justify-center text-muted-foreground" onClick={() => delMs(m.id)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+              <button className="tap flex items-center justify-center text-muted-foreground" onClick={() => delMs(m)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
             </li>
           ))}
         </ul>
@@ -258,12 +327,22 @@ function RouteDetail() {
           <Button variant="outline" className="h-12" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4" /> Import CSV</Button>
           <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => e.target.files?.[0] && importCsv(e.target.files[0])} />
           <Button variant="outline" className="h-12" onClick={() => setCardOpen(true)}><Plus className="h-4 w-4" /> Card</Button>
-          <Button asChild className="h-12" disabled={!due}>
-            <Link to="/review" search={{ route: id }}>Review</Link>
-          </Button>
+          {due && !route.archived_at ? (
+            <Button asChild className="h-12">
+              <Link to="/review" search={{ route: id }}>Review</Link>
+            </Button>
+          ) : (
+            <Button className="h-12" disabled>Review</Button>
+          )}
         </div>
       </section>
 
+      <div className="flex flex-wrap gap-2">
+      {route.archived_at ? (
+        <Button variant="outline" className="h-12" onClick={() => setArchived(false)}><ArchiveRestore className="h-4 w-4" /> Restore route</Button>
+      ) : (
+        <Button variant="outline" className="h-12" onClick={() => setArchived(true)}><Archive className="h-4 w-4" /> Archive route</Button>
+      )}
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button variant="ghost" className="h-12 text-destructive">Delete route</Button>
@@ -271,24 +350,76 @@ function RouteDetail() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this route?</AlertDialogTitle>
-            <AlertDialogDescription>Milestones, sessions, notes and flashcards for "{route.name}" are deleted permanently.</AlertDialogDescription>
+            <AlertDialogDescription>Milestones, sessions, notes and flashcards for "{route.name}" will be deleted. You'll have 10 seconds to undo. To keep them, archive the route instead.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={async () => {
-                await supabase.from("routes").delete().eq("id", id);
-                refresh();
-                navigate({ to: "/routes" });
-              }}
+              onClick={() => void deleteRoute()}
             >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
 
       <CardDialog open={cardOpen} onOpenChange={setCardOpen} routeId={id} />
+    </div>
+  );
+}
+
+function CampsInfo() {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" className="absolute right-2 top-2 h-12 w-12" aria-label="How camps work"><Info className="h-4 w-4" /></Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 space-y-2 text-sm">
+        <p className="font-display font-semibold">How camps work</p>
+        <p className="text-muted-foreground">Your camp comes from a score made of:</p>
+        <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+          <li><span className="text-foreground">Progress, 50%</span> — milestones done, or pages read. For habits: consistency.</li>
+          <li><span className="text-foreground">Time, 20%</span> — time logged, full marks at 20 hours.</li>
+          <li><span className="text-foreground">Flashcards, 30%</span> — half mature cards, half recent recall.</li>
+        </ul>
+        <p className="text-muted-foreground">Parts you don't use are left out. Camp 1 at 15%, Camp 2 at 40%, Camp 3 at 65%, Summit at 90%.</p>
+        <p className="text-muted-foreground">You can always set the camp by hand with the Camp menu.</p>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function BookPages({ current, total, onSave }: { current: number; total: number; onSave: (p: number) => Promise<boolean> }) {
+  const [value, setValue] = useState(String(current));
+  useEffect(() => setValue(String(current)), [current]);
+  const clamp = (n: number) => Math.max(0, Math.min(total, Math.round(n)));
+  function commit(n: number) {
+    const next = clamp(Number.isFinite(n) ? n : current);
+    setValue(String(next));
+    if (next !== current) void onSave(next).then((ok) => { if (!ok) setValue(String(current)); });
+  }
+  const shown = clamp(parseInt(value, 10) || 0);
+  return (
+    <div className="surface space-y-2 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">Page</span>
+        <Button variant="outline" className="h-12 w-12" aria-label="Previous page" disabled={current <= 0} onClick={() => commit(current - 1)}><Minus className="h-4 w-4" /></Button>
+        <Input
+          type="number"
+          inputMode="numeric"
+          className="h-12 w-24 text-center"
+          value={value}
+          min={0}
+          max={total}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(parseInt(value, 10)); } }}
+          onBlur={() => commit(parseInt(value, 10))}
+        />
+        <Button variant="outline" className="h-12 w-12" aria-label="Next page" disabled={current >= total} onClick={() => commit(current + 1)}><Plus className="h-4 w-4" /></Button>
+        <Button variant="outline" className="h-12" disabled={current >= total} onClick={() => commit(current + 10)}>+10</Button>
+      </div>
+      <p className="text-sm text-muted-foreground">Page {shown} of {total} · {Math.round((shown / total) * 100)}%</p>
     </div>
   );
 }

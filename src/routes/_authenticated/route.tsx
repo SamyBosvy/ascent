@@ -45,6 +45,8 @@ function Shell() {
       }
     };
     void run();
+    // Finish any route deletions whose undo window has passed.
+    void supabase.rpc("purge_deleted_routes", { _older_than_seconds: 30 });
     window.addEventListener("online", run);
     return () => window.removeEventListener("online", run);
   }, [qc]);

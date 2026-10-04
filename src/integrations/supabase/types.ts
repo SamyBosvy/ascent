@@ -237,9 +237,11 @@ export type Database = {
       }
       routes: {
         Row: {
+          archived_at: string | null
           camp_override: number | null
           created_at: string
           current_page: number | null
+          deleted_at: string | null
           description: string | null
           habit_frequency: string | null
           habit_target: number | null
@@ -254,9 +256,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived_at?: string | null
           camp_override?: number | null
           created_at?: string
           current_page?: number | null
+          deleted_at?: string | null
           description?: string | null
           habit_frequency?: string | null
           habit_target?: number | null
@@ -271,9 +275,11 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          archived_at?: string | null
           camp_override?: number | null
           created_at?: string
           current_page?: number | null
+          deleted_at?: string | null
           description?: string | null
           habit_frequency?: string | null
           habit_target?: number | null
@@ -359,6 +365,10 @@ export type Database = {
         Returns: boolean
       }
       minutes_since: { Args: { _since: string }; Returns: number }
+      purge_deleted_routes: {
+        Args: { _older_than_seconds?: number }
+        Returns: number
+      }
       record_review: {
         Args: {
           _card_id: string
@@ -399,6 +409,7 @@ export type Database = {
           session_count: number
         }[]
       }
+      swap_milestones: { Args: { _a: string; _b: string }; Returns: undefined }
     }
     Enums: {
       app_role: "owner" | "member"

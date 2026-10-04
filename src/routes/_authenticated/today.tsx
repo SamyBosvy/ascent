@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { Check } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { localDate, minutesLabel, useDueCount, useRefresh, useRouteStats, useRoutes, useWeekMinutes } from "@/lib/data";
+import { toggleCheckin } from "@/lib/checkins";
+import { isLive, minutesLabel, useDueCount, useRefresh, useRouteStats, useRoutes, useWeekMinutes } from "@/lib/data";
 import { habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { AltitudeBar, CampBadge } from "@/components/app/Mountain";
 import { Empty, SectionTitle } from "@/components/app/fields";
@@ -15,7 +14,8 @@ export const Route = createFileRoute("/_authenticated/today")({
 });
 
 function Today() {
-  const { data: routes } = useRoutes();
+  const { data: allRoutes } = useRoutes();
+  const routes = allRoutes?.filter(isLive);
   const { data: stats } = useRouteStats();
   const { data: due } = useDueCount();
   const { data: weekMinutes } = useWeekMinutes();
@@ -26,12 +26,7 @@ function Today() {
   const dueHabits = habits.filter((h) => habitDueToday(h, stats.get(h.id)));
   const active = routes.filter((r) => r.status === "active" && r.type !== "habit");
 
-  async function checkIn(routeId: string) {
-    const { error } = await supabase.from("checkins").insert({ route_id: routeId, checked_on: localDate() });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Checked in.");
-    refresh();
-  }
+  const toggle = (routeId: string, checked: boolean) => toggleCheckin(routeId, checked, refresh);
 
   const greeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
 
@@ -49,9 +44,13 @@ function Today() {
             <p className="mt-1 font-display text-4xl font-semibold">{due}</p>
             <p className="mt-1 text-sm text-muted-foreground">{due ? `${due} card${due > 1 ? "s" : ""} due. Keep climbing.` : "Nothing due. Clear skies."}</p>
           </div>
-          <Button asChild className="h-12" disabled={!due}>
-            <Link to="/review">Start review</Link>
-          </Button>
+          {due ? (
+            <Button asChild className="h-12">
+              <Link to="/review">Start review</Link>
+            </Button>
+          ) : (
+            <Button className="h-12" disabled>Start review</Button>
+          )}
         </div>
         <div className="surface p-5">
           <p className="text-sm text-muted-foreground">Time logged this week</p>
@@ -68,14 +67,19 @@ function Today() {
           <ul className="space-y-2">
             {habits.map((h) => {
               const isDue = dueHabits.includes(h);
+              const checkedToday = !!stats.get(h.id)?.checked_today;
               return (
                 <li key={h.id} className="surface flex items-center gap-3 p-3 pl-4">
                   <Link to="/routes/$id" params={{ id: h.id }} className="min-w-0 flex-1">
                     <p className="truncate font-medium">{h.name}</p>
                     <p className="text-xs text-muted-foreground">{Math.round(habitConsistency(h, stats.get(h.id)) * 100)}% over the last 30 days</p>
                   </Link>
-                  {isDue ? (
-                    <Button onClick={() => checkIn(h.id)} variant="outline" className="h-12 px-4">
+                  {checkedToday ? (
+                    <Button onClick={() => toggle(h.id, true)} variant="ghost" className="h-12 px-3 text-primary" aria-label="Checked in today. Tap to undo.">
+                      <Check className="h-4 w-4" /> Done
+                    </Button>
+                  ) : isDue ? (
+                    <Button onClick={() => toggle(h.id, false)} variant="outline" className="h-12 px-4">
                       <Check className="h-4 w-4" /> Check in
                     </Button>
                   ) : (

@@ -9,7 +9,13 @@ const n = (v: number | null | undefined) => Number(v ?? 0);
 export function habitConsistency(route: RouteRow, agg: RouteAgg | undefined) {
   const count = n(agg?.checkins_recent);
   const freq = route.habit_frequency ?? "daily";
-  const expected = freq === "daily" ? 30 : freq === "weekly" ? 30 / 7 : ((route.habit_target ?? 3) * 30) / 7;
+  // Window = last 30 days, or since the habit started if it's younger (today counts as day 1).
+  const start = new Date(route.created_at);
+  start.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.max(1, Math.min(30, Math.round((today.getTime() - start.getTime()) / 86400000) + 1));
+  const expected = freq === "daily" ? days : freq === "weekly" ? days / 7 : ((route.habit_target ?? 3) * days) / 7;
   return Math.min(1, count / expected);
 }
 
