@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/settings/access")({
   beforeLoad: ({ context }) => {
     if (context.role !== "owner") throw redirect({ to: "/settings" });
   },
-  head: () => ({ meta: [{ title: "Access — Ascent" }, { name: "description", content: "Manage who can use Ascent." }] }),
+  head: () => ({ meta: [{ title: "Access — Ascent" }, { name: "description", content: "Manage who can use Ascent." }, { property: "og:title", content: "Access — Ascent" }, { property: "og:description", content: "Manage who can use Ascent." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Access,
 });
 

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
-  head: () => ({ meta: [{ title: "Settings — Ascent" }, { name: "description", content: "Your account, data and privacy." }] }),
+  head: () => ({ meta: [{ title: "Settings — Ascent" }, { name: "description", content: "Your account, data and privacy." }, { property: "og:title", content: "Settings — Ascent" }, { property: "og:description", content: "Your account, data and privacy." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Settings,
 });
 

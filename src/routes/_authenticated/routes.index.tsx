@@ -11,7 +11,7 @@ import { Empty } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/routes/")({
-  head: () => ({ meta: [{ title: "Routes — Ascent" }, { name: "description", content: "Everything you're mastering." }] }),
+  head: () => ({ meta: [{ title: "Routes — Ascent" }, { name: "description", content: "Everything you're mastering." }, { property: "og:title", content: "Routes — Ascent" }, { property: "og:description", content: "Everything you're mastering." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: RoutesPage,
 });
 

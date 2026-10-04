@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/review")({
   validateSearch: z.object({ route: z.string().optional() }),
-  head: () => ({ meta: [{ title: "Review — Ascent" }, { name: "description", content: "Spaced-repetition review of your due cards." }] }),
+  head: () => ({ meta: [{ title: "Review — Ascent" }, { name: "description", content: "Spaced-repetition review of your due cards." }, { property: "og:title", content: "Review — Ascent" }, { property: "og:description", content: "Spaced-repetition review of your due cards." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Review,
 });
 

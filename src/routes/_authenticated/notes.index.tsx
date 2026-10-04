@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/notes/")({
   validateSearch: z.object({ route: z.string().optional() }),
-  head: () => ({ meta: [{ title: "Notes — Ascent" }, { name: "description", content: "Your notes across every route." }] }),
+  head: () => ({ meta: [{ title: "Notes — Ascent" }, { name: "description", content: "Your notes across every route." }, { property: "og:title", content: "Notes — Ascent" }, { property: "og:description", content: "Your notes across every route." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Notes,
 });
 

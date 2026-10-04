@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/routes/$id")({
-  head: () => ({ meta: [{ title: "Route — Ascent" }, { name: "description", content: "Progress, milestones, sessions and cards." }] }),
+  head: () => ({ meta: [{ title: "Route — Ascent" }, { name: "description", content: "Progress, milestones, sessions and cards." }, { property: "og:title", content: "Route — Ascent" }, { property: "og:description", content: "Progress, milestones, sessions and cards." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: RouteDetail,
 });
 

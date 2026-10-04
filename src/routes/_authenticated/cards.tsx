@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/cards")({
     sort: z.enum(SORTS).optional(),
     q: z.string().optional(),
   }),
-  head: () => ({ meta: [{ title: "Cards — Ascent" }, { name: "description", content: "Browse, edit and organise your flashcards." }] }),
+  head: () => ({ meta: [{ title: "Cards — Ascent" }, { name: "description", content: "Browse, edit and organise your flashcards." }, { property: "og:title", content: "Cards — Ascent" }, { property: "og:description", content: "Browse, edit and organise your flashcards." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: CardsPage,
 });
 

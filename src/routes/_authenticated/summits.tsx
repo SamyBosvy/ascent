@@ -4,7 +4,7 @@ import { minutesLabel, TYPE_LABEL, useRouteStats, useRoutes } from "@/lib/data";
 import { Empty } from "@/components/app/fields";
 
 export const Route = createFileRoute("/_authenticated/summits")({
-  head: () => ({ meta: [{ title: "Summits — Ascent" }, { name: "description", content: "Everything you've mastered." }] }),
+  head: () => ({ meta: [{ title: "Summits — Ascent" }, { name: "description", content: "Everything you've mastered." }, { property: "og:title", content: "Summits — Ascent" }, { property: "og:description", content: "Everything you've mastered." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Summits,
 });
 
