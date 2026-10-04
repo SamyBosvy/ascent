@@ -89,33 +89,72 @@ function Landing() {
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="h-12" />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete={mode === "up" ? "new-password" : "current-password"}
-              minLength={mode === "up" ? 8 : undefined}
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-12"
-            />
-          </div>
+          {mode !== "reset" && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {mode === "in" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("reset");
+                      setError(null);
+                      setResetSent(false);
+                    }}
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+              <Input
+                id="password"
+                type="password"
+                autoComplete={mode === "up" ? "new-password" : "current-password"}
+                minLength={mode === "up" ? 8 : undefined}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-12"
+              />
+            </div>
+          )}
           {error && <p className="rounded-lg bg-muted p-3 text-sm" role="alert">{error}</p>}
-          <Button type="submit" className="h-12 w-full text-base" disabled={busy}>
-            {busy ? "One moment…" : mode === "in" ? "Sign in" : "Create account"}
-          </Button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode(mode === "in" ? "up" : "in");
-              setError(null);
-            }}
-            className="tap w-full text-sm text-muted-foreground hover:text-foreground"
-          >
-            {mode === "in" ? "Invited? Set up your account" : "Already have an account? Sign in"}
-          </button>
+          {mode === "reset" && resetSent ? (
+            <>
+              <p className="rounded-lg bg-muted p-3 text-sm">
+                If an account exists for that email, a reset link is on its way. Check your inbox.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("in");
+                  setError(null);
+                  setResetSent(false);
+                }}
+                className="tap w-full text-sm text-muted-foreground hover:text-foreground"
+              >
+                Back to sign in
+              </button>
+            </>
+          ) : (
+            <>
+              <Button type="submit" className="h-12 w-full text-base" disabled={busy}>
+                {busy ? "One moment…" : mode === "in" ? "Sign in" : mode === "up" ? "Create account" : "Send reset link"}
+              </Button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode(mode === "in" ? "up" : "in");
+                  setError(null);
+                  setResetSent(false);
+                }}
+                className="tap w-full text-sm text-muted-foreground hover:text-foreground"
+              >
+                {mode === "reset" ? "Back to sign in" : mode === "in" ? "Invited? Set up your account" : "Already have an account? Sign in"}
+              </button>
+            </>
+          )}
         </form>
       </div>
     </main>
