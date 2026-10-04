@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { Check } from "lucide-react";
 import { toggleCheckin } from "@/lib/checkins";
-import { isLive, localDate, minutesLabel, useDueCount, useRefresh, useRouteStats, useRoutes, useWeekMinutes } from "@/lib/data";
+import { isLive, minutesLabel, useDueCount, useRefresh, useRouteStats, useRoutes, useWeekMinutes } from "@/lib/data";
 import { habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { AltitudeBar, CampBadge } from "@/components/app/Mountain";
 import { Empty, SectionTitle } from "@/components/app/fields";
