@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAll, must } from "@/lib/data";
 import { deleteMyAccount } from "@/lib/access.functions";
+import { AccountSection } from "@/components/app/AccountSection";
 import { SectionTitle } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import {
@@ -77,6 +78,8 @@ function Settings() {
           </div>
         </Link>
       )}
+
+      <AccountSection email={user.email ?? ""} />
 
       <section>
         <SectionTitle>Privacy</SectionTitle>
