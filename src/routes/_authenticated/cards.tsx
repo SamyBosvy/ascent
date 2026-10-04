@@ -156,7 +156,7 @@ function CardsPage() {
               <Button variant="outline" className="h-12" onClick={() => setMoving(ids)}>Move</Button>
               <Button variant="outline" className="h-12" onClick={() => bulk("suspend")}>Suspend</Button>
               <Button variant="outline" className="h-12" onClick={() => bulk("unsuspend")}>Unsuspend</Button>
-              <Button variant="outline" className="h-12 text-destructive" onClick={() => setBulkDelete(true)}>Delete</Button>
+              <Button variant="outline" className="h-12 text-destructive-strong" onClick={() => setBulkDelete(true)}>Delete</Button>
             </>
           )}
         </div>
@@ -195,7 +195,7 @@ function CardsPage() {
                     ) : (
                       <DropdownMenuItem className="min-h-12" onSelect={() => void setCardsState([c.id], "suspend", refresh)}>Suspend</DropdownMenuItem>
                     )}
-                    <DropdownMenuItem className="min-h-12 text-destructive" onSelect={() => void deleteCardWithUndo(c, refresh)}>Delete</DropdownMenuItem>
+                    <DropdownMenuItem className="min-h-12 text-destructive-strong" onSelect={() => void deleteCardWithUndo(c, refresh)}>Delete</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </li>

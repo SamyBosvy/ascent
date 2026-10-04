@@ -405,7 +405,7 @@ function Review() {
       )}
       {!totalCards && (
         <Empty>
-          No cards yet. Add them from a <Link to="/routes" className="text-primary underline">route</Link>, a note, or a CSV import.
+          No cards yet. Add them from a <Link to="/routes" className="text-primary-strong underline">route</Link>, a note, or a CSV import.
         </Empty>
       )}
       <CardDialog open={newOpen} onOpenChange={setNewOpen} {...(route ? { routeId: route } : {})} />

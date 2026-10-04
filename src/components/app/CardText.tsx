@@ -11,7 +11,7 @@ const components: Components = {
   a: ({ href, children }) => {
     if (href === "#cloze") return <mark className="cloze-answer">{children}</mark>;
     if (href === "#cloze-hidden") return <span className="cloze-blank">{children}</span>;
-    return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">{children}</a>;
+    return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary-strong underline">{children}</a>;
   },
 };
 

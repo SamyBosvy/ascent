@@ -163,7 +163,7 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
                   {body.slice(0, 10).map((r, ri) => (
                     <tr key={ri} className="border-t">
                       {Array.from({ length: width }, (_, i) => (
-                        <td key={i} className={`max-w-48 truncate p-2 ${map[i] === "ignore" ? "text-muted-foreground/60" : ""}`}>{r[i]}</td>
+                        <td key={i} className={`max-w-48 truncate p-2 ${map[i] === "ignore" ? "text-muted-foreground" : ""}`}>{r[i]}</td>
                       ))}
                     </tr>
                   ))}
@@ -179,7 +179,7 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
                 <Checkbox checked={skipDupes} onCheckedChange={(v) => setSkipDupes(!!v)} /> Skip duplicates (same front on this route)
               </label>
             </div>
-            {(col("front") < 0 || col("back") < 0) && <p className="text-sm text-destructive">Pick a Front and a Back column.</p>}
+            {(col("front") < 0 || col("back") < 0) && <p className="text-sm text-destructive-strong">Pick a Front and a Back column.</p>}
             {progress != null && <Progress value={progress} aria-label="Import progress" />}
             {summary && <p className="rounded-md bg-muted p-3 text-sm" role="status">{summary}</p>}
             <div className="flex gap-2">

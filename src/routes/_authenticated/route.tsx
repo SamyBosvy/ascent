@@ -112,7 +112,7 @@ function Shell() {
             key={to}
             to={to}
             className="flex min-h-16 flex-col items-center justify-center gap-1 text-xs text-muted-foreground"
-            activeProps={{ className: "!text-primary font-semibold" }}
+            activeProps={{ className: "!text-primary-strong font-semibold" }}
           >
             <Icon className="h-5 w-5" />
             {label}

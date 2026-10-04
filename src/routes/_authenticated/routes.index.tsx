@@ -41,7 +41,7 @@ function RoutesPage() {
         <h1 className="text-3xl font-semibold">Routes</h1>
         <div className="flex gap-2">
           <Button asChild variant="outline" className="h-12">
-            <Link to="/summits"><Trophy className="h-4 w-4 text-gold" /> Summits</Link>
+            <Link to="/summits"><Trophy className="h-4 w-4 text-gold-text" /> Summits</Link>
           </Button>
           <Button className="h-12" onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> New route</Button>
         </div>

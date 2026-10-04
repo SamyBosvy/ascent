@@ -79,7 +79,7 @@ function Today() {
                     <p className="text-xs text-muted-foreground">{Math.round(habitConsistency(h, stats.get(h.id)) * 100)}% over the last 30 days</p>
                   </Link>
                   {checkedToday ? (
-                    <Button onClick={() => toggle(h.id, true)} variant="ghost" className="h-12 px-3 text-primary" aria-label="Checked in today. Tap to undo.">
+                    <Button onClick={() => toggle(h.id, true)} variant="ghost" className="h-12 px-3 text-primary-strong" aria-label="Checked in today. Tap to undo.">
                       <Check className="h-4 w-4" /> Done
                     </Button>
                   ) : isDue ? (
@@ -87,7 +87,7 @@ function Today() {
                       <Check className="h-4 w-4" /> Check in
                     </Button>
                   ) : (
-                    <span className="flex h-12 items-center gap-1 px-3 text-sm text-primary"><Check className="h-4 w-4" /> Done</span>
+                    <span className="flex h-12 items-center gap-1 px-3 text-sm text-primary-strong"><Check className="h-4 w-4" /> Done</span>
                   )}
                 </li>
               );
@@ -97,10 +97,10 @@ function Today() {
       </section>
 
       <section>
-        <SectionTitle action={<Link to="/routes" className="text-sm text-primary">All routes</Link>}>Active routes</SectionTitle>
+        <SectionTitle action={<Link to="/routes" className="text-sm text-primary-strong">All routes</Link>}>Active routes</SectionTitle>
         {active.length === 0 ? (
           <Empty>
-            No active routes. <Link to="/routes" className="text-primary underline">Start your first climb</Link>.
+            No active routes. <Link to="/routes" className="text-primary-strong underline">Start your first climb</Link>.
           </Empty>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">

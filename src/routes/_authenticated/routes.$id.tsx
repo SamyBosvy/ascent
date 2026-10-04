@@ -252,7 +252,7 @@ function RouteDetail() {
                 <p className="text-xs text-muted-foreground">Last 30 days · {route.habit_frequency === "x_per_week" ? `${route.habit_target}× per week` : route.habit_frequency}</p>
               </div>
               {agg?.checked_today ? (
-                <Button variant="ghost" className="h-12 text-primary" onClick={() => toggleCheckin(id, true, refresh)} aria-label="Checked in today. Tap to undo.">
+                <Button variant="ghost" className="h-12 text-primary-strong" onClick={() => toggleCheckin(id, true, refresh)} aria-label="Checked in today. Tap to undo.">
                   <Check className="h-4 w-4" /> Checked in today
                 </Button>
               ) : habitDueToday(route, agg) ? (
@@ -260,7 +260,7 @@ function RouteDetail() {
                   <Check className="h-4 w-4" /> Check in
                 </Button>
               ) : (
-                <span className="text-sm text-primary">Done for now</span>
+                <span className="text-sm text-primary-strong">Done for now</span>
               )}
             </div>
           )}
@@ -327,7 +327,7 @@ function RouteDetail() {
       )}
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="ghost" className="h-12 text-destructive">Delete route</Button>
+          <Button variant="ghost" className="h-12 text-destructive-strong">Delete route</Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -562,7 +562,7 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
             <Input className="h-12 min-w-40 flex-1" placeholder="One-line note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
             <Button type="submit" variant="outline" className="h-12" disabled={!manual || !!manualErr}>Log</Button>
           </div>
-          {manualErr && <p className="text-xs text-destructive">{manualErr}</p>}
+          {manualErr && <p className="text-xs text-destructive-strong">{manualErr}</p>}
         </form>
       </div>
 
@@ -581,7 +581,7 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem className="min-h-12" onSelect={() => setEditing(s)}>Edit</DropdownMenuItem>
-                    <DropdownMenuItem className="min-h-12 text-destructive" onSelect={() => void del(s)}>Delete</DropdownMenuItem>
+                    <DropdownMenuItem className="min-h-12 text-destructive-strong" onSelect={() => void del(s)}>Delete</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </span>
@@ -646,12 +646,12 @@ function EditSessionDialog({ session, onClose, onSaved }: { session: Session | n
           <div className="space-y-2">
             <Label htmlFor="sm">Minutes</Label>
             <Input id="sm" className="h-12" type="number" inputMode="numeric" min={1} max={MAX_MIN} value={minutes} onChange={(e) => setMinutes(e.target.value)} aria-invalid={!!errs.minutes} />
-            {errs.minutes && <p className="text-xs text-destructive">{errs.minutes}</p>}
+            {errs.minutes && <p className="text-xs text-destructive-strong">{errs.minutes}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="sw">Date and time</Label>
             <Input id="sw" className="h-12" type="datetime-local" max={maxWhen} value={when} onChange={(e) => setWhen(e.target.value)} aria-invalid={!!errs.when} />
-            {errs.when && <p className="text-xs text-destructive">{errs.when}</p>}
+            {errs.when && <p className="text-xs text-destructive-strong">{errs.when}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="sn">Note (optional)</Label>

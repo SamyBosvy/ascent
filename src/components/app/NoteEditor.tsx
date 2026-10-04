@@ -187,7 +187,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
         </article>
       )}
       <p className="text-xs text-muted-foreground">Select text in the note, then tap "Selection → card" to turn it into a flashcard.</p>
-      <Button variant="ghost" className="h-12 text-destructive" onClick={() => setConfirmDelete(true)}>
+      <Button variant="ghost" className="h-12 text-destructive-strong" onClick={() => setConfirmDelete(true)}>
         <Trash2 className="h-4 w-4" /> Delete note
       </Button>
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
