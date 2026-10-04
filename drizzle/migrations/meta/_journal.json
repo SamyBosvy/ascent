@@ -8,6 +8,13 @@
       "when": 1791086235663,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791103781530,
+      "tag": "0001_get_user_id_by_email",
+      "breakpoints": true
     }
   ]
 }
