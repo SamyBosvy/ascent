@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Download, LogOut, ShieldCheck, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchAll, must } from "@/lib/data";
+import { fetchPaged } from "@/lib/data";
 import { deleteMyAccount } from "@/lib/access.functions";
 import { AccountSection } from "@/components/app/AccountSection";
 import { SectionTitle } from "@/components/app/fields";
@@ -42,8 +42,16 @@ function Settings() {
   }
 
   async function exportData() {
-    const all = await fetchAll();
-    const notes = await must(supabase.from("notes").select("*"));
+    // Export needs everything; page through each table so nothing is cut at 1,000 rows.
+    const page = <K extends "routes" | "milestones" | "sessions" | "cards" | "reviews" | "checkins" | "notes">(t: K) =>
+      fetchPaged((a, b) => supabase.from(t).select("*").order("id").range(a, b));
+    const [routes, milestones, sessions, cards, reviews, checkins, notes] = await Promise.all([
+      page("routes"), page("milestones"), page("sessions"), page("cards"), page("reviews"), page("checkins"), page("notes"),
+    ]);
+    const all = { routes, milestones, sessions, cards, reviews, checkins } as {
+      routes: { id: string; name: string }[]; cards: { front: string; back: string; example: string | null; pronunciation: string | null; route_id: string }[];
+      [k: string]: unknown[];
+    };
     const stamp = new Date().toISOString().slice(0, 10);
     download(`ascent-export-${stamp}.json`, JSON.stringify({ exported_at: new Date().toISOString(), email: user.email, ...all, notes }, null, 2), "application/json");
     const rows = ["front,back,example,pronunciation,route", ...all.cards.map((c) => [c.front, c.back, c.example, c.pronunciation, all.routes.find((r) => r.id === c.route_id)?.name ?? ""].map(csvCell).join(","))];

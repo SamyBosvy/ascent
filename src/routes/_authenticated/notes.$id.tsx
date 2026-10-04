@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { Layers, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { must, useAll, type Note } from "@/lib/data";
+import { must, useRoutes, type Note } from "@/lib/data";
 import { CardDialog } from "@/components/app/CardDialog";
 import { NativeSelect } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,8 @@ function NoteEditor() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const nav = useNavigate();
-  const { data: all } = useAll();
+  const { data: routes } = useRoutes();
+  const all = routes ? { routes } : undefined;
   const { data: note } = useQuery({ queryKey: ["note", id], queryFn: () => must<Note>(supabase.from("notes").select("*").eq("id", id).single()) });
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");

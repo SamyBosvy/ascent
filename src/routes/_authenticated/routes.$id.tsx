@@ -1,12 +1,14 @@
 import type { Database } from "@/integrations/supabase/types";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Check, Pause, Play, Plus, Square, Trash2, Upload } from "lucide-react";
+import { useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowDown, ArrowUp, Check, Pause, Play, Plus, RotateCcw, Square, Trash2, Upload } from "lucide-react";
 import { format } from "date-fns";
 import Papa from "papaparse";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { localDate, minutesLabel, STATUS_LABEL, TYPE_LABEL, useAll, useRefresh, type RouteStatus } from "@/lib/data";
+import { fetchPaged, localDate, minutesLabel, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteStatus, type Session } from "@/lib/data";
+import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
 import { CAMPS, habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { Mountain } from "@/components/app/Mountain";
 import { SummitOverlay } from "@/components/app/SummitOverlay";
@@ -26,37 +28,48 @@ export const Route = createFileRoute("/_authenticated/routes/$id")({
 
 function RouteDetail() {
   const { id } = Route.useParams();
-  const { data } = useAll();
+  const { data: routes } = useRoutes();
+  const { data: allStats } = useRouteStats();
+  const { data: milestoneRows } = useQuery({
+    queryKey: ["milestones", id],
+    queryFn: () => fetchPaged<Milestone>((a, b) => supabase.from("milestones").select("*").eq("route_id", id).order("position").order("id").range(a, b)),
+  });
+  const { data: sessions } = useQuery({
+    queryKey: ["sessions", id, "recent"],
+    queryFn: () => must<Session[]>(supabase.from("sessions").select("*").eq("route_id", id).order("logged_at", { ascending: false }).limit(8)),
+  });
   const refresh = useRefresh();
   const navigate = useNavigate();
   const [celebrate, setCelebrate] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [newMs, setNewMs] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const dismissKey = `ascent:summit-dismissed:${id}`;
+  const [, setDismissTick] = useState(0);
+  const dismissed = typeof sessionStorage !== "undefined" && sessionStorage.getItem(dismissKey) === "1";
 
-  const route = data?.routes.find((r) => r.id === id);
-  const stats = route && data ? routeStats(route, data) : null;
+  const route = routes?.find((r) => r.id === id);
+  const agg = allStats?.get(id);
+  const stats = route && allStats ? routeStats(route, agg) : null;
 
-  useEffect(() => {
-    if (route && stats && stats.camp === 4 && !route.summited_at && route.status !== "abandoned") {
-      supabase
-        .from("routes")
-        .update({ status: "summited", summited_at: new Date().toISOString() })
-        .eq("id", route.id)
-        .then(() => {
-          setCelebrate(true);
-          refresh();
-        });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stats?.camp, route?.summited_at]);
-
-  if (!data) return <p className="text-muted-foreground">Loading…</p>;
+  if (!routes || !allStats || !milestoneRows || !sessions) return <p className="text-muted-foreground">Loading…</p>;
   if (!route || !stats) return <Empty>This route doesn't exist.</Empty>;
 
-  const milestones = data.milestones.filter((m) => m.route_id === id).sort((a, b) => a.position - b.position);
-  const sessions = data.sessions.filter((s) => s.route_id === id);
-  const due = data.cards.filter((c) => c.route_id === id && new Date(c.due_at).getTime() <= Date.now()).length;
+  const milestones = [...milestoneRows].sort((a, b) => a.position - b.position);
+  const due = stats.due;
+  // Reaching the summit never writes anything by itself; the user confirms.
+  const offerSummit = stats.camp === 4 && route.status !== "summited" && !dismissed;
+
+  async function markSummited() {
+    const { error } = await supabase.from("routes").update({ status: "summited", summited_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setCelebrate(true);
+    refresh();
+  }
+  function notYet() {
+    sessionStorage.setItem(dismissKey, "1");
+    setDismissTick((t) => t + 1);
+  }
 
   async function update(patch: Database["public"]["Tables"]["routes"]["Update"]) {
     const { error } = await supabase.from("routes").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
@@ -108,6 +121,16 @@ function RouteDetail() {
   return (
     <div className="space-y-10">
       {celebrate && <SummitOverlay name={route.name} onDone={() => setCelebrate(false)} />}
+      {offerSummit && (
+        <div className="surface flex flex-col gap-3 border-gold/60 p-5 sm:flex-row sm:items-center" role="status">
+          <div className="h-1 w-10 shrink-0 rounded-full bg-gold sm:h-10 sm:w-1" />
+          <p className="flex-1 font-medium">You've reached the summit. Mark this route as summited?</p>
+          <div className="flex gap-2">
+            <Button className="h-12" onClick={markSummited}>Mark as summited</Button>
+            <Button variant="outline" className="h-12" onClick={notYet}>Not yet</Button>
+          </div>
+        </div>
+      )}
       <div>
         <Link to="/routes" className="text-sm text-muted-foreground">← Routes</Link>
         <h1 className="mt-2 text-3xl font-semibold">{route.name}</h1>
@@ -131,7 +154,11 @@ function RouteDetail() {
           <div className="surface grid gap-3 p-4 sm:grid-cols-2">
             <label className="space-y-1 text-sm">
               <span className="text-muted-foreground">Status</span>
-              <NativeSelect value={route.status} onChange={(e) => update({ status: e.target.value as RouteStatus, ...(e.target.value !== "summited" ? { summited_at: null } : {}) })}>
+              <NativeSelect value={route.status} onChange={(e) => {
+                const status = e.target.value as RouteStatus;
+                if (status === "summited") { void markSummited(); return; }
+                update({ status, summited_at: null });
+              }}>
                 {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </NativeSelect>
             </label>
@@ -160,10 +187,10 @@ function RouteDetail() {
           {route.type === "habit" && (
             <div className="surface flex items-center justify-between gap-3 p-4">
               <div>
-                <p className="font-medium">{Math.round(habitConsistency(route, data) * 100)}% consistency</p>
+                <p className="font-medium">{Math.round(habitConsistency(route, agg) * 100)}% consistency</p>
                 <p className="text-xs text-muted-foreground">Last 30 days · {route.habit_frequency === "x_per_week" ? `${route.habit_target}× per week` : route.habit_frequency}</p>
               </div>
-              {habitDueToday(route, data) ? (
+              {habitDueToday(route, agg) ? (
                 <Button
                   className="h-12"
                   onClick={async () => {
@@ -204,7 +231,7 @@ function RouteDetail() {
         </form>
       </section>
 
-      <SessionsSection routeId={id} />
+      <SessionsSection routeId={id} routeName={route.name} />
       <section>
         <ul className="space-y-1 text-sm">
           {sessions.slice(0, 8).map((s) => (
@@ -275,55 +302,79 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SessionsSection({ routeId }: { routeId: string }) {
+function SessionsSection({ routeId, routeName }: { routeId: string; routeName: string }) {
   const refresh = useRefresh();
-  const [running, setRunning] = useState(false);
-  const [elapsed, setElapsed] = useState(0); // seconds
-  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const { state, elapsed } = useTimer();
+  const mine = state?.routeId === routeId ? state : null;
+  const shown = mine ? elapsed : 0;
+  const running = !!mine && !mine.paused;
+  const other = state && state.routeId !== routeId ? state : null;
   const [manual, setManual] = useState("");
   const [note, setNote] = useState("");
+  const [confirmSwitch, setConfirmSwitch] = useState(false);
 
-  useEffect(() => {
-    if (!running || startedAt == null) return;
-    const base = elapsed;
-    const t = setInterval(() => setElapsed(base + Math.floor((Date.now() - startedAt) / 1000)), 500);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, startedAt]);
-
-  async function save(minutes: number) {
-    if (minutes < 1) { toast.error("Log at least one minute."); return; }
-    const { error } = await supabase.from("sessions").insert({ route_id: routeId, minutes, note: note.trim() || null });
-    if (error) { toast.error(error.message); return; }
+  async function save(minutes: number, forRoute = routeId) {
+    if (minutes < 1) { toast.error("Log at least one minute."); return false; }
+    const { error } = await supabase.from("sessions").insert({ route_id: forRoute, minutes, note: note.trim() || null });
+    if (error) { toast.error(error.message); return false; }
     toast.success(`${minutesLabel(minutes)} logged. Keep climbing.`);
     setNote("");
     setManual("");
     refresh();
+    return true;
   }
 
-  const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
-  const ss = String(elapsed % 60).padStart(2, "0");
+  function start() {
+    if (other) { setConfirmSwitch(true); return; }
+    if (mine) timer.resume();
+    else timer.start(routeId, routeName);
+  }
+
+  async function stopOtherAndStart() {
+    const s = timer.get();
+    if (s) {
+      const ok = await save(Math.max(1, Math.round(elapsed / 60000)), s.routeId);
+      if (!ok) return;
+    }
+    timer.start(routeId, routeName);
+    setConfirmSwitch(false);
+  }
 
   return (
     <section>
       <SectionTitle>Log a session</SectionTitle>
       <div className="surface space-y-4 p-4">
         <div className="flex items-center gap-3">
-          <p className="mr-auto font-display text-4xl font-semibold tabular-nums">{mm}:{ss}</p>
+          <p className="mr-auto font-display text-4xl font-semibold tabular-nums">{clockLabel(shown)}</p>
           {running ? (
-            <Button variant="outline" className="h-12 w-12" aria-label="Pause" onClick={() => setRunning(false)}><Pause className="h-5 w-5" /></Button>
+            <Button variant="outline" className="h-12 w-12" aria-label="Pause" onClick={() => timer.pause()}><Pause className="h-5 w-5" /></Button>
           ) : (
-            <Button className="h-12 w-12" aria-label="Start" onClick={() => { setStartedAt(Date.now()); setRunning(true); }}><Play className="h-5 w-5" /></Button>
+            <Button className="h-12 w-12" aria-label={mine ? "Resume" : "Start"} onClick={start}><Play className="h-5 w-5" /></Button>
           )}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="h-12 w-12" aria-label="Reset timer" disabled={!mine}><RotateCcw className="h-5 w-5" /></Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset the timer?</AlertDialogTitle>
+                <AlertDialogDescription>The {clockLabel(shown)} on the clock won't be logged.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => timer.clear()}>Reset</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Button
             variant="outline"
             className="h-12 w-12"
             aria-label="Stop and save"
-            disabled={elapsed === 0}
+            disabled={!mine || shown < 1000}
             onClick={async () => {
-              setRunning(false);
-              await save(Math.max(1, Math.round(elapsed / 60)));
-              setElapsed(0);
+              timer.pause();
+              const ok = await save(Math.max(1, Math.round(elapsedMs(timer.get()) / 60000)));
+              if (ok) timer.clear();
             }}
           >
             <Square className="h-5 w-5" />
@@ -335,6 +386,20 @@ function SessionsSection({ routeId }: { routeId: string }) {
           <Button variant="outline" className="h-12" disabled={!manual} onClick={() => save(parseInt(manual) || 0)}>Log</Button>
         </div>
       </div>
+      <AlertDialog open={confirmSwitch} onOpenChange={setConfirmSwitch}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>A session is already running</AlertDialogTitle>
+            <AlertDialogDescription>
+              {other?.routeName} has {clockLabel(elapsed)} on the clock. Stop and save it, then start timing {routeName}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep it running</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); void stopOtherAndStart(); }}>Stop and start here</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

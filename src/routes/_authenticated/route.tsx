@@ -1,6 +1,10 @@
 import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
 import { BarChart3, BookOpen, Layers, Mountain, Plus, Settings, Sun } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { flushPendingReviews } from "@/lib/reviewQueue";
+import { SessionPill, StaleSessionPrompt } from "@/components/app/SessionPill";
 import { supabase } from "@/integrations/supabase/client";
 import { QuickCapture } from "@/components/app/QuickCapture";
 
@@ -29,6 +33,22 @@ const NAV = [
 
 function Shell() {
   const [capture, setCapture] = useState(false);
+  const qc = useQueryClient();
+
+  // Re-send ratings that didn't reach the server earlier (on open and when back online).
+  useEffect(() => {
+    const run = async () => {
+      const n = await flushPendingReviews();
+      if (n > 0) {
+        toast(`Saved ${n} review${n === 1 ? "" : "s"} that didn't go through earlier.`);
+        void qc.invalidateQueries();
+      }
+    };
+    void run();
+    window.addEventListener("online", run);
+    return () => window.removeEventListener("online", run);
+  }, [qc]);
+
   return (
     <div className="min-h-screen md:flex">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-sidebar p-4 md:flex">
@@ -48,6 +68,7 @@ function Shell() {
             </Link>
           ))}
         </nav>
+        <SessionPill className="mb-2" />
         <button onClick={() => setCapture(true)} className="tap mb-2 flex items-center justify-center gap-2 rounded-xl bg-primary font-medium text-primary-foreground">
           <Plus className="h-5 w-5" /> Quick capture
         </button>
@@ -71,6 +92,9 @@ function Shell() {
         </main>
       </div>
 
+      <div className="fixed inset-x-4 bottom-24 z-30 flex justify-start pr-16 md:hidden">
+        <SessionPill className="max-w-full" />
+      </div>
       <button
         onClick={() => setCapture(true)}
         aria-label="Quick capture"
@@ -94,6 +118,7 @@ function Shell() {
       </nav>
 
       <QuickCapture open={capture} onOpenChange={setCapture} />
+      <StaleSessionPrompt />
     </div>
   );
 }

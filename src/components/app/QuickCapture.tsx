@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAll, useRefresh } from "@/lib/data";
+import { useRefresh, useRoutes } from "@/lib/data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,8 @@ import { NativeSelect } from "./fields";
 const LAST_KEY = "ascent:last-route";
 
 export function QuickCapture({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const { data } = useAll();
+  const { data: routes_ } = useRoutes();
+  const data = routes_ ? { routes: routes_ } : undefined;
   const refresh = useRefresh();
   const routes = (data?.routes ?? []).filter((r) => r.status === "active" || r.status === "paused");
   const [kind, setKind] = useState<"note" | "session">("note");

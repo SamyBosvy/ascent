@@ -6,7 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { must, useAll, type Note } from "@/lib/data";
+import { fetchPaged, useRoutes, type Note } from "@/lib/data";
 import { Empty, NativeSelect } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +17,13 @@ export const Route = createFileRoute("/_authenticated/notes/")({
   component: Notes,
 });
 
-export const notesQuery = { queryKey: ["notes"], queryFn: () => must<Note[]>(supabase.from("notes").select("*").order("updated_at", { ascending: false })) };
+export const notesQuery = { queryKey: ["notes"], queryFn: () => fetchPaged<Note>((a, b) => supabase.from("notes").select("*").order("updated_at", { ascending: false }).order("id").range(a, b)) };
 
 function Notes() {
   const { route } = Route.useSearch();
   const nav = useNavigate();
-  const { data: all } = useAll();
+  const { data: routes } = useRoutes();
+  const all = routes ? { routes } : undefined;
   const { data: notes } = useQuery(notesQuery);
   const [q, setQ] = useState("");
 

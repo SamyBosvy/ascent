@@ -12,6 +12,7 @@ export type Review = T["reviews"]["Row"];
 export type Checkin = T["checkins"]["Row"];
 export type RouteType = Database["public"]["Enums"]["route_type"];
 export type RouteStatus = Database["public"]["Enums"]["route_status"];
+export type RouteAgg = Database["public"]["Functions"]["route_stats"]["Returns"][number];
 
 export const TYPE_LABEL: Record<RouteType, string> = {
   book: "Book",
@@ -28,35 +29,72 @@ export const STATUS_LABEL: Record<RouteStatus, string> = {
   abandoned: "Abandoned",
 };
 
-export type AllData = {
-  routes: RouteRow[];
-  milestones: Milestone[];
-  sessions: Session[];
-  cards: Card[];
-  reviews: Review[];
-  checkins: Checkin[];
-};
-
 async function must<R>(p: PromiseLike<{ data: R | null; error: { message: string } | null }>) {
   const { data, error } = await p;
   if (error) throw new Error(error.message);
   return data as R;
 }
+export { must };
 
-export async function fetchAll(): Promise<AllData> {
-  const [routes, milestones, sessions, cards, reviews, checkins] = await Promise.all([
-    must(supabase.from("routes").select("*").order("created_at")),
-    must(supabase.from("milestones").select("*").order("position")),
-    must(supabase.from("sessions").select("*").order("logged_at", { ascending: false })),
-    must(supabase.from("cards").select("*").order("created_at")),
-    must(supabase.from("reviews").select("*").order("reviewed_at")),
-    must(supabase.from("checkins").select("*")),
-  ]);
-  return { routes, milestones, sessions, cards, reviews, checkins } as AllData;
+const PAGE = 1000;
+/** Fetch every row of a query in 1,000-row pages so nothing is silently truncated. */
+export async function fetchPaged<R>(
+  build: (from: number, to: number) => PromiseLike<{ data: R[] | null; error: { message: string } | null }>,
+): Promise<R[]> {
+  const out: R[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const rows = await must(build(from, from + PAGE - 1));
+    out.push(...rows);
+    if (rows.length < PAGE) return out;
+  }
 }
 
-export function useAll() {
-  return useQuery({ queryKey: ["all"], queryFn: fetchAll });
+// ---------- per-screen queries ----------
+
+export const routesQuery = {
+  queryKey: ["routes"],
+  queryFn: () => fetchPaged<RouteRow>((a, b) => supabase.from("routes").select("*").order("created_at").order("id").range(a, b)),
+};
+export function useRoutes() {
+  return useQuery(routesQuery);
+}
+
+/** Per-route aggregates (milestones, minutes, cards, recent reviews, check-ins), computed in the database under RLS. */
+export function useRouteStats() {
+  return useQuery({
+    queryKey: ["route-stats"],
+    queryFn: async () => {
+      const since = new Date();
+      since.setDate(since.getDate() - 29);
+      const rows = await must(
+        supabase.rpc("route_stats", {
+          _since_date: localDate(since),
+          _since_ts: new Date(Date.now() - 30 * 86400000).toISOString(),
+          _week_date: localDate(startOfWeek()),
+          _today: localDate(),
+        }),
+      );
+      return new Map((rows ?? []).map((r) => [r.route_id, r]));
+    },
+  });
+}
+
+export function useDueCount() {
+  return useQuery({
+    queryKey: ["cards", "due-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase.from("cards").select("id", { count: "exact", head: true }).lte("due_at", new Date().toISOString());
+      if (error) throw new Error(error.message);
+      return count ?? 0;
+    },
+  });
+}
+
+export function useWeekMinutes() {
+  return useQuery({
+    queryKey: ["sessions", "week-minutes"],
+    queryFn: async () => Number(await must(supabase.rpc("minutes_since", { _since: startOfWeek().toISOString() }))),
+  });
 }
 
 export function useRefresh() {
@@ -64,7 +102,7 @@ export function useRefresh() {
   return () => qc.invalidateQueries();
 }
 
-export { must };
+// ---------- formatting ----------
 
 export function minutesLabel(m: number) {
   const h = Math.floor(m / 60);
