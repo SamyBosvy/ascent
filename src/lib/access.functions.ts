@@ -133,3 +133,38 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     await sb.auth.admin.deleteUser(context.userId);
     return { ok: true };
   });
+
+// Records the caller's current (pre-change) email server-side so the allowlist can be moved
+// to the new address once the change is confirmed. Access itself is keyed on user_id (user_roles).
+export const rememberEmailChange = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = await admin();
+    const { data, error } = await sb.auth.admin.getUserById(context.userId);
+    if (error || !data.user) throw new Error(error?.message ?? "User not found");
+    const current = norm(data.user.email ?? "");
+    await sb.auth.admin.updateUserById(context.userId, {
+      app_metadata: { ...data.user.app_metadata, prev_email: current },
+    });
+    return { ok: true };
+  });
+
+// After an email change is confirmed: move the allowlist entry from the old to the new address.
+export const syncMyAllowlistEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = await admin();
+    const { data, error } = await sb.auth.admin.getUserById(context.userId);
+    if (error || !data.user) throw new Error(error?.message ?? "User not found");
+    const current = norm(data.user.email ?? "");
+    const prev = (data.user.app_metadata as { prev_email?: string } | undefined)?.prev_email;
+    if (!prev || !current || prev === current) return { changed: false };
+    const { data: role } = await sb.from("user_roles").select("id").eq("user_id", context.userId).maybeSingle();
+    if (role) {
+      await sb.from("allowlist").upsert({ email: current }, { onConflict: "email" });
+      await sb.from("allowlist").delete().eq("email", prev);
+    }
+    const { prev_email: _drop, ...rest } = data.user.app_metadata as Record<string, unknown>;
+    await sb.auth.admin.updateUserById(context.userId, { app_metadata: rest });
+    return { changed: true };
+  });
