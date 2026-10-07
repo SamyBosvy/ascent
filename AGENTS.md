@@ -39,3 +39,8 @@
 - Create/save entry points use useSubmission's synchronous lock and disabled controls through finally — rapid clicks cannot duplicate requests.
 - Review has a persistent polite answer region, an explicit reveal button and focus transitions to the rating group and next reveal control — touch and keyboard share the same flow.
 - Insights tables are generated from the same data as their aria-hidden charts — assistive readers receive equivalent values.
+- Calendar logic goes through `src/lib/time.ts` (pure, timezone-aware) and the cached prefs in `src/lib/prefs.ts`; `localDate`/`startOfToday`/`startOfWeek` in data.ts apply the user's timezone and week start, and SQL date boundaries are passed in as parameters — one definition of "today" and "this week".
+- Theme: user_settings is the source of truth, mirrored to localStorage and applied as .dark/.light on <html> by an inline boot script before paint; CSS dark tokens apply under `.dark` and under the OS media query unless `.light` — no flash, explicit Light wins.
+- Habit streaks/heatmap and route pacing are pure tested functions (`streaks.ts`, `pacing.ts`) fed by paged check-in history and route_stats — no streak state stored.
+- Note tags are normalised by a database trigger; note search uses the generated `notes.search` tsvector ('simple' config) via prefix tsqueries from `src/lib/search.ts` — server-side, language-agnostic.
+- The ⌘K palette (`CommandPalette`) searches server-side with 5-result limits and excludes archived/deleted routes unless toggled; app shortcuts stay silent while any dialog is open.

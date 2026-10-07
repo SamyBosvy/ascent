@@ -69,7 +69,7 @@ function Today() {
                 <div
                   role="progressbar" aria-label="Daily review goal" aria-valuemin={0} aria-valuemax={goal} aria-valuenow={Math.min(goal, reviewsToday)}
                   aria-valuetext={`${reviewsToday} of ${goal} reviews today`}
-                  className="h-2 overflow-hidden rounded-full bg-muted"
+                  className="h-2 overflow-hidden rounded-full border border-input bg-muted"
                 >
                   <div className="h-full rounded-full bg-primary transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (reviewsToday / goal) * 100)}%` }} />
                 </div>
@@ -88,7 +88,7 @@ function Today() {
         <div className="surface p-5">
           <p className="text-sm text-muted-foreground">Time logged this week</p>
           <p className="mt-1 font-display text-4xl font-semibold">{minutesLabel(weekMinutes)}</p>
-          <p className="mt-1 text-sm text-muted-foreground">Since Monday.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Since {settings?.week_start === 0 ? "Sunday" : "Monday"}.</p>
         </div>
       </div>
 

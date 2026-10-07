@@ -1,10 +1,7 @@
-# Batch 8
-- [x] F42 tests — 68 pass, 0 fail
-- [x] F43 database timestamps
-- [x] F44 review accessibility
-- [x] F45 navigation accessibility
-- [x] F46 chart alternatives
-- [x] F47 labels and submit guards
-- [x] Input contrast
-- [ ] Remove social metadata — blocked by required per-page social metadata instructions
-- [x] Signed-in verification, temporary-data cleanup and report
+# Batch 9
+- [x] F31 habit streaks + heatmap
+- [x] F32 search + command palette
+- [x] F33 note tags, server search, mobile selection-to-card
+- [x] F34 pacing, continue, daily goal
+- [x] F35 + A3 preferences, theme, timezone/week start
+- [x] Tests, signed-in check, cleanup
