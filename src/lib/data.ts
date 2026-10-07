@@ -198,3 +198,20 @@ export function startOfWeek(d = new Date()) {
 export function localDate(d = new Date()) {
   return dateInZone(d, getPrefs().tz);
 }
+
+/** Every check-in date per route (paged past 1,000 rows), for streaks and the heatmap. */
+export function useCheckinHistory(routeId?: string) {
+  return useQuery({
+    queryKey: ["checkins", "history", routeId ?? "all"],
+    queryFn: async () => {
+      const rows = await fetchPaged<{ route_id: string; checked_on: string }>((a, b) => {
+        let q = supabase.from("checkins").select("route_id, checked_on, routes!inner(id)").is("routes.deleted_at", null).eq("routes.type", "habit");
+        if (routeId) q = q.eq("route_id", routeId);
+        return q.order("checked_on").order("id").range(a, b);
+      });
+      const map = new Map<string, string[]>();
+      for (const r of rows) map.set(r.route_id, [...(map.get(r.route_id) ?? []), r.checked_on]);
+      return map;
+    },
+  });
+}

@@ -103,7 +103,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
   useEffect(() => () => {
     void flush().then(async () => {
       const v = latest.current;
-      if (idRef.current && !deleted.current && !v.title.trim() && !v.body.trim()) {
+      if (idRef.current && !deleted.current && !v.title.trim() && !v.body.trim() && !v.tags.length) {
         await supabase.from("notes").delete().eq("id", idRef.current);
       }
       void qc.invalidateQueries({ queryKey: ["notes"] });
