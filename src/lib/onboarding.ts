@@ -9,7 +9,7 @@ export async function markOnboarding(qc: QueryClient, action: 'start' | 'done') 
   const { data, error: authError } = await supabase.auth.getUser();
   if (authError || !data.user) throw new Error('Please sign in again.');
   const now = new Date().toISOString();
-  const { error } = await supabase.from('user_settings').upsert({ user_id: data.user.id, updated_at: now, ...(action === 'start' ? { onboarding_started_at: now } : { onboarding_done_at: now }) });
+  const { error } = await supabase.from('user_settings').upsert({ user_id: data.user.id, ...(action === 'start' ? { onboarding_started_at: now } : { onboarding_done_at: now }) });
   if (error) throw new Error(error.message);
   await qc.invalidateQueries({ queryKey: ['user-settings'] });
 }

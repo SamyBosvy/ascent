@@ -1,3 +1,4 @@
+import { useSubmission } from "@/hooks/use-submission";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,7 +55,9 @@ export function CardDialog({
   const route = data?.routes.find((r) => r.id === routeId);
   const isLang = route?.type === "language";
 
-  async function save(e: React.FormEvent, again = false) {
+  const { submitting: submittingSave, submit: submitSave } = useSubmission();
+  function save(e: React.FormEvent, again = false) { e.preventDefault(); return submitSave(() => saveRequest(e, again)); }
+  async function saveRequest(e: React.FormEvent, again = false) {
     e.preventDefault();
     if (!front.trim() || !back.trim() || !routeId) return;
     if (card) {
@@ -136,8 +139,8 @@ export function CardDialog({
             </div>
           )}
           <div className="flex gap-2">
-            {!card && <Button type="button" variant="outline" className="h-12 flex-1" onClick={(e) => front && back && save(e, true)}>Save & add another</Button>}
-            <Button type="submit" className="h-12 flex-1">Save</Button>
+            {!card && <Button disabled={submittingSave} type="button" variant="outline" className="h-12 flex-1" onClick={(e) => front && back && save(e, true)}>Save & add another</Button>}
+            <Button disabled={submittingSave} type="submit" className="h-12 flex-1">Save</Button>
           </div>
         </form>
       </DialogContent>

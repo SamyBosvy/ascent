@@ -1,3 +1,4 @@
+import { useSubmission } from "@/hooks/use-submission";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -35,7 +36,9 @@ function Access() {
   const [email, setEmail] = useState("");
   const reload = () => qc.invalidateQueries({ queryKey: ["access"] });
 
-  async function invite(e: React.FormEvent) {
+  const { submitting: submittingInvite, submit: submitInvite } = useSubmission();
+  function invite(e: React.FormEvent) { e.preventDefault(); return submitInvite(() => inviteRequest(e)); }
+  async function inviteRequest(e: React.FormEvent) {
     e.preventDefault();
     try {
       const res = await add({ data: { email, origin: window.location.origin } });
@@ -64,8 +67,8 @@ function Access() {
       <section>
         <SectionTitle>Invite</SectionTitle>
         <form onSubmit={invite} className="flex gap-2">
-          <Input type="email" required className="h-12" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <Button type="submit" className="h-12">Add</Button>
+          <Input id="invite-email" aria-label="Invite email" type="email" required className="h-12" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Button disabled={submittingInvite} type="submit" className="h-12">Add</Button>
         </form>
       </section>
 

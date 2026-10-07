@@ -1,3 +1,4 @@
+import { useSubmission } from "@/hooks/use-submission";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
@@ -59,7 +60,9 @@ function Landing() {
     });
   }, [navigate, revoked, setup]);
 
-  async function submit(e: React.FormEvent) {
+  const { submitting: submittingAuth, submit: submitAuth } = useSubmission();
+  function submit(e: React.FormEvent) { e.preventDefault(); return submitAuth(() => submitRequest(e)); }
+  async function submitRequest(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
@@ -192,7 +195,7 @@ function Landing() {
             </>
           ) : (
             <>
-              <Button type="submit" className="h-12 w-full text-base" disabled={busy}>
+              <Button type="submit" className="h-12 w-full text-base" disabled={busy || submittingAuth}>
                 {busy ? "One moment…" : mode === "in" ? "Sign in" : mode === "up" ? "Create account" : "Send reset link"}
               </Button>
               {mode === "reset" && (

@@ -1,3 +1,4 @@
+import { useSubmission } from "@/hooks/use-submission";
 import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
@@ -76,7 +77,9 @@ export function AccountSection({ email: initialEmail }: { email: string }) {
     return () => data.subscription.unsubscribe();
   }, []);
 
-  async function changePassword(e: React.FormEvent) {
+  const { submitting: submittingPassword, submit: submitPassword } = useSubmission();
+  function changePassword(e: React.FormEvent) { e.preventDefault(); return submitPassword(() => changePasswordRequest(e)); }
+  async function changePasswordRequest(e: React.FormEvent) {
     e.preventDefault();
     setPwErr(null);
     if (next.length < 8) return setPwErr("New password must be at least 8 characters.");
@@ -94,7 +97,9 @@ export function AccountSection({ email: initialEmail }: { email: string }) {
     }
   }
 
-  async function changeEmail(e: React.FormEvent) {
+  const { submitting: submittingEmail, submit: submitEmail } = useSubmission();
+  function changeEmail(e: React.FormEvent) { e.preventDefault(); return submitEmail(() => changeEmailRequest(e)); }
+  async function changeEmailRequest(e: React.FormEvent) {
     e.preventDefault();
     setEmErr(null);
     setEmMsg(null);
@@ -144,7 +149,7 @@ export function AccountSection({ email: initialEmail }: { email: string }) {
             <PasswordInput id="conf-pw" value={conf} onChange={setConf} show={showPw} autoComplete="new-password" />
           </div>
           {pwErr && <p className="rounded-lg bg-muted p-3 text-sm" role="alert">{pwErr}</p>}
-          <Button type="submit" className="h-12 w-full" disabled={pwBusy}>{pwBusy ? "Saving…" : "Update password"}</Button>
+          <Button type="submit" className="h-12 w-full" disabled={pwBusy || submittingPassword}>{pwBusy ? "Saving…" : "Update password"}</Button>
         </form>
 
         <form onSubmit={changeEmail} className="surface space-y-4 p-4">
@@ -161,7 +166,7 @@ export function AccountSection({ email: initialEmail }: { email: string }) {
           </div>
           {emErr && <p className="rounded-lg bg-muted p-3 text-sm" role="alert">{emErr}</p>}
           {emMsg && <p className="rounded-lg bg-muted p-3 text-sm" role="status">{emMsg}</p>}
-          <Button type="submit" className="h-12 w-full" disabled={emBusy}>{emBusy ? "Sending…" : "Change email"}</Button>
+          <Button type="submit" className="h-12 w-full" disabled={emBusy || submittingEmail}>{emBusy ? "Sending…" : "Change email"}</Button>
         </form>
       </div>
     </section>

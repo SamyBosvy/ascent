@@ -96,7 +96,7 @@ function Insights() {
           <table className="sr-only">
             <caption>Hours per route, by week</caption>
             <thead><tr><th scope="col">Week</th>{routeIds.map(rid => <th key={rid} scope="col">{name(rid)} (hours)</th>)}</tr></thead>
-            <tbody>{timeData.map(row => <tr key={row.week}><th scope="row">{row.week}</th>{routeIds.map(rid => <td key={rid}>{row[name(rid)]}</td>)}</tr>)}</tbody>
+            <tbody>{timeData.map(row => <tr key={row["week"]}><th scope="row">{row["week"]}</th>{routeIds.map(rid => <td key={rid}>{row[name(rid)]}</td>)}</tr>)}</tbody>
           </table>
           {routeIds.length ? (
             <ResponsiveContainer aria-hidden="true">

@@ -1,3 +1,4 @@
+import { useSubmission } from "@/hooks/use-submission";
 import { markOnboarding, useOnboarding } from "@/lib/onboarding";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -58,7 +59,9 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
     void qc.invalidateQueries({ queryKey: ["route-stats"] });
   };
 
-  async function save(e: React.FormEvent) {
+  const { submitting: submittingSave, submit: submitSave } = useSubmission();
+  function save(e: React.FormEvent) { e.preventDefault(); return submitSave(() => saveRequest(e)); }
+  async function saveRequest(e: React.FormEvent) {
     e.preventDefault();
     setTried(true);
     if (!valid || busy) return;
@@ -76,7 +79,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
     if (route) {
       const cur = route.current_page;
       const current_page = total == null ? cur : Math.min(cur ?? 0, total);
-      const { error } = await supabase.from("routes").update({ ...common, current_page, updated_at: new Date().toISOString() }).eq("id", route.id);
+      const { error } = await supabase.from("routes").update({ ...common, current_page }).eq("id", route.id);
       setBusy(false);
       if (error) { toast.error(`Couldn't save the route: ${error.message}`); return; }
       if (cur != null && current_page !== cur) toast.success(`Route saved. Current page set to ${current_page}.`);
@@ -183,7 +186,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
             <Label htmlFor="rtd">Target date (optional)</Label>
             <Input id="rtd" type="date" className="h-12" value={target} onChange={(e) => setTarget(e.target.value)} />
           </div>
-          <Button type="submit" className="h-12 w-full" disabled={busy}>{editing ? "Save" : "Start climbing"}</Button>
+          <Button type="submit" className="h-12 w-full" disabled={busy || submittingSave}>{editing ? "Save" : "Start climbing"}</Button>
         </form>
       </DialogContent>
     </Dialog>

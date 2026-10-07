@@ -56,7 +56,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
     inflight.current++;
     setStatus("saving");
     const { data, error } = idRef.current
-      ? await supabase.from("notes").update({ title: v.title, body: v.body, route_id: v.routeId, updated_at: new Date().toISOString() }).eq("id", idRef.current).select("id").single()
+      ? await supabase.from("notes").update({ title: v.title, body: v.body, route_id: v.routeId }).eq("id", idRef.current).select("id").single()
       : await supabase.from("notes").insert({ title: v.title, body: v.body, route_id: v.routeId }).select("id").single();
     inflight.current--;
     if (error || !data) {
