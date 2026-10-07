@@ -2,9 +2,12 @@ import { Onboarding } from "@/components/app/Onboarding";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
-import { Check } from "lucide-react";
+import { ArrowRight, BookOpen, Check, Layers, Play } from "lucide-react";
+import { PacingLine } from "@/components/app/Pacing";
+import { StreakLine } from "@/components/app/Habit";
+import { timer, useTimer } from "@/lib/timer";
 import { toggleCheckin } from "@/lib/checkins";
-import { isLive, minutesLabel, useDueCounts, useNewPerDay, useNewReviewedToday, useRefresh, useRouteStats, useRoutes, useWeekMinutes } from "@/lib/data";
+import { isLive, localDate, minutesLabel, useCheckinHistory, useDueCounts, useNewPerDay, useNewReviewedToday, useRefresh, useReviewsToday, useRouteStats, useRoutes, useUserSettings, useWeekMinutes, type RouteAgg, type RouteRow } from "@/lib/data";
 import { habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { AltitudeBar, CampBadge } from "@/components/app/Mountain";
 import { Empty, SectionTitle } from "@/components/app/fields";
@@ -26,6 +29,10 @@ function Today() {
   const due = dueCounts && newPerDay != null && newToday != null ? dueCounts.reviews + Math.min(dueCounts.fresh, Math.max(0, newPerDay - newToday)) : null;
   const { data: weekMinutes } = useWeekMinutes();
   const refresh = useRefresh();
+  const { data: settings } = useUserSettings();
+  const { data: reviewsToday } = useReviewsToday();
+  const { data: history } = useCheckinHistory();
+  const { state: running } = useTimer();
   if (!routes || !stats || due == null || weekMinutes == null) return <ScreenSkeleton screen="today" />;
 
   const habits = routes.filter((r) => r.type === "habit" && r.status === "active");
@@ -34,7 +41,11 @@ function Today() {
 
   const toggle = (routeId: string, checked: boolean) => toggleCheckin(routeId, checked, refresh);
 
-  const greeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
+  const today = localDate();
+  const goal = settings?.daily_goal ?? null;
+  const cont = pickContinue(routes, stats);
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: settings?.timezone }).format(new Date()));
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   return (
     <div className="space-y-8">
@@ -45,12 +56,26 @@ function Today() {
 
       <Onboarding routes={allRoutes ?? routes} stats={stats} />
 
+      {cont && <ContinueCard route={cont.route} agg={stats.get(cont.route.id)} timerBusy={!!running} onCheckin={() => toggle(cont.route.id, false)} />}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="surface flex flex-col justify-between gap-4 p-5">
           <div>
             <p className="text-sm text-muted-foreground">Flashcards due</p>
             <p className="mt-1 font-display text-4xl font-semibold">{due}</p>
             <p className="mt-1 text-sm text-muted-foreground">{due ? `${due} card${due > 1 ? "s" : ""} due. Keep climbing.` : "Nothing due. Clear skies."}</p>
+            {goal != null && reviewsToday != null && (
+              <div className="mt-3 space-y-1">
+                <div
+                  role="progressbar" aria-label="Daily review goal" aria-valuemin={0} aria-valuemax={goal} aria-valuenow={Math.min(goal, reviewsToday)}
+                  aria-valuetext={`${reviewsToday} of ${goal} reviews today`}
+                  className="h-2 overflow-hidden rounded-full bg-muted"
+                >
+                  <div className="h-full rounded-full bg-primary transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (reviewsToday / goal) * 100)}%` }} />
+                </div>
+                <p className="text-xs text-muted-foreground">{reviewsToday >= goal ? `Daily goal reached: ${reviewsToday}/${goal}.` : `${reviewsToday}/${goal} reviews toward today's goal.`}</p>
+              </div>
+            )}
           </div>
           {due ? (
             <Button asChild className="h-12">
@@ -81,6 +106,7 @@ function Today() {
                   <Link to="/routes/$id" params={{ id: h.id }} className="min-w-0 flex-1">
                     <p className="truncate font-medium">{h.name}</p>
                     <p className="text-xs text-muted-foreground">{Math.round(habitConsistency(h, stats.get(h.id)) * 100)}% over the last 30 days</p>
+                    <StreakLine route={h} dates={history?.get(h.id)} today={today} />
                   </Link>
                   {checkedToday ? (
                     <Button onClick={() => toggle(h.id, true)} variant="ghost" className="h-12 px-3 text-primary-strong" aria-label="Checked in today. Tap to undo.">
@@ -118,6 +144,7 @@ function Today() {
                       <CampBadge camp={s.camp} />
                     </div>
                     <AltitudeBar camp={s.camp} />
+                    <PacingLine route={r} agg={stats.get(r.id)} />
                     <p className="text-xs text-muted-foreground">Last activity {formatDistanceToNow(new Date(s.lastActivity), { addSuffix: true })}</p>
                   </Link>
                 </li>
@@ -127,5 +154,47 @@ function Today() {
         )}
       </section>
     </div>
+  );
+}
+
+/** Most recently active live, unfinished route (session, review, milestone, check-in or page update). */
+function pickContinue(routes: RouteRow[], stats: Map<string, RouteAgg>) {
+  let best: { route: RouteRow; at: string } | null = null;
+  for (const r of routes) {
+    if (r.status === "summited" || r.status === "abandoned") continue;
+    const a = stats.get(r.id);
+    const times = [a?.last_session_at, a?.last_review_at, a?.last_milestone_at, a?.last_checkin_on, r.type === "book" && r.current_page ? r.updated_at : null].filter((t): t is string => !!t);
+    if (!times.length) continue;
+    const at = times.sort().at(-1)!;
+    if (!best || at > best.at) best = { route: r, at };
+  }
+  return best;
+}
+
+function ContinueCard({ route, agg, timerBusy, onCheckin }: { route: RouteRow; agg: RouteAgg | undefined; timerBusy: boolean; onCheckin: () => void }) {
+  const cards = Number(agg?.cards_total ?? 0);
+  let action: React.ReactNode;
+  if (route.type === "book" && route.total_pages) {
+    action = <Button asChild className="h-12"><Link to="/routes/$id" params={{ id: route.id }} search={{ focus: "page" }}><BookOpen className="h-4 w-4" /> Update page</Link></Button>;
+  } else if (route.type === "habit") {
+    action = agg?.checked_today
+      ? <span className="flex h-12 items-center gap-1 text-sm text-primary-strong"><Check className="h-4 w-4" /> Checked in today</span>
+      : <Button className="h-12" onClick={onCheckin}><Check className="h-4 w-4" /> Check in</Button>;
+  } else if (route.type === "language" || cards > 0) {
+    action = <Button asChild className="h-12"><Link to="/review" search={{ route: route.id }}><Layers className="h-4 w-4" /> Start review</Link></Button>;
+  } else if (!timerBusy) {
+    action = <Button className="h-12" onClick={() => timer.start(route.id, route.name)}><Play className="h-4 w-4" /> Start timer</Button>;
+  } else {
+    action = <Button asChild className="h-12"><Link to="/routes/$id" params={{ id: route.id }}><ArrowRight className="h-4 w-4" /> Open route</Link></Button>;
+  }
+  return (
+    <section aria-labelledby="continue-title" className="surface flex flex-wrap items-center justify-between gap-3 p-5">
+      <div className="min-w-0">
+        <p id="continue-title" className="text-sm text-muted-foreground">Continue where you left off</p>
+        <Link to="/routes/$id" params={{ id: route.id }} className="mt-1 block truncate font-display text-xl font-semibold hover:underline">{route.name}</Link>
+        <PacingLine route={route} agg={agg} className="mt-1" />
+      </div>
+      {action}
+    </section>
   );
 }
