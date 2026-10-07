@@ -8,7 +8,7 @@ import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPaged, must, useRoutes, type Note } from "@/lib/data";
-import { prefixTsQuery } from "@/components/app/CommandPalette";
+import { prefixTsQuery } from "@/lib/search";
 import { Empty, NativeSelect } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -111,3 +111,18 @@ describe("pacing", () => {
     expect(pacing(base, today)?.text).toBe("25 days left · target 1 Nov");
   });
 });
+
+import { addTags, prefixTsQuery, safeTerm } from "./search";
+describe("search helpers", () => {
+  it("builds a safe prefix tsquery", () => {
+    expect(prefixTsQuery("  café  ser:vice & (x)")).toBe("café:* & service:* & x:*");
+    expect(prefixTsQuery("!!! ")).toBe("");
+  });
+  it("strips PostgREST-significant characters", () => expect(safeTerm("a,(b)*%c")).toBe("a b c"));
+  it("normalises, dedupes and limits tags", () => {
+    expect(addTags(["go"], " Rust , GO,  web dev ").tags).toEqual(["go", "rust", "web dev"]);
+    expect(addTags([], "x".repeat(31)).error).toMatch(/30/);
+    const ten = Array.from({ length: 10 }, (_, i) => `t${i}`);
+    expect(addTags(ten, "more")).toEqual({ tags: ten, error: "A note can have at most 10 tags." });
+  });
+});

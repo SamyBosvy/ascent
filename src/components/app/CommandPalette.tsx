@@ -13,12 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { RouteDialog } from "./RouteDialog";
 import { CardDialog } from "./CardDialog";
 
-/** Words safe for a prefix tsquery ('simple' config): letters/digits only, each matched as a prefix. */
-export function prefixTsQuery(q: string) {
-  return q.split(/\s+/).map((w) => w.replace(/[^\p{L}\p{N}_]/gu, "")).filter(Boolean).map((w) => `${w}:*`).join(" & ");
-}
-/** Strip characters with meaning in PostgREST filters / ilike patterns. */
-export const safeTerm = (s: string) => s.replace(/[,()%*\\:"'.]/g, " ").replace(/\s+/g, " ").trim();
+import { prefixTsQuery, safeTerm } from "@/lib/search";
 
 type Hit = { id: string; label: string; sub?: string; routeId?: string };
 
