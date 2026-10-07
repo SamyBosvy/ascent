@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNewPerDay, fetchPaged } from "@/lib/data";
 import { deleteMyAccount } from "@/lib/access.functions";
 import { AccountSection } from "@/components/app/AccountSection";
-import { ReviewSettings } from "@/components/app/ReviewSettings";
+import { Preferences } from "@/components/app/Preferences";
 import { SectionTitle } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import {
@@ -92,7 +92,7 @@ function Settings() {
         </Link>
       )}
 
-      <ReviewSettings />
+      <Preferences />
 
       <AccountSection email={user.email ?? ""} />
 
