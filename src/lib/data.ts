@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { getPrefs, type Theme } from "./prefs";
+import { addDays, browserTimeZone, dateInZone, weekStartOf, zonedMidnight, type WeekStart } from "./time";
 
 type T = Database["public"]["Tables"];
 export type RouteRow = T["routes"]["Row"];
@@ -64,14 +66,13 @@ export function useRouteStats() {
   return useQuery({
     queryKey: ["route-stats"],
     queryFn: async () => {
-      const since = new Date();
-      since.setDate(since.getDate() - 29);
+      const today = localDate();
       const rows = await must(
         supabase.rpc("route_stats", {
-          _since_date: localDate(since),
+          _since_date: addDays(today, -29),
           _since_ts: new Date(Date.now() - 30 * 86400000).toISOString(),
-          _week_date: localDate(startOfWeek()),
-          _today: localDate(),
+          _week_date: weekStartDate(),
+          _today: today,
         }),
       );
       return new Map((rows ?? []).map((r) => [r.route_id, r]));
@@ -115,19 +116,44 @@ export function useWeekMinutes() {
 export const isLive = (r: RouteRow) => !r.archived_at;
 
 export const DEFAULT_NEW_PER_DAY = 20;
-export function useNewPerDay() {
+export type UserSettings = { new_per_day: number; theme: Theme; week_start: WeekStart; timezone: string; timezone_set: boolean; daily_goal: number | null; exists: boolean };
+/** The user's settings with defaults filled in; a row is only created on the first save. */
+export function useUserSettings() {
   return useQuery({
-    queryKey: ["user-settings"],
-    queryFn: async () => {
-      const row = await must<{ new_per_day: number }>(supabase.from("user_settings").select("new_per_day").maybeSingle());
-      return row?.new_per_day ?? DEFAULT_NEW_PER_DAY;
+    queryKey: ["user-settings", "all"],
+    queryFn: async (): Promise<UserSettings> => {
+      const row = await must<{ new_per_day: number; theme: string; week_start: number; timezone: string | null; daily_goal: number | null } | null>(
+        supabase.from("user_settings").select("new_per_day, theme, week_start, timezone, daily_goal").maybeSingle(),
+      );
+      return {
+        new_per_day: row?.new_per_day ?? DEFAULT_NEW_PER_DAY,
+        theme: row?.theme === "light" || row?.theme === "dark" ? row.theme : "system",
+        week_start: row?.week_start === 0 ? 0 : 1,
+        timezone: row?.timezone || browserTimeZone(),
+        timezone_set: !!row?.timezone,
+        daily_goal: row?.daily_goal ?? null,
+        exists: !!row,
+      };
     },
   });
 }
+export function useNewPerDay() {
+  const q = useUserSettings();
+  return { ...q, data: q.data?.new_per_day };
+}
 export function startOfToday() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return zonedMidnight(localDate(), getPrefs().tz);
+}
+/** Reviews recorded today (user timezone); cram records none. */
+export function useReviewsToday() {
+  return useQuery({
+    queryKey: ["reviews", "today-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase.from("reviews").select("id", { count: "exact", head: true }).gte("reviewed_at", startOfToday().toISOString());
+      if (error) throw new Error(error.message);
+      return count ?? 0;
+    },
+  });
 }
 /** New cards (never reviewed before) whose first review happened today. */
 export function useNewReviewedToday() {
@@ -159,17 +185,16 @@ export function minutesLabel(m: number) {
   return r ? `${h}h ${r}m` : `${h}h`;
 }
 
+/** First day of the current week (user week start), as YYYY-MM-DD. */
+export function weekStartDate(d = new Date()) {
+  return weekStartOf(localDate(d), getPrefs().weekStart);
+}
+/** Instant the week containing `d` starts, in the user's timezone and week start. */
 export function startOfWeek(d = new Date()) {
-  const x = new Date(d);
-  const day = (x.getDay() + 6) % 7; // Monday start
-  x.setHours(0, 0, 0, 0);
-  x.setDate(x.getDate() - day);
-  return x;
+  return zonedMidnight(weekStartDate(d), getPrefs().tz);
 }
 
+/** Calendar date in the user's timezone. */
 export function localDate(d = new Date()) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return dateInZone(d, getPrefs().tz);
 }

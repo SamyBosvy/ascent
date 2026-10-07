@@ -1,4 +1,6 @@
 import type { RouteAgg, RouteRow } from "./data";
+import { getPrefs } from "./prefs";
+import { dateInZone, daysBetween } from "./time";
 
 export const CAMPS = ["Base Camp", "Camp 1", "Camp 2", "Camp 3", "Summit"] as const;
 
@@ -10,11 +12,8 @@ export function habitConsistency(route: RouteRow, agg: RouteAgg | undefined) {
   const count = n(agg?.checkins_recent);
   const freq = route.habit_frequency ?? "daily";
   // Window = last 30 days, or since the habit started if it's younger (today counts as day 1).
-  const start = new Date(route.created_at);
-  start.setHours(0, 0, 0, 0);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const days = Math.max(1, Math.min(30, Math.round((today.getTime() - start.getTime()) / 86400000) + 1));
+  const tz = getPrefs().tz;
+  const days = Math.max(1, Math.min(30, daysBetween(dateInZone(new Date(route.created_at), tz), dateInZone(new Date(), tz)) + 1));
   const expected = freq === "daily" ? days : freq === "weekly" ? days / 7 : ((route.habit_target ?? 3) * days) / 7;
   return Math.min(1, count / expected);
 }

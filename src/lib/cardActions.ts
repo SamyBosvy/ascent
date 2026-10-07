@@ -1,11 +1,10 @@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPaged, localDate, type Card, type Review } from "./data";
+import { addDays } from "./time";
 
 export function tomorrow() {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return localDate(d);
+  return addDays(localDate(), 1);
 }
 
 type Patch = { suspended_at?: string | null; buried_until?: string | null };
