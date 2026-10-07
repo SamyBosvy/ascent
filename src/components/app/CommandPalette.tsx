@@ -174,7 +174,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
           </Command>
         </DialogContent>
       </Dialog>
-      <RouteDialog open={newRoute} onOpenChange={setNewRoute} />
+      {newRoute && <RouteDialog open={newRoute} onOpenChange={setNewRoute} />}
       {newCard && <CardDialog open={newCard} onOpenChange={setNewCard} {...(current && !current.archived_at ? { routeId: current.id } : {})} />}
     </>
   );
