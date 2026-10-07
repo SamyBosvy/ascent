@@ -1,9 +1,10 @@
 # Batch 8
-- [ ] F42 tests
-- [ ] F43 database timestamps
-- [ ] F44 review accessibility
-- [ ] F45 navigation accessibility
-- [ ] F46 chart alternatives
-- [ ] F47 labels and submit guards
-- [ ] Input contrast and private metadata request
-- [ ] Verification and report
+- [x] F42 tests — 68 pass, 0 fail
+- [x] F43 database timestamps
+- [x] F44 review accessibility
+- [x] F45 navigation accessibility
+- [x] F46 chart alternatives
+- [x] F47 labels and submit guards
+- [x] Input contrast
+- [ ] Remove social metadata — blocked by required per-page social metadata instructions
+- [x] Signed-in verification, temporary-data cleanup and report
