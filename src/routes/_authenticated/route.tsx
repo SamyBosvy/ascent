@@ -1,6 +1,6 @@
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
-import { BarChart3, BookOpen, Layers, Library, Mountain, Plus, Settings, Sun } from "lucide-react";
+import { BarChart3, BookOpen, Layers, Library, Mountain, Plus, Search, Settings, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -8,6 +8,9 @@ import { flushPendingReviews } from "@/lib/reviewQueue";
 import { SessionPill, StaleSessionPrompt } from "@/components/app/SessionPill";
 import { supabase } from "@/integrations/supabase/client";
 import { QuickCapture } from "@/components/app/QuickCapture";
+import { CommandPalette } from "@/components/app/CommandPalette";
+import { useUserSettings } from "@/lib/data";
+import { setPrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -36,7 +39,30 @@ const NAV = [
 
 function Shell() {
   const [capture, setCapture] = useState(false);
+  const [palette, setPalette] = useState(false);
   const qc = useQueryClient();
+  const { data: settings } = useUserSettings();
+
+  // The database row is the source of truth; cache it locally (instant theme on next load) and
+  // refetch date-based data when timezone or week start differ from the cached values.
+  useEffect(() => {
+    if (!settings) return;
+    const changed = setPrefs({ theme: settings.theme, weekStart: settings.week_start, tz: settings.timezone });
+    if (changed) void qc.invalidateQueries({ predicate: (q) => q.queryKey[0] !== "user-settings" });
+  }, [settings, qc]);
+
+  // ⌘K / Ctrl+K opens search and commands from anywhere.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        e.stopPropagation();
+        setPalette((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
 
   // Re-send ratings that didn't reach the server earlier (on open and when back online).
   useEffect(() => {
@@ -62,6 +88,9 @@ function Shell() {
           <img src="/icon-192.png" alt="" className="h-9 w-9 rounded-xl" />
           <span className="font-display text-xl font-semibold">Ascent</span>
         </Link>
+        <button onClick={() => setPalette(true)} className="tap mb-4 flex items-center gap-3 rounded-xl border border-input px-3 text-sm text-muted-foreground hover:bg-sidebar-accent" aria-keyshortcuts="Meta+K Control+K">
+          <Search className="h-4 w-4" /> <span className="flex-1 text-left">Search</span> <kbd className="text-xs">⌘K</kbd>
+        </button>
         <nav className="flex flex-1 flex-col gap-1">
           {NAV.map(({ to, label, icon: Icon }) => (
             <Link
@@ -89,9 +118,14 @@ function Shell() {
             <img src="/icon-192.png" alt="" className="h-8 w-8 rounded-lg" />
             <span className="font-display text-lg font-semibold">Ascent</span>
           </Link>
+          <div className="flex items-center">
+          <button onClick={() => setPalette(true)} aria-label="Search" className="tap flex items-center justify-center rounded-xl text-muted-foreground">
+            <Search className="h-5 w-5" />
+          </button>
           <Link to="/settings" aria-label="Settings" activeProps={{ "aria-current": "page" }} className="tap flex items-center justify-center rounded-xl text-muted-foreground">
             <Settings className="h-5 w-5" />
           </Link>
+          </div>
         </header>
         <main id="main" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-4 pb-32 pt-6 md:px-10 md:pb-12 md:pt-10">
           <Outlet />
@@ -124,6 +158,7 @@ function Shell() {
       </nav>
 
       <QuickCapture open={capture} onOpenChange={setCapture} />
+      <CommandPalette open={palette} onOpenChange={setPalette} onQuickCapture={() => setCapture(true)} />
       <StaleSessionPrompt />
     </div>
   );

@@ -1,36 +1,51 @@
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { formatDistanceToNow } from "date-fns";
 import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPaged, useRoutes, type Note } from "@/lib/data";
+import { fetchPaged, must, useRoutes, type Note } from "@/lib/data";
+import { prefixTsQuery } from "@/lib/search";
 import { Empty, NativeSelect } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/notes/")({
-  validateSearch: z.object({ route: z.string().optional() }),
+  validateSearch: z.object({ route: z.string().optional(), tag: z.string().optional() }),
   head: () => ({ meta: [{ property: "og:title", content: "Notes — Ascent" }, { property: "og:description", content: "Your notes across every route." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Notes — Ascent" }, { name: "description", content: "Your notes across every route." }] }),
   component: Notes,
 });
 
-export const notesQuery = { queryKey: ["notes"], queryFn: () => fetchPaged<Note>((a, b) => supabase.from("notes").select("*, routes!inner(id)").is("routes.deleted_at", null).order("updated_at", { ascending: false }).order("id").range(a, b)) };
+/** Notes for the list: filtered by route/tag and full-text searched in the database, paged. */
+export function notesQuery(route?: string, tag?: string, q = "") {
+  const tsq = prefixTsQuery(q);
+  return {
+    queryKey: ["notes", "list", route ?? "", tag ?? "", tsq],
+    queryFn: () =>
+      fetchPaged<Note>((a, b) => {
+        let x = supabase.from("notes").select("*, routes!inner(id)").is("routes.deleted_at", null);
+        if (route) x = x.eq("route_id", route);
+        if (tag) x = x.contains("tags", [tag]);
+        if (tsq) x = x.textSearch("search", tsq, { config: "simple" });
+        return x.order("updated_at", { ascending: false }).order("id").range(a, b);
+      }),
+  };
+}
 
 function Notes() {
-  const { route } = Route.useSearch();
+  const { route, tag } = Route.useSearch();
   const nav = useNavigate();
   const { data: routes } = useRoutes();
   const all = routes ? { routes } : undefined;
-  const { data: notes } = useQuery(notesQuery);
   const [q, setQ] = useState("");
-
-  const list = (notes ?? []).filter(
-    (n) => (!route || n.route_id === route) && (!q || `${n.title} ${n.body}`.toLowerCase().includes(q.toLowerCase())),
-  );
+  const [term, setTerm] = useState("");
+  useEffect(() => { const t = setTimeout(() => setTerm(q.trim()), 200); return () => clearTimeout(t); }, [q]);
+  const { data: notes, isFetching } = useQuery({ ...notesQuery(route, tag, term), placeholderData: (prev) => prev });
+  const { data: tags } = useQuery({ queryKey: ["notes", "tags"], queryFn: () => must(supabase.rpc("note_tags")) });
+  const list = notes ?? [];
   const routeName = (id: string) => all?.routes.find((r) => r.id === id)?.name ?? "";
 
   function create() {
@@ -50,15 +65,28 @@ function Notes() {
       <div className="grid gap-2 sm:grid-cols-[1fr_16rem]">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="h-12 pl-9" placeholder="Search all notes" value={q} onChange={(e) => setQ(e.target.value)} />
+          <Input className="h-12 pl-9" aria-label="Search notes" placeholder="Search all notes" value={q} onChange={(e) => setQ(e.target.value)} aria-busy={isFetching} />
         </div>
-        <NativeSelect value={route ?? ""} onChange={(e) => nav({ to: "/notes", search: { route: e.target.value || undefined } })}>
+        <NativeSelect value={route ?? ""} onChange={(e) => nav({ to: "/notes", search: { route: e.target.value || undefined, tag } })}>
           <option value="">All routes</option>
           {all?.routes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
         </NativeSelect>
       </div>
+      {tags && tags.length > 0 && (
+        <div role="group" aria-label="Filter by tag" className="flex flex-wrap gap-2">
+          {tags.map((t) => {
+            const on = t.tag === tag;
+            return (
+              <Link key={t.tag} to="/notes" search={{ route, tag: on ? undefined : t.tag }} aria-pressed={on}
+                className={`inline-flex min-h-10 items-center rounded-full border px-3 text-sm ${on ? "border-primary bg-primary text-primary-foreground" : "border-input text-foreground hover:bg-accent"}`}>
+                #{t.tag} <span className={`ml-1 text-xs ${on ? "" : "text-muted-foreground"}`}>{t.uses}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
       {list.length === 0 ? (
-        <Empty>{q ? "No notes match that search." : "No notes yet. Capture what you learn while it's fresh."}</Empty>
+        <Empty>{term || tag ? "No notes match that search." : "No notes yet. Capture what you learn while it's fresh."}</Empty>
       ) : (
         <ul className="space-y-2">
           {list.map((n) => (
@@ -66,6 +94,7 @@ function Notes() {
               <Link to="/notes/$id" params={{ id: n.id }} className="surface block p-4 hover:border-primary/50">
                 <p className="truncate font-medium">{n.title || n.body.split("\n")[0] || "Untitled"}</p>
                 <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{n.body.replace(/[#*_`>]/g, "")}</p>
+                {n.tags.length > 0 && <p className="mt-2 flex flex-wrap gap-1">{n.tags.map((t) => <span key={t} className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">#{t}</span>)}</p>}
                 <p className="mt-2 text-xs text-muted-foreground">{routeName(n.route_id)} · {formatDistanceToNow(new Date(n.updated_at), { addSuffix: true })}</p>
               </Link>
             </li>

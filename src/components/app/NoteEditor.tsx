@@ -3,7 +3,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Layers, Trash2 } from "lucide-react";
+import { Layers, Trash2, X } from "lucide-react";
+import { addTags } from "@/lib/search";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isLive, useRoutes, type Note } from "@/lib/data";
@@ -30,6 +31,13 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
   const [title, setTitle] = useState(note?.title ?? "");
   const [body, setBody] = useState(note?.body ?? "");
   const [routeId, setRouteId] = useState(note?.route_id ?? initialRoute ?? "");
+  const [tags, setTags] = useState<string[]>(note?.tags ?? []);
+  const [tagInput, setTagInput] = useState("");
+  const [tagError, setTagError] = useState("");
+  const [barBottom, setBarBottom] = useState(0);
+  const [showBar, setShowBar] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [mode, setMode] = useState<"write" | "preview">(note?.body ? "preview" : "write");
   const [selection, setSelection] = useState("");
   const [cardOpen, setCardOpen] = useState(false);
@@ -38,8 +46,8 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
   const ta = useRef<HTMLTextAreaElement>(null);
 
   const idRef = useRef<string | null>(note?.id ?? null);
-  const latest = useRef({ title, body, routeId });
-  latest.current = { title, body, routeId };
+  const latest = useRef({ title, body, routeId, tags });
+  latest.current = { title, body, routeId, tags };
   const dirty = useRef(false);
   const inflight = useRef(0);
   const chain = useRef<Promise<void>>(Promise.resolve());
@@ -50,14 +58,14 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
     if (!dirty.current || deleted.current) return;
     const v = latest.current;
     if (!v.routeId) return; // waits for the route picker
-    const empty = !v.title.trim() && !v.body.trim();
+    const empty = !v.title.trim() && !v.body.trim() && !v.tags.length;
     if (!idRef.current && empty) { dirty.current = false; return; }
     dirty.current = false;
     inflight.current++;
     setStatus("saving");
     const { data, error } = idRef.current
-      ? await supabase.from("notes").update({ title: v.title, body: v.body, route_id: v.routeId }).eq("id", idRef.current).select("id").single()
-      : await supabase.from("notes").insert({ title: v.title, body: v.body, route_id: v.routeId }).select("id").single();
+      ? await supabase.from("notes").update({ title: v.title, body: v.body, route_id: v.routeId, tags: v.tags }).eq("id", idRef.current).select("id").single()
+      : await supabase.from("notes").insert({ title: v.title, body: v.body, route_id: v.routeId, tags: v.tags }).select("id").single();
     inflight.current--;
     if (error || !data) {
       dirty.current = true;
@@ -95,7 +103,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
   useEffect(() => () => {
     void flush().then(async () => {
       const v = latest.current;
-      if (idRef.current && !deleted.current && !v.title.trim() && !v.body.trim()) {
+      if (idRef.current && !deleted.current && !v.title.trim() && !v.body.trim() && !v.tags.length) {
         await supabase.from("notes").delete().eq("id", idRef.current);
       }
       void qc.invalidateQueries({ queryKey: ["notes"] });
@@ -103,14 +111,57 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Selection → card works with touch: track selections inside the editor (textarea or preview)
+  // through selectionchange, and keep the bar briefly after a tap collapses the selection.
   useEffect(() => {
-    const onSel = () => {
-      const s = window.getSelection()?.toString().trim();
-      if (s) setSelection(s);
+    const read = () => {
+      const el = ta.current;
+      if (el && document.activeElement === el && el.selectionEnd > el.selectionStart) return el.value.slice(el.selectionStart, el.selectionEnd).trim();
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed && sel.anchorNode && editorRef.current?.contains(sel.anchorNode)) return sel.toString().trim();
+      return "";
     };
+    const onSel = () => {
+      const s = read();
+      if (s) {
+        if (hideTimer.current) clearTimeout(hideTimer.current);
+        setSelection(s);
+        setShowBar(true);
+      } else {
+        if (hideTimer.current) clearTimeout(hideTimer.current);
+        hideTimer.current = setTimeout(() => setShowBar(false), 600);
+      }
+    };
+    const vv = window.visualViewport;
+    const onVV = () => { if (vv) setBarBottom(Math.max(0, window.innerHeight - vv.height - vv.offsetTop)); };
     document.addEventListener("selectionchange", onSel);
-    return () => document.removeEventListener("selectionchange", onSel);
+    vv?.addEventListener("resize", onVV);
+    vv?.addEventListener("scroll", onVV);
+    return () => {
+      document.removeEventListener("selectionchange", onSel);
+      vv?.removeEventListener("resize", onVV);
+      vv?.removeEventListener("scroll", onVV);
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+    };
   }, []);
+
+  function commitTags(input: string) {
+    const { tags: next, error } = addTags(tags, input);
+    setTagError(error ?? "");
+    setTagInput("");
+    if (next.length !== tags.length) { setTags(next); latest.current = { ...latest.current, tags: next }; edit(); }
+  }
+  function removeTag(t: string) {
+    const next = tags.filter((x) => x !== t);
+    setTags(next);
+    latest.current = { ...latest.current, tags: next };
+    edit();
+  }
+  function openCardFromSelection() {
+    captureTextarea();
+    setShowBar(false);
+    setCardOpen(true);
+  }
 
   function captureTextarea() {
     const el = ta.current;
@@ -151,6 +202,28 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
         </div>
       )}
       <Input aria-label="Note title" value={title} onChange={(e) => { setTitle(e.target.value); edit(); }} placeholder="Title" className="h-14 border-0 px-0 font-display text-2xl font-semibold shadow-none focus-visible:ring-0" />
+      <div className="space-y-1">
+        <label htmlFor="note-tags" className="sr-only">Tags</label>
+        <div className="flex flex-wrap items-center gap-2">
+          {tags.map((t) => (
+            <span key={t} className="inline-flex min-h-9 items-center gap-1 rounded-full bg-secondary pl-3 text-sm text-secondary-foreground">
+              #{t}
+              <button type="button" onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`} className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-accent"><X className="h-3.5 w-3.5" /></button>
+            </span>
+          ))}
+          {tags.length < 10 && (
+            <Input id="note-tags" value={tagInput} placeholder={tags.length ? "Add tag" : "Add tags (comma or Enter)"} maxLength={300}
+              className="h-10 w-48 border-dashed" aria-describedby="note-tags-help"
+              onChange={(e) => { const v = e.target.value; if (v.includes(",")) commitTags(v); else setTagInput(v); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); commitTags(tagInput); }
+                else if (e.key === "Backspace" && !tagInput && tags.length) removeTag(tags[tags.length - 1]!);
+              }}
+              onBlur={() => { if (tagInput.trim()) commitTags(tagInput); }} />
+          )}
+        </div>
+        <p id="note-tags-help" className={`text-xs ${tagError ? "text-destructive-strong" : "sr-only"}`} aria-live="polite">{tagError || "Up to 10 tags, 30 characters each."}</p>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         {!needsRoute && (
           <NativeSelect aria-label="Note route" className="w-auto min-w-48" value={routeId} onChange={(e) => { setRouteId(e.target.value); edit(); }}>
@@ -166,15 +239,13 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
         <Button
           variant="outline"
           className="h-12"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => {
-            captureTextarea();
-            setCardOpen(true);
-          }}
+          onPointerDown={(e) => { if (e.pointerType === "mouse") e.preventDefault(); }}
+          onClick={openCardFromSelection}
         >
           <Layers className="h-4 w-4" /> Selection → card
         </Button>
       </div>
+      <div ref={editorRef}>
       {mode === "write" ? (
         <textarea
           aria-label="Note body"
@@ -190,7 +261,15 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
           {body ? <ReactMarkdown>{body}</ReactMarkdown> : <p className="text-muted-foreground">Nothing written yet.</p>}
         </article>
       )}
-      <p className="text-xs text-muted-foreground">Select text in the note, then tap "Selection → card" to turn it into a flashcard.</p>
+      </div>
+      {showBar && selection && !cardOpen && (
+        <div className="fixed inset-x-0 z-40 flex justify-center px-4 pb-2" style={{ bottom: `calc(${barBottom}px + env(safe-area-inset-bottom) + 5.5rem)` }}>
+          <Button className="h-12 shadow-lg" onPointerDown={(e) => { if (e.pointerType === "mouse") e.preventDefault(); }} onClick={openCardFromSelection}>
+            <Layers className="h-4 w-4" /> Make card
+          </Button>
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground">Select text in the note (write or preview), then tap "Make card" to turn it into a flashcard.</p>
       <Button variant="ghost" className="h-12 text-destructive-strong" onClick={() => setConfirmDelete(true)}>
         <Trash2 className="h-4 w-4" /> Delete note
       </Button>

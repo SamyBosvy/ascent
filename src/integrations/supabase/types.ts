@@ -173,6 +173,8 @@ export type Database = {
           created_at: string
           id: string
           route_id: string
+          search: unknown
+          tags: string[]
           title: string
           updated_at: string
           user_id: string
@@ -182,6 +184,8 @@ export type Database = {
           created_at?: string
           id?: string
           route_id: string
+          search?: unknown
+          tags?: string[]
           title?: string
           updated_at?: string
           user_id?: string
@@ -191,6 +195,8 @@ export type Database = {
           created_at?: string
           id?: string
           route_id?: string
+          search?: unknown
+          tags?: string[]
           title?: string
           updated_at?: string
           user_id?: string
@@ -368,25 +374,37 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          daily_goal: number | null
           new_per_day: number
           onboarding_done_at: string | null
           onboarding_started_at: string | null
+          theme: string
+          timezone: string | null
           updated_at: string
           user_id: string
+          week_start: number
         }
         Insert: {
+          daily_goal?: number | null
           new_per_day?: number
           onboarding_done_at?: string | null
           onboarding_started_at?: string | null
+          theme?: string
+          timezone?: string | null
           updated_at?: string
           user_id?: string
+          week_start?: number
         }
         Update: {
+          daily_goal?: number | null
           new_per_day?: number
           onboarding_done_at?: string | null
           onboarding_started_at?: string | null
+          theme?: string
+          timezone?: string | null
           updated_at?: string
           user_id?: string
+          week_start?: number
         }
         Relationships: []
       }
@@ -406,6 +424,13 @@ export type Database = {
       minutes_since: { Args: { _since: string }; Returns: number }
       move_cards: { Args: { _ids: string[]; _route: string }; Returns: number }
       new_cards_reviewed_since: { Args: { _since: string }; Returns: number }
+      note_tags: {
+        Args: never
+        Returns: {
+          tag: string
+          uses: number
+        }[]
+      }
       purge_deleted_routes: {
         Args: { _older_than_seconds?: number }
         Returns: number

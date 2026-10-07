@@ -1,0 +1,11 @@
+# Review, cards and notes logic
+- Reviews save through the idempotent `record_review` RPC via a localStorage-backed queue (`src/lib/reviewQueue.ts`) — ratings are never lost and never double-counted.
+- Undoing a rating goes through the atomic, idempotent `undo_review` RPC after cancelling/awaiting the queued save (`undoReview` in `reviewQueue.ts`) — a card is never left updated without its review row or vice versa.
+- Single-card delete snapshots the card + its reviews and re-inserts both (same ids) on Undo; moving cards uses the `move_cards` RPC so review rows follow their card.
+- Interval fuzz lives in `schedule()` (srs.ts) wrapping the unchanged `sm2()`; the per-user new-card limit is in `user_settings`.
+- Card text renders through `CardText` (react-markdown, raw HTML skipped, images dropped); cloze `{{cN::answer::hint}}` is rewritten to private `#cloze` links in `src/lib/cardText.ts` — one renderer for Review, Cards and the dialog preview, no HTML injection.
+- Cram sessions record nothing (no review rows, no schedule change); Review-ahead ratings use the normal `record_review` path — so retention stats never include cram.
+- Review interval previews are cached per card appearance and reused verbatim for record_review — random fuzz cannot disagree with the displayed schedule.
+- Review ordering uses the tested pure reviewOrdering helpers (earlier local due days, shuffled within each day) — testing does not change queue semantics.
+- Habit streaks/heatmap and route pacing are pure tested functions (`streaks.ts`, `pacing.ts`) fed by paged check-in history and route_stats — no streak state stored.
+- Note tags are normalised by a database trigger; note search uses the generated `notes.search` tsvector ('simple' config) via prefix tsqueries from `src/lib/search.ts` — server-side, language-agnostic.

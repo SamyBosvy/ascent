@@ -8,7 +8,7 @@ import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Check, Info, Minus, MoreHo
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPaged, localDate, minutesLabel, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteStatus, type Session } from "@/lib/data";
+import { fetchPaged, localDate, minutesLabel, useCheckinHistory, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteStatus, type Session } from "@/lib/data";
 import { RouteDialog } from "@/components/app/RouteDialog";
 import { CsvImportDialog } from "@/components/app/CsvImportDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -20,6 +20,9 @@ import { Mountain } from "@/components/app/Mountain";
 import { toggleCheckin } from "@/lib/checkins";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SummitOverlay } from "@/components/app/SummitOverlay";
+import { PacingLine } from "@/components/app/Pacing";
+import { HabitHeatmap, StreakLine } from "@/components/app/Habit";
+import { z } from "zod";
 import { CardDialog } from "@/components/app/CardDialog";
 import { Empty, NativeSelect, SectionTitle } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
@@ -30,12 +33,14 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/routes/$id")({
+  validateSearch: z.object({ focus: z.enum(["page"]).optional() }),
   head: () => ({ meta: [{ property: "og:title", content: "Route — Ascent" }, { property: "og:description", content: "Progress, milestones, sessions and cards." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title: "Route — Ascent" }, { name: "description", content: "Progress, milestones, sessions and cards." }] }),
   component: RouteDetail,
 });
 
 function RouteDetail() {
   const { id } = Route.useParams();
+  const { focus } = Route.useSearch();
   const { data: routes } = useRoutes();
   const { data: allStats } = useRouteStats();
   const { data: milestoneRows } = useQuery({
@@ -58,6 +63,15 @@ function RouteDetail() {
 
   const route = routes?.find((r) => r.id === id);
   const agg = allStats?.get(id);
+  const { data: history } = useCheckinHistory(route?.type === "habit" ? id : "none");
+  // "Continue" on Today opens a book at its page input.
+  const pageReady = !!route && !!allStats;
+  useEffect(() => {
+    if (focus !== "page" || !pageReady) return;
+    const el = document.getElementById("book-current-page") as HTMLInputElement | null;
+    el?.focus();
+    el?.scrollIntoView({ block: "center" });
+  }, [focus, pageReady]);
   const stats = route && allStats ? routeStats(route, agg) : null;
 
   if (!routes || !allStats || !milestoneRows) return <ScreenSkeleton screen="route" />;
@@ -211,8 +225,9 @@ function RouteDetail() {
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {TYPE_LABEL[route.type]}
-          {route.target_date && ` · target ${format(new Date(route.target_date), "MMM d, yyyy")}`}
+          {route.target_date && ` · target ${format(new Date(`${route.target_date}T12:00:00`), "MMM d, yyyy")}`}
         </p>
+        <PacingLine route={route} agg={agg} className="mt-1 text-sm" />
         {route.description && <p className="mt-3 max-w-prose text-muted-foreground">{route.description}</p>}
       </div>
 
@@ -254,6 +269,7 @@ function RouteDetail() {
               <div>
                 <p className="font-medium">{Math.round(habitConsistency(route, agg) * 100)}% consistency</p>
                 <p className="text-xs text-muted-foreground">Last 30 days · {route.habit_frequency === "x_per_week" ? `${route.habit_target}× per week` : route.habit_frequency}</p>
+                <StreakLine route={route} dates={history?.get(id)} today={localDate()} className="mt-1" />
               </div>
               {agg?.checked_today ? (
                 <Button variant="ghost" className="h-12 text-primary-strong" onClick={() => toggleCheckin(id, true, refresh)} aria-label="Checked in today. Tap to undo.">
@@ -270,6 +286,13 @@ function RouteDetail() {
           )}
         </div>
       </div>
+
+      {route.type === "habit" && (
+        <section>
+          <SectionTitle>Check-ins</SectionTitle>
+          <HabitHeatmap dates={history?.get(id)} today={localDate()} />
+        </section>
+      )}
 
       <section>
         <SectionTitle>{route.type === "habit" ? "Steps" : "Milestones"}</SectionTitle>
