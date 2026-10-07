@@ -50,7 +50,7 @@ function Today() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
+        <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", ...(settings ? { timeZone: settings.timezone } : {}) })}</p>
         <h1 className="mt-1 text-3xl font-semibold">{greeting}.</h1>
       </div>
 

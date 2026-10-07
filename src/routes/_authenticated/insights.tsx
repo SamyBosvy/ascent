@@ -4,7 +4,9 @@ import { format } from "date-fns";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPaged, startOfWeek, useRouteStats, useRoutes } from "@/lib/data";
+import { fetchPaged, useRouteStats, useRoutes, weekStartDate } from "@/lib/data";
+import { getPrefs } from "@/lib/prefs";
+import { addDays, shortDate, zonedMidnight } from "@/lib/time";
 import { habitConsistency } from "@/lib/camp";
 import { Empty, SectionTitle } from "@/components/app/fields";
 
@@ -15,11 +17,13 @@ export const Route = createFileRoute("/_authenticated/insights")({
 
 const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 
+/** Last eight weeks in the user's timezone and week start; each bucket is [start, end). */
 function eightWeeks() {
+  const tz = getPrefs().tz;
+  const current = weekStartDate();
   return Array.from({ length: 8 }, (_, i) => {
-    const s = startOfWeek();
-    s.setDate(s.getDate() - (7 - i) * 7);
-    return s;
+    const day = addDays(current, -(7 - i) * 7);
+    return { day, start: zonedMidnight(day, tz).getTime(), end: zonedMidnight(addDays(day, 7), tz).getTime() };
   });
 }
 
@@ -28,7 +32,7 @@ function useInsightRows() {
   return useQuery({
     queryKey: ["insights", "rows"],
     queryFn: async () => {
-      const from = eightWeeks()[0]!.toISOString();
+      const from = new Date(eightWeeks()[0]!.start).toISOString();
       const [sessions, reviews] = await Promise.all([
         fetchPaged<{ route_id: string; minutes: number; logged_at: string }>((a, b) =>
           supabase.from("sessions").select("route_id, minutes, logged_at, routes!inner(id)").is("routes.deleted_at", null).gte("logged_at", from).order("logged_at").order("id").range(a, b)),
@@ -68,19 +72,17 @@ function Insights() {
     .map((a) => a.route_id);
   const name = (id: string) => routes.find((r) => r.id === id)?.name ?? "Route";
   const timeData = weeks.map((w) => {
-    const end = w.getTime() + 7 * 86400000;
-    const row: Record<string, string | number> = { week: format(w, "MMM d") };
+    const row: Record<string, string | number> = { week: shortDate(w.day) };
     for (const rid of routeIds) {
-      const m = rows.sessions.filter((s) => s.route_id === rid && new Date(s.logged_at).getTime() >= w.getTime() && new Date(s.logged_at).getTime() < end).reduce((a, s) => a + s.minutes, 0);
+      const m = rows.sessions.filter((s) => s.route_id === rid && new Date(s.logged_at).getTime() >= w.start && new Date(s.logged_at).getTime() < w.end).reduce((a, s) => a + s.minutes, 0);
       row[name(rid)] = Math.round((m / 60) * 10) / 10;
     }
     return row;
   });
 
   const retention = weeks.map((w) => {
-    const end = w.getTime() + 7 * 86400000;
-    const rs = rows.reviews.filter((r) => new Date(r.reviewed_at).getTime() >= w.getTime() && new Date(r.reviewed_at).getTime() < end);
-    return { week: format(w, "MMM d"), retention: rs.length ? Math.round((rs.filter((r) => r.rating >= 2).length / rs.length) * 100) : null };
+    const rs = rows.reviews.filter((r) => new Date(r.reviewed_at).getTime() >= w.start && new Date(r.reviewed_at).getTime() < w.end);
+    return { week: shortDate(w.day), retention: rs.length ? Math.round((rs.filter((r) => r.rating >= 2).length / rs.length) * 100) : null };
   });
 
   const habits = routes.filter((r) => r.type === "habit");
