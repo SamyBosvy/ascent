@@ -64,6 +64,13 @@
       "when": 1791345185788,
       "tag": "0008_cards_updated_at",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791352566054,
+      "tag": "0009_preferences_tags_search",
+      "breakpoints": true
     }
   ]
 }
