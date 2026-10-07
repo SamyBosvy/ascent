@@ -9,6 +9,7 @@ import { RouteDialog } from "@/components/app/RouteDialog";
 import { routeStats } from "@/lib/camp";
 import { AltitudeBar, CampBadge } from "@/components/app/Mountain";
 import { Empty } from "@/components/app/fields";
+import { PacingLine } from "@/components/app/Pacing";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/routes/")({
@@ -68,6 +69,7 @@ function RoutesPage() {
                         <CampBadge camp={s.camp} />
                       </div>
                       <AltitudeBar camp={s.camp} />
+                      <PacingLine route={r} agg={stats.get(r.id)} />
                     </Link>
                   </li>
                 );
