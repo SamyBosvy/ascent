@@ -92,10 +92,15 @@ function Insights() {
       <h1 className="text-3xl font-semibold">Insights</h1>
       <section>
         <SectionTitle>Hours per route, by week</SectionTitle>
-        <div className="surface h-72 p-3">
+        <div role="group" aria-label="Hours spent per route each week, over the last eight weeks" className="surface h-72 p-3">
+          <table className="sr-only">
+            <caption>Hours per route, by week</caption>
+            <thead><tr><th scope="col">Week</th>{routeIds.map(rid => <th key={rid} scope="col">{name(rid)} (hours)</th>)}</tr></thead>
+            <tbody>{timeData.map(row => <tr key={row.week}><th scope="row">{row.week}</th>{routeIds.map(rid => <td key={rid}>{row[name(rid)]}</td>)}</tr>)}</tbody>
+          </table>
           {routeIds.length ? (
-            <ResponsiveContainer>
-              <BarChart data={timeData}>
+            <ResponsiveContainer aria-hidden="true">
+              <BarChart data={timeData} accessibilityLayer={false}>
                 <CartesianGrid stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="week" {...axis} />
                 <YAxis {...axis} width={30} />
@@ -109,12 +114,17 @@ function Insights() {
       </section>
       <section>
         <SectionTitle>Flashcard retention</SectionTitle>
-        <div className="surface h-64 p-3">
+        <div role="group" aria-label="Weekly flashcard retention percentage over the last eight weeks" className="surface h-64 p-3">
+          <table className="sr-only">
+            <caption>Flashcard retention</caption>
+            <thead><tr><th scope="col">Week</th><th scope="col">Retention (%)</th></tr></thead>
+            <tbody>{retention.map(row => <tr key={row.week}><th scope="row">{row.week}</th><td>{row.retention == null ? "No reviews" : `${row.retention}%`}</td></tr>)}</tbody>
+          </table>
           {retention.every((r) => r.retention == null) ? (
             <Empty>No reviews in the last 8 weeks. Retention appears here once you review cards.</Empty>
           ) : (
-          <ResponsiveContainer>
-            <LineChart data={retention}>
+          <ResponsiveContainer aria-hidden="true">
+            <LineChart data={retention} accessibilityLayer={false}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis dataKey="week" {...axis} />
               <YAxis {...axis} width={36} domain={[0, 100]} unit="%" />

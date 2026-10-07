@@ -125,7 +125,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
           <div className="space-y-2">
             <Label htmlFor="rt">Type</Label>
             {editing ? (
-              <p id="rt" className="flex h-12 items-center rounded-md border border-dashed px-3 text-muted-foreground">{TYPE_LABEL[type]} · can't be changed</p>
+              <Input id="rt" readOnly value={`${TYPE_LABEL[type]} · can't be changed`} className="h-12 border-dashed text-muted-foreground" />
             ) : (
               <NativeSelect id="rt" value={type} onChange={(e) => setType(e.target.value as RouteType)}>
                 {Object.entries(TYPE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}

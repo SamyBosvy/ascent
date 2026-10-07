@@ -95,8 +95,8 @@ export function CardDialog({
         <form onSubmit={(e) => save(e)} className="space-y-4">
           {(!fixedRoute || card) && (
             <div className="space-y-2">
-              <Label>Route</Label>
-              <NativeSelect value={routeId} onChange={(e) => setRouteId(e.target.value)}>
+              <Label htmlFor="card-route">Route</Label>
+              <NativeSelect id="card-route" value={routeId} onChange={(e) => setRouteId(e.target.value)}>
                 {data?.routes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
               </NativeSelect>
             </div>
