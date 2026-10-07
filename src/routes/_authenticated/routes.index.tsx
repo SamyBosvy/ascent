@@ -30,7 +30,7 @@ function RoutesPage() {
   const archived = routes.filter((r) => !isLive(r));
 
   async function restore(id: string) {
-    const { error } = await supabase.from("routes").update({ archived_at: null, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await supabase.from("routes").update({ archived_at: null }).eq("id", id);
     if (error) { toast.error(`Couldn't restore: ${error.message}`); return; }
     toast.success("Route restored.");
     refresh();

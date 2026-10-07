@@ -1,3 +1,4 @@
+import { useSubmission } from "@/hooks/use-submission";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
@@ -38,7 +39,9 @@ function ResetPassword() {
     return () => data.subscription.unsubscribe();
   }, []);
 
-  async function submit(e: React.FormEvent) {
+  const { submitting: submittingReset, submit: submitReset } = useSubmission();
+  function submit(e: React.FormEvent) { e.preventDefault(); return submitReset(() => submitRequest(e)); }
+  async function submitRequest(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     if (password.length < 8) {
@@ -128,7 +131,7 @@ function ResetPassword() {
                 />
               </div>
               {error && <p className="rounded-lg bg-muted p-3 text-sm" role="alert">{error}</p>}
-              <Button type="submit" className="h-12 w-full text-base" disabled={busy}>
+              <Button type="submit" className="h-12 w-full text-base" disabled={busy || submittingReset}>
                 {busy ? "One moment…" : "Update password"}
               </Button>
             </form>

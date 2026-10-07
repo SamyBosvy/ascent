@@ -1,3 +1,4 @@
+import { useSubmission } from "@/hooks/use-submission";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,7 +55,9 @@ export function CardDialog({
   const route = data?.routes.find((r) => r.id === routeId);
   const isLang = route?.type === "language";
 
-  async function save(e: React.FormEvent, again = false) {
+  const { submitting: submittingSave, submit: submitSave } = useSubmission();
+  function save(e: React.FormEvent, again = false) { e.preventDefault(); return submitSave(() => saveRequest(e, again)); }
+  async function saveRequest(e: React.FormEvent, again = false) {
     e.preventDefault();
     if (!front.trim() || !back.trim() || !routeId) return;
     if (card) {
@@ -95,8 +98,8 @@ export function CardDialog({
         <form onSubmit={(e) => save(e)} className="space-y-4">
           {(!fixedRoute || card) && (
             <div className="space-y-2">
-              <Label>Route</Label>
-              <NativeSelect value={routeId} onChange={(e) => setRouteId(e.target.value)}>
+              <Label htmlFor="card-route">Route</Label>
+              <NativeSelect id="card-route" value={routeId} onChange={(e) => setRouteId(e.target.value)}>
                 {data?.routes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
               </NativeSelect>
             </div>
@@ -123,8 +126,8 @@ export function CardDialog({
           )}
           <p className="text-xs text-muted-foreground">Markdown works: **bold**, *italics*, lists, `code`. Cloze: {"{{c1::answer}}"} or {"{{c1::answer::hint}}"} in the front.</p>
           {!card && (
-            <label className="flex min-h-12 items-center gap-3 text-sm">
-              <Checkbox checked={reverse} disabled={hasCloze(front)} onCheckedChange={(v) => setReverse(!!v)} /> Also create reverse card
+            <label htmlFor="card-reverse" className="flex min-h-12 items-center gap-3 text-sm">
+              <Checkbox id="card-reverse" checked={reverse} disabled={hasCloze(front)} onCheckedChange={(v) => setReverse(!!v)} /> Also create reverse card
             </label>
           )}
           {(front.trim() || back.trim()) && (
@@ -136,8 +139,8 @@ export function CardDialog({
             </div>
           )}
           <div className="flex gap-2">
-            {!card && <Button type="button" variant="outline" className="h-12 flex-1" onClick={(e) => front && back && save(e, true)}>Save & add another</Button>}
-            <Button type="submit" className="h-12 flex-1">Save</Button>
+            {!card && <Button disabled={submittingSave} type="button" variant="outline" className="h-12 flex-1" onClick={(e) => front && back && save(e, true)}>Save & add another</Button>}
+            <Button disabled={submittingSave} type="submit" className="h-12 flex-1">Save</Button>
           </div>
         </form>
       </DialogContent>

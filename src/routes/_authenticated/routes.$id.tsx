@@ -1,3 +1,4 @@
+import { useSubmission } from "@/hooks/use-submission";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import type { Database } from "@/integrations/supabase/types";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -47,6 +48,7 @@ function RouteDetail() {
   const [celebrate, setCelebrate] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [newMs, setNewMs] = useState("");
+  const { submitting: submittingMilestone, submit: submitMilestone } = useSubmission();
   const [importOpen, setImportOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editKey, setEditKey] = useState(0);
@@ -67,7 +69,7 @@ function RouteDetail() {
   const offerSummit = stats.camp === 4 && route.status !== "summited" && !dismissed;
 
   async function markSummited() {
-    const { error } = await supabase.from("routes").update({ status: "summited", summited_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await supabase.from("routes").update({ status: "summited", summited_at: new Date().toISOString() }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     setCelebrate(true);
     refresh();
@@ -78,7 +80,7 @@ function RouteDetail() {
   }
 
   async function update(patch: Database["public"]["Tables"]["routes"]["Update"]) {
-    const { error } = await supabase.from("routes").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await supabase.from("routes").update({ ...patch }).eq("id", id);
     if (error) toast.error(error.message);
     refresh();
     return !error;
@@ -101,7 +103,8 @@ function RouteDetail() {
     }
     msRefresh();
   }
-  async function addMs(e: React.FormEvent) {
+  function addMs(e: React.FormEvent) { e.preventDefault(); return submitMilestone(() => addMsRequest(e)); }
+  async function addMsRequest(e: React.FormEvent) {
     e.preventDefault();
     const title = newMs.trim();
     if (!title) return;
@@ -149,7 +152,7 @@ function RouteDetail() {
   }
 
   async function setArchived(archived: boolean) {
-    const { error } = await supabase.from("routes").update({ archived_at: archived ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await supabase.from("routes").update({ archived_at: archived ? new Date().toISOString() : null }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success(archived ? "Route archived. Find it under Archived on Routes." : "Route restored.");
     refresh();
@@ -225,9 +228,9 @@ function RouteDetail() {
             <Stat label="Retention" value={stats.retention == null ? "—" : `${Math.round(stats.retention * 100)}%`} />
           </div>
           <div className="surface grid gap-3 p-4 sm:grid-cols-2">
-            <label className="space-y-1 text-sm">
+            <label htmlFor="route-status" className="space-y-1 text-sm">
               <span className="text-muted-foreground">Status</span>
-              <NativeSelect value={route.status} onChange={(e) => {
+              <NativeSelect id="route-status" value={route.status} onChange={(e) => {
                 const status = e.target.value as RouteStatus;
                 if (status === "summited") { void markSummited(); return; }
                 update({ status, summited_at: null });
@@ -235,9 +238,9 @@ function RouteDetail() {
                 {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </NativeSelect>
             </label>
-            <label className="space-y-1 text-sm">
+            <label htmlFor="route-camp" className="space-y-1 text-sm">
               <span className="text-muted-foreground">Camp</span>
-              <NativeSelect value={route.camp_override ?? "auto"} onChange={(e) => update({ camp_override: e.target.value === "auto" ? null : parseInt(e.target.value) })}>
+              <NativeSelect id="route-camp" value={route.camp_override ?? "auto"} onChange={(e) => update({ camp_override: e.target.value === "auto" ? null : parseInt(e.target.value) })}>
                 <option value="auto">Automatic ({CAMPS[stats.calculated]})</option>
                 {CAMPS.map((c, i) => <option key={c} value={i}>{c}</option>)}
               </NativeSelect>
@@ -286,8 +289,8 @@ function RouteDetail() {
           ))}
         </ul>
         <form onSubmit={addMs} className="mt-3 flex gap-2">
-          <Input className="h-12" placeholder="Add a milestone" value={newMs} onChange={(e) => setNewMs(e.target.value)} />
-          <Button type="submit" variant="outline" className="h-12 w-12" aria-label="Add"><Plus className="h-4 w-4" /></Button>
+          <Input aria-label="New milestone" className="h-12" placeholder="Add a milestone" value={newMs} onChange={(e) => setNewMs(e.target.value)} />
+          <Button disabled={submittingMilestone} type="submit" variant="outline" className="h-12 w-12" aria-label="Add"><Plus className="h-4 w-4" /></Button>
         </form>
       </section>
 
@@ -393,9 +396,10 @@ function BookPages({ current, total, onSave }: { current: number; total: number;
   return (
     <div className="surface space-y-2 p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">Page</span>
+        <Label htmlFor="book-current-page" className="text-sm text-muted-foreground">Page</Label>
         <Button variant="outline" className="h-12 w-12" aria-label="Previous page" disabled={current <= 0} onClick={() => commit(current - 1)}><Minus className="h-4 w-4" /></Button>
         <Input
+          id="book-current-page"
           type="number"
           inputMode="numeric"
           className="h-12 w-24 text-center"
@@ -466,7 +470,9 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
     void qc.invalidateQueries({ queryKey: ["insights"] });
   };
 
-  async function save(minutes: number, forRoute = routeId, loggedAt?: string) {
+  const { submitting: submittingSession, submit: submitSession } = useSubmission();
+  function save(minutes: number, forRoute = routeId, loggedAt?: string) { return submitSession(() => saveRequest(minutes, forRoute, loggedAt)); }
+  async function saveRequest(minutes: number, forRoute = routeId, loggedAt?: string) {
     if (minutes < 1 || minutes > MAX_MIN) { toast.error(`Log between 1 and ${MAX_MIN} minutes.`); return false; }
     const { error } = await supabase.from("sessions").insert({ route_id: forRoute, minutes, note: note.trim() || null, ...(loggedAt ? { logged_at: loggedAt } : {}) });
     if (error) { toast.error(error.message); return false; }
@@ -543,7 +549,7 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
             variant="outline"
             className="h-12 w-12"
             aria-label="Stop and save"
-            disabled={!mine || shown < 1000}
+            disabled={submittingSession || !mine || shown < 1000}
             onClick={async () => {
               timer.pause();
               const ok = await save(Math.min(MAX_MIN, Math.max(1, Math.round(elapsedMs(timer.get()) / 60000))));
@@ -560,8 +566,8 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
           <div className="flex flex-wrap gap-2">
             <Input className="h-12 w-28" type="number" inputMode="numeric" min={1} max={MAX_MIN} placeholder="Minutes" aria-label="Minutes" value={manual} onChange={(e) => setManual(e.target.value)} aria-invalid={!!manualErr} />
             <Input className="h-12 w-40" type="date" aria-label="Date" value={day} max={localDate()} onChange={(e) => setDay(e.target.value && e.target.value > localDate() ? localDate() : e.target.value)} />
-            <Input className="h-12 min-w-40 flex-1" placeholder="One-line note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
-            <Button type="submit" variant="outline" className="h-12" disabled={!manual || !!manualErr}>Log</Button>
+            <Input aria-label="Session note (optional)" className="h-12 min-w-40 flex-1" placeholder="One-line note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+            <Button type="submit" variant="outline" className="h-12" disabled={submittingSession || !manual || !!manualErr}>Log</Button>
           </div>
           {manualErr && <p className="text-xs text-destructive-strong">{manualErr}</p>}
         </form>
@@ -607,7 +613,7 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Keep it running</AlertDialogCancel>
-            <AlertDialogAction onClick={(e) => { e.preventDefault(); void stopOtherAndStart(); }}>Stop and start here</AlertDialogAction>
+            <AlertDialogAction disabled={submittingSession} onClick={(e) => { e.preventDefault(); void stopOtherAndStart(); }}>Stop and start here</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -628,7 +634,9 @@ function EditSessionDialog({ session, onClose, onSaved }: { session: Session | n
     minutes: minutesError(minutes),
     when: !when ? "Pick a date and time." : new Date(when).getTime() > Date.now() + 60000 ? "Sessions can't be in the future." : null,
   };
-  async function save(e: React.FormEvent) {
+  const { submitting: submittingEditSession, submit: submitEditSession } = useSubmission();
+  function save(e: React.FormEvent) { e.preventDefault(); return submitEditSession(() => saveRequest(e)); }
+  async function saveRequest(e: React.FormEvent) {
     e.preventDefault();
     if (!session || errs.minutes || errs.when || busy) return;
     setBusy(true);
@@ -658,7 +666,7 @@ function EditSessionDialog({ session, onClose, onSaved }: { session: Session | n
             <Label htmlFor="sn">Note (optional)</Label>
             <Input id="sn" className="h-12" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
-          <Button type="submit" className="h-12 w-full" disabled={busy || !!errs.minutes || !!errs.when}>Save</Button>
+          <Button type="submit" className="h-12 w-full" disabled={busy || submittingEditSession || !!errs.minutes || !!errs.when}>Save</Button>
         </form>
       </DialogContent>
     </Dialog>

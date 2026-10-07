@@ -56,6 +56,7 @@ function Shell() {
 
   return (
     <div className="min-h-screen md:flex">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-background focus:p-3 focus:text-foreground focus:outline-none focus:ring-2 focus:ring-ring">Skip to content</a>
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-sidebar p-4 md:flex">
         <Link to="/today" className="mb-8 flex items-center gap-3 px-2 pt-2">
           <img src="/icon-192.png" alt="" className="h-9 w-9 rounded-xl" />
@@ -67,7 +68,7 @@ function Shell() {
               key={to}
               to={to}
               className="tap flex items-center gap-3 rounded-xl px-3 text-sidebar-foreground/75 hover:bg-sidebar-accent"
-              activeProps={{ className: "bg-sidebar-accent !text-sidebar-accent-foreground font-semibold" }}
+              activeProps={{ className: "bg-sidebar-accent !text-sidebar-accent-foreground font-semibold", "aria-current": "page" }}
             >
               <Icon className="h-5 w-5" /> {label}
             </Link>
@@ -77,7 +78,7 @@ function Shell() {
         <button onClick={() => setCapture(true)} className="tap mb-2 flex items-center justify-center gap-2 rounded-xl bg-primary font-medium text-primary-foreground">
           <Plus className="h-5 w-5" /> Quick capture
         </button>
-        <Link to="/settings" className="tap flex items-center gap-3 rounded-xl px-3 text-sidebar-foreground/75 hover:bg-sidebar-accent" activeProps={{ className: "bg-sidebar-accent font-semibold" }}>
+        <Link to="/settings" className="tap flex items-center gap-3 rounded-xl px-3 text-sidebar-foreground/75 hover:bg-sidebar-accent" activeProps={{ className: "bg-sidebar-accent font-semibold", "aria-current": "page" }}>
           <Settings className="h-5 w-5" /> Settings
         </Link>
       </aside>
@@ -88,11 +89,11 @@ function Shell() {
             <img src="/icon-192.png" alt="" className="h-8 w-8 rounded-lg" />
             <span className="font-display text-lg font-semibold">Ascent</span>
           </Link>
-          <Link to="/settings" aria-label="Settings" className="tap flex items-center justify-center rounded-xl text-muted-foreground">
+          <Link to="/settings" aria-label="Settings" activeProps={{ "aria-current": "page" }} className="tap flex items-center justify-center rounded-xl text-muted-foreground">
             <Settings className="h-5 w-5" />
           </Link>
         </header>
-        <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-32 pt-6 md:px-10 md:pb-12 md:pt-10">
+        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-4 pb-32 pt-6 md:px-10 md:pb-12 md:pt-10">
           <Outlet />
         </main>
       </div>
@@ -114,7 +115,7 @@ function Shell() {
             key={to}
             to={to}
             className="flex min-h-16 flex-col items-center justify-center gap-1 text-xs text-muted-foreground"
-            activeProps={{ className: "!text-primary-strong font-semibold" }}
+            activeProps={{ className: "!text-primary-strong font-semibold", "aria-current": "page" }}
           >
             <Icon className="h-5 w-5" />
             {label}

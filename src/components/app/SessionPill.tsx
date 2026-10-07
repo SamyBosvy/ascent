@@ -1,3 +1,4 @@
+import { useSubmission } from "@/hooks/use-submission";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Timer } from "lucide-react";
@@ -48,7 +49,9 @@ export function StaleSessionPrompt() {
     }
   }, []);
 
-  async function save(mins: number) {
+  const { submitting: submittingStale, submit: submitStale } = useSubmission();
+  function save(mins: number) { return submitStale(() => saveRequest(mins)); }
+  async function saveRequest(mins: number) {
     const s = timer.get();
     if (!s) { setOpen(false); return; }
     if (mins < 1) { toast.error("Log at least one minute."); return; }
@@ -77,11 +80,11 @@ export function StaleSessionPrompt() {
               <Label htmlFor="stale-min">Minutes actually spent</Label>
               <Input id="stale-min" type="number" inputMode="numeric" min={1} required className="h-12" value={minutes} onChange={(e) => setMinutes(e.target.value)} />
             </div>
-            <Button type="submit" className="h-12 w-full">Save adjusted time</Button>
+            <Button disabled={submittingStale} type="submit" className="h-12 w-full">Save adjusted time</Button>
           </form>
         ) : (
           <div className="grid gap-2 sm:grid-cols-3">
-            <Button className="h-12" onClick={() => save(Math.max(1, Math.round(elapsedMs(timer.get()) / 60000)))}>Save</Button>
+            <Button disabled={submittingStale} className="h-12" onClick={() => save(Math.max(1, Math.round(elapsedMs(timer.get()) / 60000)))}>Save</Button>
             <Button variant="outline" className="h-12" onClick={() => setAdjust(true)}>Adjust</Button>
             <Button variant="outline" className="h-12 text-destructive-strong" onClick={() => { timer.clear(); setOpen(false); }}>Discard</Button>
           </div>

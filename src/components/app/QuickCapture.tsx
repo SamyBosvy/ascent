@@ -1,3 +1,4 @@
+import { useSubmission } from "@/hooks/use-submission";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,7 +32,9 @@ export function QuickCapture({ open, onOpenChange }: { open: boolean; onOpenChan
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  async function save(e: React.FormEvent) {
+  const { submitting: submittingSave, submit: submitSave } = useSubmission();
+  function save(e: React.FormEvent) { e.preventDefault(); return submitSave(() => saveRequest(e)); }
+  async function saveRequest(e: React.FormEvent) {
     e.preventDefault();
     if (!routeId) return;
     setBusy(true);
@@ -85,7 +88,7 @@ export function QuickCapture({ open, onOpenChange }: { open: boolean; onOpenChan
                 <Input id="qc-text" value={text} onChange={(e) => setText(e.target.value)} className="h-12" />
               )}
             </div>
-            <Button type="submit" className="h-12 w-full" disabled={busy}>Save</Button>
+            <Button type="submit" className="h-12 w-full" disabled={busy || submittingSave}>Save</Button>
           </form>
         )}
       </DialogContent>

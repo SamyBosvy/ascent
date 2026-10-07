@@ -48,6 +48,7 @@ export type Database = {
           reps: number
           route_id: string
           suspended_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -65,6 +66,7 @@ export type Database = {
           reps?: number
           route_id: string
           suspended_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Update: {
@@ -82,6 +84,7 @@ export type Database = {
           reps?: number
           route_id?: string
           suspended_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: [

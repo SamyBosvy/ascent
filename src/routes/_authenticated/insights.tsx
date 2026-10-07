@@ -92,10 +92,16 @@ function Insights() {
       <h1 className="text-3xl font-semibold">Insights</h1>
       <section>
         <SectionTitle>Hours per route, by week</SectionTitle>
-        <div className="surface h-72 p-3">
+        <div role="group" aria-label="Hours spent per route each week, over the last eight weeks" className="surface h-72 p-3">
+          <table className="sr-only">
+            <caption>Hours per route, by week</caption>
+            <thead><tr><th scope="col">Week</th>{routeIds.map(rid => <th key={rid} scope="col">{name(rid)} (hours)</th>)}</tr></thead>
+            <tbody>{timeData.map(row => <tr key={row["week"]}><th scope="row">{row["week"]}</th>{routeIds.map(rid => <td key={rid}>{row[name(rid)]}</td>)}</tr>)}</tbody>
+          </table>
           {routeIds.length ? (
+            <div aria-hidden="true" className="h-full">
             <ResponsiveContainer>
-              <BarChart data={timeData}>
+              <BarChart data={timeData} accessibilityLayer={false}>
                 <CartesianGrid stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="week" {...axis} />
                 <YAxis {...axis} width={30} />
@@ -104,17 +110,24 @@ function Insights() {
                 {routeIds.map((rid, i) => <Bar key={rid} dataKey={name(rid)} stackId="a" fill={COLORS[i % COLORS.length]} />)}
               </BarChart>
             </ResponsiveContainer>
+            </div>
           ) : <Empty>No sessions logged yet.</Empty>}
         </div>
       </section>
       <section>
         <SectionTitle>Flashcard retention</SectionTitle>
-        <div className="surface h-64 p-3">
+        <div role="group" aria-label="Weekly flashcard retention percentage over the last eight weeks" className="surface h-64 p-3">
+          <table className="sr-only">
+            <caption>Flashcard retention</caption>
+            <thead><tr><th scope="col">Week</th><th scope="col">Retention (%)</th></tr></thead>
+            <tbody>{retention.map(row => <tr key={row.week}><th scope="row">{row.week}</th><td>{row.retention == null ? "No reviews" : `${row.retention}%`}</td></tr>)}</tbody>
+          </table>
           {retention.every((r) => r.retention == null) ? (
             <Empty>No reviews in the last 8 weeks. Retention appears here once you review cards.</Empty>
           ) : (
+          <div aria-hidden="true" className="h-full">
           <ResponsiveContainer>
-            <LineChart data={retention}>
+            <LineChart data={retention} accessibilityLayer={false}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis dataKey="week" {...axis} />
               <YAxis {...axis} width={36} domain={[0, 100]} unit="%" />
@@ -122,6 +135,7 @@ function Insights() {
               <Line type="monotone" dataKey="retention" stroke="var(--chart-1)" strokeWidth={2.5} connectNulls dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
+          </div>
           )}
         </div>
       </section>

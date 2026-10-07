@@ -82,7 +82,7 @@
   --destructive-text: oklch(0.54 0.2 27);
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.91 0.012 245);
-  --input: oklch(0.660 0.014 245);
+  --input: oklch(0.65 0.014 245);
   --ring: oklch(0.52 0.12 250);
   --gold: oklch(0.76 0.15 75);
   --gold-text: oklch(0.53 0.12 75);
