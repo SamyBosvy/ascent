@@ -61,10 +61,10 @@ describe("computeStreaks weekly and x_per_week", () => {
     expect(computeStreaks(["2026-09-15", "2026-09-29"], "weekly", null, today, 1)).toMatchObject({ current: 1, best: 1 });
   });
   it("respects the week start", () => {
-    // Sunday 10-04 is in the current week when weeks start Sunday, in last week when Monday.
-    const dates = ["2026-09-27", "2026-10-04"];
-    expect(computeStreaks(dates, "weekly", null, today, 0).current).toBe(2);
-    expect(computeStreaks(dates, "weekly", null, today, 1).current).toBe(1);
+    // Sunday 10-04 shares the current week with Monday 10-05 when weeks start Sunday; not when they start Monday.
+    const dates = ["2026-10-04", "2026-10-05"];
+    expect(computeStreaks(dates, "weekly", null, today, 0).current).toBe(1);
+    expect(computeStreaks(dates, "weekly", null, today, 1).current).toBe(2);
   });
   it("x_per_week needs the target per week", () => {
     const dates = ["2026-09-28", "2026-09-29", "2026-09-30", "2026-10-05", "2026-10-06"];
