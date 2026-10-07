@@ -99,7 +99,8 @@ function Insights() {
             <tbody>{timeData.map(row => <tr key={row["week"]}><th scope="row">{row["week"]}</th>{routeIds.map(rid => <td key={rid}>{row[name(rid)]}</td>)}</tr>)}</tbody>
           </table>
           {routeIds.length ? (
-            <ResponsiveContainer aria-hidden="true">
+            <div aria-hidden="true" className="h-full">
+            <ResponsiveContainer>
               <BarChart data={timeData} accessibilityLayer={false}>
                 <CartesianGrid stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="week" {...axis} />
@@ -109,6 +110,7 @@ function Insights() {
                 {routeIds.map((rid, i) => <Bar key={rid} dataKey={name(rid)} stackId="a" fill={COLORS[i % COLORS.length]} />)}
               </BarChart>
             </ResponsiveContainer>
+            </div>
           ) : <Empty>No sessions logged yet.</Empty>}
         </div>
       </section>
@@ -123,7 +125,8 @@ function Insights() {
           {retention.every((r) => r.retention == null) ? (
             <Empty>No reviews in the last 8 weeks. Retention appears here once you review cards.</Empty>
           ) : (
-          <ResponsiveContainer aria-hidden="true">
+          <div aria-hidden="true" className="h-full">
+          <ResponsiveContainer>
             <LineChart data={retention} accessibilityLayer={false}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis dataKey="week" {...axis} />
@@ -132,6 +135,7 @@ function Insights() {
               <Line type="monotone" dataKey="retention" stroke="var(--chart-1)" strokeWidth={2.5} connectNulls dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
+          </div>
           )}
         </div>
       </section>

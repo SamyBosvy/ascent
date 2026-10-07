@@ -3,7 +3,7 @@ import { habitConsistency, habitDueToday, routeStats } from "./camp";
 import type { RouteAgg, RouteRow } from "./data";
 
 const route = (patch: Partial<RouteRow> = {}): RouteRow => ({ id: "r", user_id: "u", name: "Learning", type: "skill", status: "active", created_at: "2026-09-01T12:00:00Z", updated_at: "2026-09-01T12:00:00Z", archived_at: null, deleted_at: null, description: null, target_date: null, total_pages: null, current_page: null, habit_frequency: null, habit_target: null, speech_lang: null, camp_override: null, summited_at: null, ...patch });
-const agg = (patch: Partial<RouteAgg> = {}): RouteAgg => ({ route_id: "r", milestones_total: 0, milestones_done: 0, last_milestone_at: null, minutes: 0, session_count: 0, last_session_at: null, cards_total: 0, cards_mature: 0, cards_due: 0, reviews_recent: 0, reviews_recent_good: 0, last_review_at: null, checkins_recent: 0, checkins_week: 0, checked_today: false, last_checkin_on: null, ...patch });
+const agg = (patch: Partial<RouteAgg> = {}): RouteAgg => ({ route_id: "r", milestones_total: 0, milestones_done: 0, last_milestone_at: "", minutes: 0, session_count: 0, last_session_at: "", cards_total: 0, cards_mature: 0, cards_due: 0, reviews_recent: 0, reviews_recent_good: 0, last_review_at: "", checkins_recent: 0, checkins_week: 0, checked_today: false, last_checkin_on: "", ...patch });
 beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-07T12:00:00Z")); });
 afterEach(() => vi.useRealTimers());
 describe("camp scoring", () => {

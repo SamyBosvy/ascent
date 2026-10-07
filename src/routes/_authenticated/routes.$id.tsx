@@ -228,9 +228,9 @@ function RouteDetail() {
             <Stat label="Retention" value={stats.retention == null ? "—" : `${Math.round(stats.retention * 100)}%`} />
           </div>
           <div className="surface grid gap-3 p-4 sm:grid-cols-2">
-            <label className="space-y-1 text-sm">
+            <label htmlFor="route-status" className="space-y-1 text-sm">
               <span className="text-muted-foreground">Status</span>
-              <NativeSelect value={route.status} onChange={(e) => {
+              <NativeSelect id="route-status" value={route.status} onChange={(e) => {
                 const status = e.target.value as RouteStatus;
                 if (status === "summited") { void markSummited(); return; }
                 update({ status, summited_at: null });
@@ -238,9 +238,9 @@ function RouteDetail() {
                 {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </NativeSelect>
             </label>
-            <label className="space-y-1 text-sm">
+            <label htmlFor="route-camp" className="space-y-1 text-sm">
               <span className="text-muted-foreground">Camp</span>
-              <NativeSelect value={route.camp_override ?? "auto"} onChange={(e) => update({ camp_override: e.target.value === "auto" ? null : parseInt(e.target.value) })}>
+              <NativeSelect id="route-camp" value={route.camp_override ?? "auto"} onChange={(e) => update({ camp_override: e.target.value === "auto" ? null : parseInt(e.target.value) })}>
                 <option value="auto">Automatic ({CAMPS[stats.calculated]})</option>
                 {CAMPS.map((c, i) => <option key={c} value={i}>{c}</option>)}
               </NativeSelect>

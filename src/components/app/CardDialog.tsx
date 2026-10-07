@@ -126,8 +126,8 @@ export function CardDialog({
           )}
           <p className="text-xs text-muted-foreground">Markdown works: **bold**, *italics*, lists, `code`. Cloze: {"{{c1::answer}}"} or {"{{c1::answer::hint}}"} in the front.</p>
           {!card && (
-            <label className="flex min-h-12 items-center gap-3 text-sm">
-              <Checkbox checked={reverse} disabled={hasCloze(front)} onCheckedChange={(v) => setReverse(!!v)} /> Also create reverse card
+            <label htmlFor="card-reverse" className="flex min-h-12 items-center gap-3 text-sm">
+              <Checkbox id="card-reverse" checked={reverse} disabled={hasCloze(front)} onCheckedChange={(v) => setReverse(!!v)} /> Also create reverse card
             </label>
           )}
           {(front.trim() || back.trim()) && (

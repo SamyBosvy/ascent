@@ -129,8 +129,8 @@ function RevokeButton({ email, onConfirm }: { email: string; onConfirm: (deleteD
           <AlertDialogTitle>Revoke access for {email}?</AlertDialogTitle>
           <AlertDialogDescription>They'll be signed out and can no longer log in. Their data is kept unless you choose to delete it.</AlertDialogDescription>
         </AlertDialogHeader>
-        <label className="flex min-h-12 items-center gap-3 text-sm">
-          <Checkbox checked={del} onCheckedChange={(v) => setDel(v === true)} />
+        <label htmlFor="revoke-delete-data" className="flex min-h-12 items-center gap-3 text-sm">
+          <Checkbox id="revoke-delete-data" checked={del} onCheckedChange={(v) => setDel(v === true)} />
           Revoke and delete data (permanent)
         </label>
         <AlertDialogFooter>
