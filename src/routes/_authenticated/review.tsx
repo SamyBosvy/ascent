@@ -16,6 +16,7 @@ import { speak, speakable, speechAvailable } from "@/lib/cardText";
 import { CardDialog } from "@/components/app/CardDialog";
 import { Button } from "@/components/ui/button";
 import { previewSchedules, intervalLabel } from "@/lib/reviewPreview";
+import { orderQueue, shuffle } from "@/lib/reviewOrdering";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 
 export const Route = createFileRoute("/_authenticated/review")({
@@ -31,26 +32,6 @@ const RATINGS: { r: Rating; label: string }[] = [
   { r: 3, label: "Easy" },
 ];
 
-/** Most overdue first; cards due on the same local day are Fisher-Yates shuffled. */
-function orderQueue(cards: Card[]) {
-  const sorted = [...cards].sort((a, b) => a.due_at.localeCompare(b.due_at));
-  const out: Card[] = [];
-  let i = 0;
-  while (i < sorted.length) {
-    const day = localDate(new Date(sorted[i]!.due_at));
-    let j = i;
-    while (j < sorted.length && localDate(new Date(sorted[j]!.due_at)) === day) j++;
-    const group = sorted.slice(i, j);
-    for (let k = group.length - 1; k > 0; k--) {
-      const x = Math.floor(Math.random() * (k + 1));
-      [group[k], group[x]] = [group[x]!, group[k]!];
-    }
-    out.push(...group);
-    i = j;
-  }
-  return out;
-}
-
 type UndoEntry = {
   prev: Card;
   counted: boolean;
@@ -58,15 +39,6 @@ type UndoEntry = {
   saved?: { pending: PendingReview; inflight: { signal: { cancelled: boolean }; promise: Promise<boolean> } };
 };
 type Mode = "review" | "ahead" | "cram";
-
-function shuffle<X>(arr: X[]) {
-  const a = [...arr];
-  for (let k = a.length - 1; k > 0; k--) {
-    const x = Math.floor(Math.random() * (k + 1));
-    [a[k], a[x]] = [a[x]!, a[k]!];
-  }
-  return a;
-}
 
 /** Cards of live routes matching the shared "reviewable" rules (not suspended, not buried). */
 function liveCards() {
@@ -122,6 +94,18 @@ function Review() {
   const [loadingExtra, setLoadingExtra] = useState(false);
 
   const card = queue?.[0];
+  const showAnswerRef = useRef<HTMLButtonElement>(null);
+  const ratingsRef = useRef<HTMLDivElement>(null);
+  const focusReview = useRef(false);
+  useEffect(() => {
+    if (!focusReview.current || !card) return;
+    if (flipped) ratingsRef.current?.focus();
+    else showAnswerRef.current?.focus();
+  }, [card, flipped]);
+  function reveal() {
+    focusReview.current = true;
+    setFlipped(true);
+  }
   // Each card appearance gets one shared fuzz sample per rating, reused verbatim by save.
   const previews = useMemo(() => card && mode !== "cram" ? previewSchedules(card) : null, [card, mode]);
   const touch = useRef<{ x: number; y: number; horizontal: boolean; vertical: boolean } | null>(null);
@@ -156,6 +140,7 @@ function Review() {
 
   function rate(c: Card, r: Rating) {
     if (busy) return;
+    focusReview.current = true;
     if (mode === "cram") {
       // Cram never changes scheduling and records nothing.
       setQueue((q) => {
@@ -226,7 +211,7 @@ function Review() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); void undo(); return; }
       if (e.ctrlKey || e.metaKey || e.altKey || !card) return;
       const k = e.key.toLowerCase();
-      if (!flipped && (e.key === " " || e.key === "Enter")) { e.preventDefault(); setFlipped(true); return; }
+      if (!flipped && (e.key === " " || e.key === "Enter")) { e.preventDefault(); reveal(); return; }
       if (flipped && ["1", "2", "3", "4"].includes(e.key)) { e.preventDefault(); rate(card, (Number(e.key) - 1) as Rating); return; }
       if (k === "e") { e.preventDefault(); setEditing(card); return; }
       if (k === "s") { e.preventDefault(); void hide(card, "suspend"); return; }
@@ -243,6 +228,7 @@ function Review() {
   });
 
   function begin(m: Mode, cards: Card[]) {
+    focusReview.current = true;
     setUndoStack([]);
     setDone(0);
     setFlipped(false);
@@ -349,12 +335,13 @@ function Review() {
           <div className="h-full bg-primary" style={{ width: `${100 * done / (done + queue.length)}%` }} />
         </div>
         {mode === "cram" && <p className="text-center text-xs text-muted-foreground">Cram mode: ratings aren't saved and don't change your schedule.</p>}
-        <div role="button" aria-label={flipped ? 'Revealed flashcard' : 'Reveal flashcard'} tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFlipped(true); } }} onClick={() => { if (!suppressClick.current) setFlipped(true); }} onTouchStart={touchStart} onTouchMove={touchMove} onTouchEnd={touchEnd} onTouchCancel={() => { touch.current = null; setDrag(0); }} style={{ transform: reducedMotion ? undefined : `translateX(${drag}px)`, touchAction: 'pan-y' }} className="surface flex min-h-72 w-full flex-col items-center justify-center gap-4 p-8 text-center shadow-sm">
+        <div onClick={() => { if (!suppressClick.current) reveal(); }} onTouchStart={touchStart} onTouchMove={touchMove} onTouchEnd={touchEnd} onTouchCancel={() => { touch.current = null; setDrag(0); }} style={{ transform: reducedMotion ? undefined : `translateX(${drag}px)`, touchAction: 'pan-y' }} className="surface flex min-h-72 w-full flex-col items-center justify-center gap-4 p-8 text-center shadow-sm">
           <div className="flex items-start justify-center gap-1">
             <CardText text={card.front} revealed={flipped} className="font-display text-2xl font-semibold" />
             {lang && <SpeakButton text={card.front} lang={lang.speech_lang} revealed={flipped} />}
           </div>
           {card.pronunciation && <p className="text-sm text-muted-foreground">/{card.pronunciation}/</p>}
+          <div aria-live="polite" aria-atomic="true" className="w-full">
           {flipped ? (
             <div className="review-reveal w-full space-y-3 border-t pt-4">
               <div className="flex items-start justify-center gap-1">
@@ -366,9 +353,10 @@ function Review() {
           ) : (
             <span className="text-sm text-muted-foreground">Tap to reveal</span>
           )}
+          </div>
         </div>
         {flipped ? (
-          <div className="grid grid-cols-4 gap-2">
+          <div ref={ratingsRef} role="group" aria-label="Rate your recall" tabIndex={-1} className="grid grid-cols-4 gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             {RATINGS.map(({ r, label }) => (
               <div key={r} className="space-y-1 text-center">
                 <Button variant={r === 2 ? "default" : "outline"} className="h-14 w-full" disabled={busy} onClick={() => rate(card, r)} aria-describedby={mode !== 'cram' ? `interval-${r}` : undefined}>
@@ -379,7 +367,7 @@ function Review() {
             ))}
           </div>
         ) : (
-          <Button className="h-14 w-full" onClick={() => setFlipped(true)}>Show answer <kbd className="kbd-hint">Space</kbd></Button>
+          <Button ref={showAnswerRef} className="h-14 w-full" onClick={reveal}>Show answer <kbd className="kbd-hint">Space</kbd></Button>
         )}
         <div className="flex items-center justify-between gap-2">
           {undoButton}
@@ -401,7 +389,7 @@ function Review() {
           <Button variant="outline" className="h-12" onClick={() => setNewOpen(true)} disabled={!routes.length}>New card</Button>
         </div>
       </div>
-      <NativeSelect value={route ?? ""} onChange={(e) => navigate({ search: { route: e.target.value || undefined } })}>
+      <NativeSelect aria-label="Review route" value={route ?? ""} onChange={(e) => navigate({ search: { route: e.target.value || undefined } })}>
         <option value="">All routes</option>
         {routes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
       </NativeSelect>
