@@ -34,3 +34,8 @@
 - Review interval previews are cached per card appearance and reused verbatim for record_review — random fuzz cannot disagree with the displayed schedule.
 - Screen loading placeholders share ScreenSkeleton and respect reduced motion — loading semantics and shapes stay consistent.
 - Onboarding timestamps live in user_settings and are written only from explicit user actions; route aggregates drive step progression — state follows the account without save-on-render.
+- Database BEFORE UPDATE triggers own updated_at on every timestamped public table; clients omit it — all mutation paths share the same trusted clock.
+- Review ordering uses the tested pure reviewOrdering helpers (earlier local due days, shuffled within each day) — testing does not change queue semantics.
+- Create/save entry points use useSubmission's synchronous lock and disabled controls through finally — rapid clicks cannot duplicate requests.
+- Review has a persistent polite answer region, an explicit reveal button and focus transitions to the rating group and next reveal control — touch and keyboard share the same flow.
+- Insights tables are generated from the same data as their aria-hidden charts — assistive readers receive equivalent values.

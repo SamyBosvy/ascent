@@ -144,16 +144,16 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
       {needsRoute && (
         <div className="surface space-y-2 border-primary/60 p-4">
           <p className="text-sm font-medium">Which route does this note belong to?</p>
-          <NativeSelect value="" onChange={(e) => { setRouteId(e.target.value); if (title.trim() || body.trim()) edit(); }}>
+          <NativeSelect aria-label="Note route" value="" onChange={(e) => { setRouteId(e.target.value); if (title.trim() || body.trim()) edit(); }}>
             <option value="" disabled>Choose a route…</option>
             {pickable.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </NativeSelect>
         </div>
       )}
-      <Input value={title} onChange={(e) => { setTitle(e.target.value); edit(); }} placeholder="Title" className="h-14 border-0 px-0 font-display text-2xl font-semibold shadow-none focus-visible:ring-0" />
+      <Input aria-label="Note title" value={title} onChange={(e) => { setTitle(e.target.value); edit(); }} placeholder="Title" className="h-14 border-0 px-0 font-display text-2xl font-semibold shadow-none focus-visible:ring-0" />
       <div className="flex flex-wrap items-center gap-2">
         {!needsRoute && (
-          <NativeSelect className="w-auto min-w-48" value={routeId} onChange={(e) => { setRouteId(e.target.value); edit(); }}>
+          <NativeSelect aria-label="Note route" className="w-auto min-w-48" value={routeId} onChange={(e) => { setRouteId(e.target.value); edit(); }}>
             {pickable.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </NativeSelect>
         )}
@@ -177,6 +177,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
       </div>
       {mode === "write" ? (
         <textarea
+          aria-label="Note body"
           ref={ta}
           value={body}
           onChange={(e) => { setBody(e.target.value); edit(); }}

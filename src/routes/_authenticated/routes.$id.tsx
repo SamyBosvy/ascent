@@ -396,9 +396,10 @@ function BookPages({ current, total, onSave }: { current: number; total: number;
   return (
     <div className="surface space-y-2 p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">Page</span>
+        <Label htmlFor="book-current-page" className="text-sm text-muted-foreground">Page</Label>
         <Button variant="outline" className="h-12 w-12" aria-label="Previous page" disabled={current <= 0} onClick={() => commit(current - 1)}><Minus className="h-4 w-4" /></Button>
         <Input
+          id="book-current-page"
           type="number"
           inputMode="numeric"
           className="h-12 w-24 text-center"

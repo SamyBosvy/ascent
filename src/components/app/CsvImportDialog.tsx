@@ -1,4 +1,6 @@
 import { useRef, useState } from "react";
+import { useSubmission } from "@/hooks/use-submission";
+import { Label } from "@/components/ui/label";
 import { useQueryClient } from "@tanstack/react-query";
 import Papa from "papaparse";
 import { toast } from "sonner";
@@ -49,6 +51,7 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
   const [map, setMap] = useState<Field[]>([]);
   const [progress, setProgress] = useState<number | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
+  const { submitting, submit } = useSubmission();
 
   function reset() {
     setFileName(""); setRows(null); setMap([]); setProgress(null); setSummary(null); setHasHeader(true); setSkipDupes(true);
@@ -79,9 +82,10 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
   const width = map.length;
   const body = rows ? (hasHeader ? rows.slice(1) : rows) : [];
   const col = (f: Field) => map.indexOf(f);
-  const canImport = !!rows && col("front") >= 0 && col("back") >= 0 && progress == null;
+  const canImport = !!rows && col("front") >= 0 && col("back") >= 0 && progress == null && !submitting;
 
-  async function run() {
+  function run() { return submit(runRequest); }
+  async function runRequest() {
     if (!rows) return;
     const fi = col("front"), bi = col("back"), ei = col("example"), pi = col("pronunciation");
     let invalid = 0, dupes = 0;
@@ -132,14 +136,14 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (progress != null) return; onOpenChange(o); if (!o) setTimeout(reset, 200); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (progress != null || submitting) return; onOpenChange(o); if (!o) setTimeout(reset, 200); }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Import flashcards</DialogTitle>
           <DialogDescription>CSV or TSV. Files exported from Settings re-import as they are.</DialogDescription>
         </DialogHeader>
-        <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" className="hidden" onChange={(e) => e.target.files?.[0] && pick(e.target.files[0])} />
-        <Button variant="outline" className="h-12" onClick={() => fileRef.current?.click()} disabled={progress != null}>
+        <input aria-label="Flashcards file" ref={fileRef} type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" className="hidden" onChange={(e) => e.target.files?.[0] && pick(e.target.files[0])} />
+        <Button variant="outline" className="h-12" onClick={() => fileRef.current?.click()} disabled={progress != null || submitting}>
           {fileName ? `${fileName} · choose another` : "Choose file"}
         </Button>
 
@@ -151,10 +155,11 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
                   <tr>
                     {map.map((f, i) => (
                       <th key={i} className="min-w-36 p-2 text-left font-normal">
-                        <NativeSelect aria-label={`Column ${i + 1}`} value={f} onChange={(e) => setMap((m) => m.map((x, j) => (j === i ? (e.target.value as Field) : x === e.target.value && e.target.value !== "ignore" ? "ignore" : x)))}>
+                        <Label htmlFor={`csv-column-${i}`} className="sr-only">{hasHeader ? rows[0]?.[i] || `Column ${i + 1}` : `Column ${i + 1}`}</Label>
+                        <NativeSelect id={`csv-column-${i}`} disabled={submitting} value={f} onChange={(e) => setMap((m) => m.map((x, j) => (j === i ? (e.target.value as Field) : x === e.target.value && e.target.value !== "ignore" ? "ignore" : x)))}>
                           {FIELDS.map((x) => <option key={x} value={x}>{LABEL[x]}</option>)}
                         </NativeSelect>
-                        {hasHeader && <p className="mt-1 truncate text-xs text-muted-foreground">{rows[0]?.[i]}</p>}
+                        {hasHeader && <Label htmlFor={`csv-column-${i}`} className="mt-1 block truncate text-xs text-muted-foreground">{rows[0]?.[i]}</Label>}
                       </th>
                     ))}
                   </tr>
@@ -172,11 +177,11 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
             </div>
             <p className="text-xs text-muted-foreground">Showing {Math.min(10, body.length)} of {body.length} rows.</p>
             <div className="flex flex-col gap-1 sm:flex-row sm:gap-6">
-              <label className="flex min-h-12 items-center gap-3 text-sm">
-                <Checkbox checked={hasHeader} onCheckedChange={(v) => setHasHeader(!!v)} /> First row is a header
+              <label htmlFor="csv-header" className="flex min-h-12 items-center gap-3 text-sm">
+                <Checkbox id="csv-header" disabled={submitting} checked={hasHeader} onCheckedChange={(v) => setHasHeader(!!v)} /> First row is a header
               </label>
-              <label className="flex min-h-12 items-center gap-3 text-sm">
-                <Checkbox checked={skipDupes} onCheckedChange={(v) => setSkipDupes(!!v)} /> Skip duplicates (same front on this route)
+              <label htmlFor="csv-duplicates" className="flex min-h-12 items-center gap-3 text-sm">
+                <Checkbox id="csv-duplicates" disabled={submitting} checked={skipDupes} onCheckedChange={(v) => setSkipDupes(!!v)} /> Skip duplicates (same front on this route)
               </label>
             </div>
             {(col("front") < 0 || col("back") < 0) && <p className="text-sm text-destructive-strong">Pick a Front and a Back column.</p>}
