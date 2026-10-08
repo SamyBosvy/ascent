@@ -12,7 +12,7 @@ function applyLocal(routeId: string, day: string, checked: boolean) {
     if (!a) return m;
     const next = new Map(m);
     const delta = checked === !!a.checked_today ? 0 : checked ? 1 : -1;
-    next.set(routeId, { ...a, checked_today: checked, checkins_30: Math.max(0, Number(a.checkins_30 ?? 0) + delta), checkins_week: Math.max(0, Number(a.checkins_week ?? 0) + delta) } as RouteAgg);
+    next.set(routeId, { ...a, checked_today: checked, checkins_recent: Math.max(0, a.checkins_recent + delta), checkins_week: Math.max(0, a.checkins_week + delta), last_checkin_on: checked ? day : a.last_checkin_on });
     return next;
   });
   qc.setQueriesData<Map<string, string[]>>({ queryKey: ["checkins", "history"] }, (m) => {
