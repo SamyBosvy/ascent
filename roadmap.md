@@ -14,8 +14,8 @@
 - [x] Tests, signed-in checks, cleanup and report
 
 # Batch 13
-- [ ] Display-name editing and immediate greeting refresh
-- [ ] Milestones-or-cards onboarding progression
-- [ ] Displayed-camp climber clamping and matching accessible label
-- [ ] Running/paused session indicator and current-kind capture title
-- [ ] All tests, signed-in checks, account restoration, report and credits
+- [x] Display-name editing and immediate greeting refresh
+- [x] Milestones-or-cards onboarding progression
+- [x] Displayed-camp climber clamping and matching accessible label
+- [x] Running/paused session indicator and current-kind capture title
+- [x] All tests, signed-in checks, account restoration, report and credits
