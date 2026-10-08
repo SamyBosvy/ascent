@@ -13,6 +13,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 import appCss from "../styles.css?url";
+import manropeLatin from "@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2?url";
+import { clearPersisted } from "../lib/persist";
+import { stopSync } from "../lib/sync";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { THEME_BOOT_SCRIPT, watchSystemTheme } from "../lib/prefs";
 
@@ -61,8 +64,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "robots", content: "noindex, nofollow" },
-      { name: "theme-color", content: "#1E2A3A" },
+      { name: "theme-color", content: "#F8FAFC" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "Ascent" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { title: "Ascent" },
       { name: "description", content: "A private place to track what you're mastering." },
       { property: "og:type", content: "website" },
@@ -73,12 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap",
-      },
+      { rel: "preload", as: "font", type: "font/woff2", href: manropeLatin, crossOrigin: "anonymous" },
     ],
   }),
   shellComponent: RootShell,
@@ -108,6 +109,11 @@ function RootComponent() {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      if (event === "SIGNED_OUT") {
+        stopSync();
+        void clearPersisted();
+        localStorage.removeItem("ascent:identity");
+      }
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });

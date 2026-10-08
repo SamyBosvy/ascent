@@ -1,5 +1,5 @@
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
-import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useLocation, useNavigate } from "@tanstack/react-router";
 import { BarChart3, BookOpen, Layers, Library, Mountain, Plus, Search, Settings, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,7 +14,6 @@ import type { User } from "@supabase/supabase-js";
 import { startSync, syncNow, useOnline, usePendingCount } from "@/lib/sync";
 import { startPersisting } from "@/lib/persist";
 import { applyUpdate, onUpdateReady, registerServiceWorker } from "@/lib/pwa";
-import { useLocation, useNavigate } from "@tanstack/react-router";
 import { CloudOff } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
