@@ -416,6 +416,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activity_strip: {
+        Args: { _timezone: string; _today: string }
+        Returns: {
+          checkins: number
+          day: string
+          minutes: number
+          reviews: number
+        }[]
+      }
       get_user_id_by_email: { Args: { _email: string }; Returns: string }
       has_role: {
         Args: {

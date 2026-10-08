@@ -15,7 +15,7 @@ import { requireOnline } from "@/lib/sync";
 
 const LAST_KEY = "ascent:last-route";
 
-export function QuickCapture({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+export function QuickCapture({ open, onOpenChange, initialKind = 'note', initialRouteId }: { open: boolean; onOpenChange: (o: boolean) => void; initialKind?: 'note' | 'session'; initialRouteId?: string | undefined }) {
   const { data: routes_ } = useRoutes();
   const data = routes_ ? { routes: routes_ } : undefined;
   const refresh = useRefresh();
@@ -29,7 +29,8 @@ export function QuickCapture({ open, onOpenChange }: { open: boolean; onOpenChan
   useEffect(() => {
     if (!open) return;
     const last = localStorage.getItem(LAST_KEY);
-    setRouteId(routes.find((r) => r.id === last)?.id ?? routes[0]?.id ?? "");
+    setKind(initialKind);
+    setRouteId(routes.find((r) => r.id === initialRouteId)?.id ?? routes.find((r) => r.id === last)?.id ?? routes[0]?.id ?? "");
     setText("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -59,7 +60,7 @@ export function QuickCapture({ open, onOpenChange }: { open: boolean; onOpenChan
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Quick capture</DialogTitle>
+           <DialogTitle>{initialKind === 'session' ? 'Log time' : 'Quick capture'}</DialogTitle>
         </DialogHeader>
         {routes.length === 0 ? (
           <p className="text-sm text-muted-foreground">Create a Route first, then capture notes and sessions here.</p>

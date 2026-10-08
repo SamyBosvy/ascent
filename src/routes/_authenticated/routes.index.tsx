@@ -1,4 +1,5 @@
 import { RouteDot } from "@/components/app/RouteDot";
+import { LearningRouteCard } from '@/components/app/LearningRouteCard';
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -7,10 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isLive, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type RouteStatus } from "@/lib/data";
 import { RouteDialog } from "@/components/app/RouteDialog";
-import { routeStats } from "@/lib/camp";
-import { AltitudeBar, CampBadge } from "@/components/app/Mountain";
 import { Empty } from "@/components/app/fields";
-import { PacingLine } from "@/components/app/Pacing";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/routes/")({
@@ -58,20 +56,9 @@ function RoutesPage() {
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{STATUS_LABEL[status]}</h2>
             <ul className="grid gap-3 sm:grid-cols-2">
               {list.map((r) => {
-                const s = routeStats(r, stats.get(r.id));
                 return (
                   <li key={r.id}>
-                    <Link to="/routes/$id" params={{ id: r.id }} className="surface block space-y-3 p-4 hover:border-primary/50">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="flex items-center gap-2 font-medium"><RouteDot route={r} /><span className="truncate">{r.name}</span></p>
-                          <p className="text-xs text-muted-foreground">{TYPE_LABEL[r.type]}</p>
-                        </div>
-                        <CampBadge camp={s.camp} />
-                      </div>
-                      <AltitudeBar camp={s.camp} />
-                      <PacingLine route={r} agg={stats.get(r.id)} />
-                    </Link>
+                    <LearningRouteCard route={r} agg={stats.get(r.id)} />
                   </li>
                 );
               })}
