@@ -69,6 +69,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
   useEffect(() => { if (!open) { setQ(""); setDebounced(""); } }, [open]);
 
   const { data: hits, isFetching } = useSearch(debounced, archived);
+  const online = useOnline();
 
   const run = (fn: () => void) => { onOpenChange(false); fn(); };
   const go = (to: "/today" | "/routes" | "/review" | "/cards" | "/notes" | "/insights" | "/summits" | "/settings") => run(() => navigate({ to }));
@@ -121,7 +122,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
               Show archived
             </label>
             <Command.List className="max-h-[60vh] overflow-y-auto p-2">
-              {nothing && <Command.Empty className="p-4 text-center text-sm text-muted-foreground">{isFetching ? "Searching…" : "Nothing found."}</Command.Empty>}
+              {nothing && <Command.Empty className="p-4 text-center text-sm text-muted-foreground">{!online ? "You're offline. Search needs a connection." : isFetching ? "Searching…" : "Nothing found."}</Command.Empty>}
               {searching && hits && hits.routes.length > 0 && (
                 <Command.Group heading="Routes" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
                   {hits.routes.map((h) => (
