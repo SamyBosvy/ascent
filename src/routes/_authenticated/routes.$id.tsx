@@ -18,6 +18,8 @@ import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
 import { CAMPS, habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { Mountain } from "@/components/app/Mountain";
 import { toggleCheckin } from "@/lib/checkins";
+import { logSession } from "@/lib/sessions";
+import { queueWrite } from "@/lib/sync";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SummitOverlay } from "@/components/app/SummitOverlay";
 import { PacingLine } from "@/components/app/Pacing";
@@ -63,7 +65,7 @@ function RouteDetail() {
 
   const route = routes?.find((r) => r.id === id);
   const agg = allStats?.get(id);
-  const { data: history } = useCheckinHistory(route?.type === "habit" ? id : "none");
+  const { data: history } = useCheckinHistory(id, route?.type === "habit");
   // "Continue" on Today opens a book at its page input.
   const pageReady = !!route && !!allStats;
   useEffect(() => {
@@ -110,12 +112,12 @@ function RouteDetail() {
   async function toggleMs(m: Milestone, done: boolean) {
     const done_at = done ? new Date().toISOString() : null;
     setMs((rows) => rows.map((r) => (r.id === m.id ? { ...r, done, done_at } : r)));
-    const { error } = await supabase.from("milestones").update({ done, done_at }).eq("id", m.id);
-    if (error) {
+    try {
+      await queueWrite({ kind: "milestone", data: { id: m.id, done, done_at } });
+    } catch (e) {
       setMs((rows) => rows.map((r) => (r.id === m.id ? m : r)));
-      toast.error(`Couldn't update the milestone: ${error.message}`);
+      toast.error(`Couldn't update the milestone: ${(e as Error).message}`);
     }
-    msRefresh();
   }
   function addMs(e: React.FormEvent) { e.preventDefault(); return submitMilestone(() => addMsRequest(e)); }
   async function addMsRequest(e: React.FormEvent) {
@@ -497,8 +499,9 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
   function save(minutes: number, forRoute = routeId, loggedAt?: string) { return submitSession(() => saveRequest(minutes, forRoute, loggedAt)); }
   async function saveRequest(minutes: number, forRoute = routeId, loggedAt?: string) {
     if (minutes < 1 || minutes > MAX_MIN) { toast.error(`Log between 1 and ${MAX_MIN} minutes.`); return false; }
-    const { error } = await supabase.from("sessions").insert({ route_id: forRoute, minutes, note: note.trim() || null, ...(loggedAt ? { logged_at: loggedAt } : {}) });
-    if (error) { toast.error(error.message); return false; }
+    try {
+      await logSession({ route_id: forRoute, minutes, note: note.trim() || null, logged_at: loggedAt });
+    } catch (e) { toast.error((e as Error).message); return false; }
     toast.success(`${minutesLabel(minutes)} logged. Keep climbing.`);
     setNote("");
     setManual("");

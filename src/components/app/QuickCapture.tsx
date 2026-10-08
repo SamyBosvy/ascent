@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "./fields";
+import { logSession } from "@/lib/sessions";
+import { requireOnline } from "@/lib/sync";
 
 const LAST_KEY = "ascent:last-route";
 
@@ -37,12 +39,15 @@ export function QuickCapture({ open, onOpenChange }: { open: boolean; onOpenChan
   async function saveRequest(e: React.FormEvent) {
     e.preventDefault();
     if (!routeId) return;
+    if (kind === "note" && !requireOnline("Saving a note")) return;
     setBusy(true);
     localStorage.setItem(LAST_KEY, routeId);
-    const { error } =
-      kind === "note"
-        ? await supabase.from("notes").insert({ route_id: routeId, title: (text.split("\n")[0] ?? "").slice(0, 80), body: text })
-        : await supabase.from("sessions").insert({ route_id: routeId, minutes: Math.max(1, parseInt(minutes) || 0), note: text || null });
+    let error: { message: string } | null = null;
+    if (kind === "note") {
+      ({ error } = await supabase.from("notes").insert({ route_id: routeId, title: (text.split("\n")[0] ?? "").slice(0, 80), body: text }));
+    } else {
+      try { await logSession({ route_id: routeId, minutes: Math.max(1, parseInt(minutes) || 0), note: text || null }); } catch (e) { error = e as Error; }
+    }
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success(kind === "note" ? "Note saved." : "Session logged. Keep climbing.");

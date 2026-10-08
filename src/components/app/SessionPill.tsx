@@ -55,8 +55,7 @@ export function StaleSessionPrompt() {
     const s = timer.get();
     if (!s) { setOpen(false); return; }
     if (mins < 1) { toast.error("Log at least one minute."); return; }
-    const { error } = await supabase.from("sessions").insert({ route_id: s.routeId, minutes: mins });
-    if (error) { toast.error(error.message); return; }
+    try { await logSession({ route_id: s.routeId, minutes: mins }); } catch (e) { toast.error((e as Error).message); return; }
     timer.clear();
     toast.success(`${minutesLabel(mins)} logged.`);
     refresh();
