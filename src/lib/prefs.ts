@@ -49,9 +49,20 @@ export function applyTheme(theme: Theme) {
   el.style.colorScheme = dark ? "dark" : "light";
   // Read the actual themed background rather than maintaining a separate palette.
   const background = getComputedStyle(el).getPropertyValue("--background").trim();
-  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta) => {
-    meta.content = background || (dark ? "#15202D" : "#F9FBFD");
-    meta.media = "";
+  // Browser chrome support for OKLCH varies; resolve the CSS token to sRGB hex.
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 1;
+  const context = canvas.getContext("2d");
+  let colour = dark ? "#15202D" : "#F9FBFD";
+  if (context && background) {
+    context.fillStyle = background;
+    context.fillRect(0, 0, 1, 1);
+    colour = "#" + Array.from(context.getImageData(0, 0, 1, 1).data).slice(0, 3).map((n) => n.toString(16).padStart(2, "0")).join("");
+  }
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta, i) => {
+    if (i > 0) { meta.remove(); return; }
+    meta.content = colour;
+    meta.removeAttribute("media");
   });
 }
 
