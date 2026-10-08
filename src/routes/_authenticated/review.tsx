@@ -18,6 +18,7 @@ import { CardDialog } from "@/components/app/CardDialog";
 import { Button } from "@/components/ui/button";
 import { previewSchedules, intervalLabel } from "@/lib/reviewPreview";
 import { orderQueue, shuffle } from "@/lib/reviewOrdering";
+import { getPrefs } from "@/lib/prefs";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 
 export const Route = createFileRoute("/_authenticated/review")({
@@ -80,6 +81,16 @@ function Review() {
         if (route) q = q.eq("route_id", route);
         return q.order("due_at").order("id").range(a, b);
       }),
+  });
+  const { data: nextDue } = useQuery({
+    queryKey: ["cards", "next-due", route ?? "all"], enabled: dueCards?.length === 0,
+    queryFn: async () => {
+      let q = liveCards().or(`buried_until.is.null,buried_until.lte.${localDate()}`).gt("due_at", new Date().toISOString());
+      if (route) q = q.eq("route_id", route);
+      const { data, error } = await q.order("due_at").limit(1);
+      if (error) throw new Error(error.message);
+      return data?.[0]?.due_at ?? null;
+    },
   });
   const refresh = useRefresh();
   const [queue, setQueue] = useState<Card[] | null>(null);
@@ -395,7 +406,7 @@ function Review() {
         <option value="">All routes</option>
         {routes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
       </NativeSelect>
-      {startCount === 0 ? <Empty headingLevel={2} illustration="cards" title="Nothing due right now" description="Your next scheduled cards will appear here when they’re due." primaryAction={<Button asChild><Link to="/today">Back to Today</Link></Button>} /> : <div className="surface space-y-4 p-6 text-center">
+      {startCount === 0 ? <Empty headingLevel={2} illustration="cards" title="Nothing due right now" description={nextDue ? `Next due: ${new Intl.DateTimeFormat(undefined, { timeZone: getPrefs().tz, month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(nextDue))}.` : "Your next scheduled cards will appear here when they’re due."} primaryAction={<Button asChild><Link to="/today">Back to Today</Link></Button>} /> : <div className="surface space-y-4 p-6 text-center">
         <p className="font-display text-5xl font-semibold">{startCount}</p>
         <p className="text-muted-foreground">{startCount ? `${startCount} card${startCount > 1 ? "s" : ""} due. Keep climbing.` : "Nothing due right now."}</p>
         <p className="text-sm text-muted-foreground">{newLeft} new card{newLeft === 1 ? "" : "s"} left today</p>
