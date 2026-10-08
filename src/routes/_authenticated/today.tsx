@@ -1,16 +1,19 @@
 import { RouteDot } from "@/components/app/RouteDot";
+import { useState } from 'react';
+import { getRouteApi } from '@tanstack/react-router';
+import { LearningRouteCard } from '@/components/app/LearningRouteCard';
+import { ActivityStrip } from '@/components/app/ActivityStrip';
+import { QuickCapture } from '@/components/app/QuickCapture';
 import { Onboarding } from "@/components/app/Onboarding";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { formatDistanceToNow } from "date-fns";
 import { ArrowRight, BookOpen, Check, Layers, Play } from "lucide-react";
 import { PacingLine } from "@/components/app/Pacing";
 import { StreakLine } from "@/components/app/Habit";
 import { timer, useTimer } from "@/lib/timer";
 import { toggleCheckin } from "@/lib/checkins";
 import { isLive, localDate, minutesLabel, useCheckinHistory, useDueCounts, useNewPerDay, useNewReviewedToday, useRefresh, useReviewsToday, useRouteStats, useRoutes, useUserSettings, useWeekMinutes, type RouteAgg, type RouteRow } from "@/lib/data";
-import { habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
-import { AltitudeBar, CampBadge } from "@/components/app/Mountain";
+import { habitConsistency, habitDueToday } from "@/lib/camp";
 import { Empty, SectionTitle } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 
@@ -20,6 +23,10 @@ export const Route = createFileRoute("/_authenticated/today")({
 });
 
 function Today() {
+  const [logOpen, setLogOpen] = useState(false);
+  const { user } = getRouteApi('/_authenticated').useRouteContext();
+  const nameValue = user.user_metadata?.['display_name'] ?? user.user_metadata?.['full_name'] ?? user.user_metadata?.['name'];
+  const name = typeof nameValue === 'string' ? nameValue.trim().split(/\s+/)[0] : '';
   const { data: allRoutes } = useRoutes();
   const routes = allRoutes?.filter(isLive);
   const { data: stats } = useRouteStats();
@@ -50,10 +57,12 @@ function Today() {
 
   return (
     <div className="space-y-8">
-      <div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><div>
         <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", ...(settings ? { timeZone: settings.timezone } : {}) })}</p>
-        <h1 className="mt-1 text-3xl font-semibold">{greeting}.</h1>
-      </div>
+        <h1 className="mt-1 text-3xl font-semibold">{greeting}{name ? `, ${name}` : ''}.</h1>
+      </div><Button variant="outline" className="h-12" disabled={!routes.some(r => r.status === 'active' || r.status === 'paused')} onClick={() => setLogOpen(true)}><Play className="size-4" />Log time</Button></div>
+      <ActivityStrip />
+      <QuickCapture open={logOpen} onOpenChange={setLogOpen} initialKind="session" initialRouteId={routes.filter(r => r.status === 'active').length === 1 ? routes.find(r => r.status === 'active')?.id : undefined} />
 
       <Onboarding routes={allRoutes ?? routes} stats={stats} />
 
@@ -136,18 +145,9 @@ function Today() {
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
             {active.map((r) => {
-              const s = routeStats(r, stats.get(r.id));
               return (
                 <li key={r.id}>
-                  <Link to="/routes/$id" params={{ id: r.id }} className="surface block space-y-3 p-4 transition-colors hover:border-primary/50">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="flex min-w-0 items-center gap-2 font-medium"><RouteDot route={r} /><span className="truncate">{r.name}</span></p>
-                      <CampBadge camp={s.camp} />
-                    </div>
-                    <AltitudeBar camp={s.camp} />
-                    <PacingLine route={r} agg={stats.get(r.id)} />
-                    <p className="text-xs text-muted-foreground">Last activity {formatDistanceToNow(new Date(s.lastActivity), { addSuffix: true })}</p>
-                  </Link>
+                  <LearningRouteCard route={r} agg={stats.get(r.id)} />
                 </li>
               );
             })}
@@ -166,7 +166,8 @@ function pickContinue(routes: RouteRow[], stats: Map<string, RouteAgg>) {
     const a = stats.get(r.id);
     const times = [a?.last_session_at, a?.last_review_at, a?.last_milestone_at, a?.last_checkin_on, r.type === "book" && r.current_page ? r.updated_at : null].filter((t): t is string => !!t);
     if (!times.length) continue;
-    const at = times.sort().at(-1)!;
+    const at = times.sort().at(-1);
+    if (!at) continue;
     if (!best || at > best.at) best = { route: r, at };
   }
   return best;

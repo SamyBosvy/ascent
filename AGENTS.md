@@ -33,3 +33,6 @@
 
 - Route graphics share routeColours.ts: stored palette slot or deterministic id fallback; create selects the least-used live-route slot, and backup imports preserve slots — list order and renames never change route identity.
 - Persisted queries use Map-aware cacheSerialization and a format-version buster — route stats and habit history retain their Map shape after reload instead of crashing screens.
+- Visual progress uses pure visualProgress helpers and shared LearningRouteCard; Today reads one RLS activity_strip aggregate RPC — visual summaries never add per-card or per-day requests.
+- Summit celebrations are opened only after explicit locked summit saves; event keys are user/route/timestamp-scoped in localStorage and claimed before opening — refresh never repeats a celebration or writes from render.
+- Today time logging reuses QuickCapture in session mode and its existing outbox/submission lock — no competing session-write flow.

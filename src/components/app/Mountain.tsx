@@ -1,43 +1,42 @@
 import { CAMPS } from "@/lib/camp";
 import { cn } from "@/lib/utils";
+import { climberPosition } from '@/lib/visualProgress';
 
 /** Vertical mountain with camps; climber sits at `camp` (0-4), nudged by `score` progress. */
-export function Mountain({ camp, className }: { camp: number; className?: string }) {
+export function Mountain({ camp, score = 0, className }: { camp: number; score?: number; className?: string }) {
+  const position = climberPosition(score);
   const H = 320;
   const ys: number[] = CAMPS.map((_, i) => H - 30 - i * ((H - 60) / 4));
   const xs = [70, 110, 80, 120, 100];
   return (
-    <div className={cn("flex items-stretch gap-4", className)}>
-      <svg viewBox={`0 0 200 ${H}`} className="h-80 w-40 shrink-0" role="img" aria-label={`Currently at ${CAMPS[camp]}`}>
+    <div className={cn("flex min-w-0 items-stretch gap-4", className)}>
+      <svg viewBox={`0 0 200 ${H}`} className="h-48 w-28 shrink-0 sm:h-80 sm:w-40" role="img" aria-label={`${Math.round(score * 100)}% progress, between ${CAMPS[position.current]} and ${CAMPS[position.next]}`}>
         <path d={`M0 ${H} L100 14 L200 ${H} Z`} className="fill-ridge" opacity="0.55" />
         <path d={`M100 14 L82 66 L94 60 L100 72 L108 58 L118 66 Z`} className="fill-background" />
         <polyline
           points={xs.map((x, i) => `${x},${ys[i]}`).join(" ")}
           fill="none"
-          className="stroke-primary"
+          className="stroke-primary-strong"
           strokeWidth="2"
           strokeDasharray="4 5"
-          opacity="0.6"
         />
         {xs.map((x, i) => (
-          <circle key={i} cx={x} cy={ys[i]} r={i === 4 ? 7 : 5} className={i <= camp ? (i === 4 ? "fill-gold-text" : "fill-primary") : "fill-muted-foreground/40"} />
+          <circle key={i} cx={x} cy={ys[i]} r={i === 4 ? 7 : 5} className={i <= camp ? (i === 4 ? "fill-gold-text" : "fill-primary") : "fill-muted-foreground"} />
         ))}
-        <g transform={`translate(${xs[camp]!}, ${ys[camp]! - 6})`}>
-          <circle r="10" className={camp === 4 ? "fill-gold" : "fill-primary"} opacity="0.25">
-            <animate attributeName="r" values="9;14;9" dur="2.4s" repeatCount="indefinite" />
-          </circle>
+        <g className="mountain-climber" style={{ transform: `translate(${position.x}px, ${position.y}px)` }}>
+          <circle r="10" className={camp === 4 ? "fill-gold" : "fill-primary"} opacity="0.25" />
           <circle r="6" className="fill-foreground" />
         </g>
         {camp === 4 && (
-          <g transform={`translate(${xs[4]}, ${ys[4]! - 4})`}>
+          <g transform="translate(100, 26)">
             <line x1="0" y1="0" x2="0" y2="-26" className="stroke-foreground" strokeWidth="2" />
             <path d="M0 -26 L16 -21 L0 -16 Z" className="fill-gold" />
           </g>
         )}
       </svg>
-      <ol className="flex flex-col-reverse justify-between py-3 text-sm">
+      <ol className="flex flex-col-reverse justify-center gap-4 py-3 text-sm sm:justify-between sm:gap-0">
         {CAMPS.map((c, i) => (
-          <li key={c} className={cn(i === camp ? "font-semibold text-foreground" : "text-muted-foreground", i === 4 && camp === 4 && "text-gold-text")}>
+          <li key={c} className={cn(i !== position.current && i !== position.next && 'hidden sm:list-item', i === position.current ? "font-semibold text-foreground" : "text-muted-foreground", i === 4 && camp === 4 && "text-gold-text")}>
             {c}
           </li>
         ))}

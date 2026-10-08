@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { getPrefs, type Theme } from "./prefs";
 import { addDays, browserTimeZone, dateInZone, weekStartOf, zonedMidnight, type WeekStart } from "./time";
+import { activityBuckets, type ActivityDay } from './visualProgress';
 
 type T = Database["public"]["Tables"];
 export type RouteRow = T["routes"]["Row"];
@@ -52,6 +53,21 @@ export async function fetchPaged<R>(
 }
 
 // ---------- per-screen queries ----------
+export function useActivityStrip() {
+  const today = localDate();
+  const prefs = getPrefs();
+  return useQuery({
+    queryKey: ['activity-strip', today, prefs.tz, prefs.weekStart],
+    queryFn: async (): Promise<ActivityDay[]> => {
+      const rows = await must(supabase.rpc('activity_strip', { _today: today, _timezone: prefs.tz }));
+      return activityBuckets(today, prefs.tz, prefs.weekStart, rows.flatMap(r => [
+        { at: r.day, kind: 'reviews' as const, amount: Number(r.reviews) },
+        { at: r.day, kind: 'minutes' as const, amount: Number(r.minutes) },
+        { at: r.day, kind: 'checkins' as const, amount: Number(r.checkins) },
+      ]));
+    },
+  });
+}
 
 export const routesQuery = {
   queryKey: ["routes"],

@@ -331,3 +331,19 @@
 .route-colour-10 { --route-color: var(--route-10); }
  .route-dot { display: inline-block; width: 0.625rem; height: 0.625rem; flex-shrink: 0; border-radius: 50%; background: var(--route-color); }
 .route-swatch { background: var(--route-color); }
+.route-accent { border-left-width: 3px; }
+.mountain-climber { transition: transform 600ms ease-out; }
+.stroke-primary-strong { stroke: var(--primary-text); }
+.activity-level-0 { background: var(--muted); }
+.activity-level-1 { background: var(--activity-low); }
+.activity-level-2 { background: var(--activity-mid); }
+.activity-level-3 { background: var(--activity-high); }
+:root { --activity-low: oklch(0.62 0.08 250); --activity-mid: var(--primary); --activity-high: oklch(0.42 0.1 250); }
+:root.dark { --activity-low: oklch(0.64 0.08 250); --activity-mid: var(--primary-text); --activity-high: oklch(0.82 0.08 250); }
+@media (prefers-color-scheme: dark) { :root:not(.light) { --activity-low: oklch(0.64 0.08 250); --activity-mid: var(--primary-text); --activity-high: oklch(0.82 0.08 250); } }
+.activity-cell { border: 1px solid var(--input); }
+.summit-dialog [data-summit-flag] { animation: flag-rise 900ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .mountain-climber { transition: none; }
+  .summit-dialog, .summit-dialog *, body:has(.summit-dialog) > [data-state] { animation: none !important; transition: none !important; }
+}

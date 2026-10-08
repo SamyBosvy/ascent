@@ -85,6 +85,13 @@
       "when": 1791424529108,
       "tag": "0011_route_colours",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791426282920,
+      "tag": "0012_activity_strip",
+      "breakpoints": true
     }
   ]
 }

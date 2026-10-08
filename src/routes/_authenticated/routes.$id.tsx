@@ -3,7 +3,9 @@ import { useSubmission } from "@/hooks/use-submission";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import type { Database } from "@/integrations/supabase/types";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { getRouteApi } from '@tanstack/react-router';
+import { claimSummit, summitSeenKey } from '@/lib/visualProgress';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Check, Info, Minus, MoreHorizontal, Pause, Pencil, Play, Plus, RotateCcw, Square, Trash2, Upload } from "lucide-react";
 import { format } from "date-fns";
@@ -53,7 +55,10 @@ function RouteDetail() {
   const refresh = useRefresh();
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [celebrate, setCelebrate] = useState(false);
+  const [celebrate, setCelebrate] = useState<RouteRow | null>(null);
+  const summitFocus = useRef<HTMLElement | null>(null);
+  const { user } = getRouteApi('/_authenticated').useRouteContext();
+  const { submitting: summitBusy, submit: submitSummit } = useSubmission();
   const [cardOpen, setCardOpen] = useState(false);
   const [newMs, setNewMs] = useState("");
   const { submitting: submittingMilestone, submit: submitMilestone } = useSubmission();
@@ -86,10 +91,14 @@ function RouteDetail() {
   const offerSummit = stats.camp === 4 && route.status !== "summited" && !dismissed;
 
   async function markSummited() {
-    const { error } = await supabase.from("routes").update({ status: "summited", summited_at: new Date().toISOString() }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    setCelebrate(true);
-    refresh();
+    summitFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    await submitSummit(async () => {
+      const at = new Date().toISOString();
+      const { error } = await supabase.from("routes").update({ status: "summited", summited_at: at }).eq("id", id);
+      if (error) throw new Error(error.message);
+      if (route && claimSummit(localStorage, summitSeenKey(user.id, id, at))) setCelebrate({ ...route, status: 'summited', summited_at: at });
+      refresh();
+    });
   }
   function notYet() {
     sessionStorage.setItem(dismissKey, "1");
@@ -216,13 +225,13 @@ function RouteDetail() {
 
   return (
     <div className="space-y-10">
-      {celebrate && <SummitOverlay name={route.name} onDone={() => setCelebrate(false)} />}
+      {celebrate && <SummitOverlay route={celebrate} agg={agg} returnFocus={summitFocus.current} onDone={() => setCelebrate(null)} />}
       {offerSummit && (
         <div className="surface flex flex-col gap-3 border-gold/60 p-5 sm:flex-row sm:items-center" role="status">
           <div className="h-1 w-10 shrink-0 rounded-full bg-gold sm:h-10 sm:w-1" />
           <p className="flex-1 font-medium">You've reached the summit. Mark this route as summited?</p>
           <div className="flex gap-2">
-            <Button className="h-12" onClick={markSummited}>Mark as summited</Button>
+            <Button className="h-12" disabled={summitBusy} onClick={markSummited}>Mark as summited</Button>
             <Button variant="outline" className="h-12" onClick={notYet}>Not yet</Button>
           </div>
         </div>
@@ -236,7 +245,7 @@ function RouteDetail() {
       <div>
         <Link to="/routes" className="text-sm text-muted-foreground">← Routes</Link>
         <div className="mt-2 flex items-start justify-between gap-3">
-          <h1 className="flex min-w-0 items-center gap-2 text-3xl font-semibold"><RouteDot route={route} /><span className="break-words">{route.name}</span></h1>
+          <h1 tabIndex={-1} className="flex min-w-0 items-center gap-2 text-3xl font-semibold"><RouteDot route={route} /><span className="break-words">{route.name}</span></h1>
           <Button variant="outline" className="h-12 shrink-0" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4" /> Edit route</Button>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -249,7 +258,7 @@ function RouteDetail() {
 
       <div className="grid gap-6 md:grid-cols-[auto_1fr]">
         <div className="surface relative p-5">
-          <Mountain camp={stats.camp} />
+          <Mountain camp={stats.camp} score={stats.score} />
           <CampsInfo />
         </div>
         <div className="space-y-4">
