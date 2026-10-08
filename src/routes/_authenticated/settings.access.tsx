@@ -33,7 +33,7 @@ function Access() {
   const add = useServerFn(addAllowed);
   const remove = useServerFn(removeAllowed);
   const revoke = useServerFn(revokeMember);
-  const { data } = useQuery({ queryKey: ["access"], queryFn: () => list() });
+  const { data, error: accessError } = useQuery({ queryKey: ["access"], queryFn: () => list() });
   const [email, setEmail] = useState("");
   const reload = () => qc.invalidateQueries({ queryKey: ["access"] });
 
@@ -54,6 +54,9 @@ function Access() {
       toast.error(err instanceof Error ? err.message : "Could not add");
     }
   }
+
+  if (accessError) throw accessError;
+  if (!data) return <ScreenSkeleton screen="settings" />;
 
   const members = (data?.members ?? []).filter((m) => m.id !== user.id);
   const memberEmails = new Set((data?.members ?? []).filter((m) => !m.revoked).map((m) => m.email.toLowerCase()));
@@ -76,7 +79,7 @@ function Access() {
 
       <section>
         <SectionTitle>Allowlist</SectionTitle>
-        {!data ? <ScreenSkeleton screen="settings" /> : data.allowlist.length === 0 ? <Empty>No one invited yet.</Empty> : (
+        {!data ? <ScreenSkeleton screen="settings" /> : data.allowlist.length === 0 ? <Empty illustration="tent" title="No invitations yet" description="People you invite will appear here." primaryAction={<Button onClick={() => document.getElementById("invite-email")?.focus()}>Invite someone</Button>} /> : (
           <ul className="surface divide-y">
             {data.allowlist.map((a) => (
               <li key={a.id} className="flex items-center gap-3 p-2 pl-4">
@@ -98,7 +101,7 @@ function Access() {
 
       <section>
         <SectionTitle>Members</SectionTitle>
-        {members.length === 0 ? <Empty>No members yet.</Empty> : (
+        {members.length === 0 ? <Empty illustration="tent" title="No members yet" description="People who accept an invitation will appear here." primaryAction={<Button onClick={() => document.getElementById("invite-email")?.focus()}>Invite someone</Button>} /> : (
           <ul className="surface divide-y">
             {members.map((m) => (
               <li key={m.id} className="flex items-center gap-3 p-2 pl-4">

@@ -9,14 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "./fields";
+import { useNavigate } from "@tanstack/react-router";
+import { ScreenSkeleton } from "./ScreenSkeleton";
+import { Empty, NativeSelect } from "./fields";
 import { logSession } from "@/lib/sessions";
 import { requireOnline } from "@/lib/sync";
 
 const LAST_KEY = "ascent:last-route";
 
 export function QuickCapture({ open, onOpenChange, initialKind = 'note', initialRouteId }: { open: boolean; onOpenChange: (o: boolean) => void; initialKind?: 'note' | 'session'; initialRouteId?: string | undefined }) {
-  const { data: routes_ } = useRoutes();
+  const navigate = useNavigate();
+  const { data: routes_, error: routesError } = useRoutes();
   const data = routes_ ? { routes: routes_ } : undefined;
   const refresh = useRefresh();
   const routes = (data?.routes ?? []).filter((r) => isLive(r) && (r.status === "active" || r.status === "paused"));
@@ -62,8 +65,8 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
         <DialogHeader>
            <DialogTitle>{kind === 'session' ? 'Log time' : 'Quick capture'}</DialogTitle>
         </DialogHeader>
-        {routes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Create a Route first, then capture notes and sessions here.</p>
+        {routesError ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load routes.</p> : !routes_ ? <ScreenSkeleton screen="notes" /> : routes.length === 0 ? (
+          <Empty headingLevel={2} illustration="tent" title="No active routes" description="Choose a route before saving notes or study time." primaryAction={<Button onClick={() => { onOpenChange(false); navigate({ to: "/routes" }); }}>Open routes</Button>} />
         ) : (
           <form onSubmit={save} className="space-y-4">
             <Tabs value={kind} onValueChange={(v) => setKind(v as "note" | "session")}>

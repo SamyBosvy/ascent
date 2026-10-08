@@ -60,12 +60,12 @@ function isTyping(e: KeyboardEvent) {
 function Review() {
   const { route } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { data: allRoutes } = useRoutes();
+  const { data: allRoutes, error: routesError } = useRoutes();
   const routes = allRoutes?.filter(isLive);
-  const { data: stats } = useRouteStats();
-  const { data: newPerDay } = useNewPerDay();
-  const { data: newToday } = useNewReviewedToday();
-  const { data: dueCards } = useQuery({
+  const { data: stats, error: statsError } = useRouteStats();
+  const { data: newPerDay, error: settingsError } = useNewPerDay();
+  const { data: newToday, error: newError } = useNewReviewedToday();
+  const { data: dueCards, error: dueError } = useQuery({
     queryKey: ["cards", "due", route ?? "all"],
     queryFn: () =>
       fetchPaged<Card>((a, b) => {
@@ -271,6 +271,7 @@ function Review() {
     }
   }
 
+  if (routesError || statsError || settingsError || newError || dueError) throw routesError || statsError || settingsError || newError || dueError;
   if (!routes || !stats || !dueCards || newPerDay == null || newToday == null) return <ScreenSkeleton screen="review" />;
   const dueNow = dueCards.filter((c) => new Date(c.due_at).getTime() <= Date.now());
   const dueReviews = dueNow.filter((c) => c.last_reviewed_at);
@@ -394,7 +395,7 @@ function Review() {
         <option value="">All routes</option>
         {routes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
       </NativeSelect>
-      <div className="surface space-y-4 p-6 text-center">
+      {startCount === 0 ? <Empty headingLevel={2} illustration="cards" title="Nothing due right now" description="Your next scheduled cards will appear here when they’re due." primaryAction={<Button asChild><Link to="/today">Back to Today</Link></Button>} /> : <div className="surface space-y-4 p-6 text-center">
         <p className="font-display text-5xl font-semibold">{startCount}</p>
         <p className="text-muted-foreground">{startCount ? `${startCount} card${startCount > 1 ? "s" : ""} due. Keep climbing.` : "Nothing due right now."}</p>
         <p className="text-sm text-muted-foreground">{newLeft} new card{newLeft === 1 ? "" : "s"} left today</p>
@@ -403,7 +404,7 @@ function Review() {
         ) : (
           <Button className="h-12 w-full sm:w-auto sm:px-10" disabled>Start review</Button>
         )}
-      </div>
+      </div>}
       {totalCards > 0 && (
         <div className="grid gap-4 sm:grid-cols-2">
           {startCount < 10 && (
@@ -433,11 +434,7 @@ function Review() {
           </div>
         </div>
       )}
-      {!totalCards && (
-        <Empty>
-          No cards yet. Add them from a <Link to="/routes" className="text-primary-strong underline">route</Link>, a note, or a CSV import.
-        </Empty>
-      )}
+
       <CardDialog open={newOpen} onOpenChange={setNewOpen} {...(route ? { routeId: route } : {})} />
     </div>
   );

@@ -1,3 +1,5 @@
+import { Empty } from "./fields";
+import { Button } from "@/components/ui/button";
 import { RouteDot } from "@/components/app/RouteDot";
 import { useEffect, useState } from "react";
 import { isOffline, useOnline } from "@/lib/sync";
@@ -69,7 +71,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
   }, [q]);
   useEffect(() => { if (!open) { setQ(""); setDebounced(""); } }, [open]);
 
-  const { data: hits, isFetching } = useSearch(debounced, archived);
+  const { data: hits, isFetching, error: searchError, refetch } = useSearch(debounced, archived);
   const online = useOnline();
 
   const run = (fn: () => void) => { onOpenChange(false); fn(); };
@@ -105,7 +107,8 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
   const shownActions = actions.filter((a) => match(a.label));
   const shownPages = pages.filter((p) => match(`Go to ${p.label}`));
   const searching = debounced.length >= 2;
-  const nothing = !shownActions.length && !shownPages.length && (!searching || !online || (hits && !hits.routes.length && !hits.notes.length && !hits.cards.length));
+  const waiting = q.trim() !== debounced || isFetching;
+  const nothing = online && !searchError && !waiting && !shownActions.length && !shownPages.length && (!searching || (hits && !hits.routes.length && !hits.notes.length && !hits.cards.length));
 
   return (
     <>
@@ -123,7 +126,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
               Show archived
             </label>
             <Command.List className="max-h-[60vh] overflow-y-auto p-2">
-              {nothing && <Command.Empty className="p-4 text-center text-sm text-muted-foreground">{!online ? "You're offline. Search needs a connection." : isFetching ? "Searching…" : "Nothing found."}</Command.Empty>}
+              {searching && !online ? <p role="alert" className="p-4 text-sm text-muted-foreground">You’re offline. Search needs a connection.</p> : searching && searchError ? <div role="alert" className="p-4 text-sm text-muted-foreground">Couldn’t search.<Button variant="link" className="h-12" onClick={() => void refetch()}>Try again</Button></div> : waiting ? <p role="status" className="p-4 text-sm text-muted-foreground">Searching…</p> : nothing && <Empty headingLevel={2} illustration="path" title="No results" description="Try another search for your routes, notes or cards." primaryAction={<Button onClick={() => { setQ(""); setDebounced(""); }}>Clear search</Button>} />}
               {searching && hits && hits.routes.length > 0 && (
                 <Command.Group heading="Routes" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
                   {hits.routes.map((h) => (

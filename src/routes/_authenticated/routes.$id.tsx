@@ -46,9 +46,9 @@ export const Route = createFileRoute("/_authenticated/routes/$id")({
 function RouteDetail() {
   const { id } = Route.useParams();
   const { focus } = Route.useSearch();
-  const { data: routes } = useRoutes();
-  const { data: allStats } = useRouteStats();
-  const { data: milestoneRows } = useQuery({
+  const { data: routes, error: routesError } = useRoutes();
+  const { data: allStats, error: statsError } = useRouteStats();
+  const { data: milestoneRows, error: milestonesError } = useQuery({
     queryKey: ["milestones", id],
     queryFn: () => fetchPaged<Milestone>((a, b) => supabase.from("milestones").select("*").eq("route_id", id).order("position").order("id").range(a, b)),
   });
@@ -71,7 +71,7 @@ function RouteDetail() {
 
   const route = routes?.find((r) => r.id === id);
   const agg = allStats?.get(id);
-  const { data: history } = useCheckinHistory(id, route?.type === "habit");
+  const { data: history, error: historyError } = useCheckinHistory(id, route?.type === "habit");
   // "Continue" on Today opens a book at its page input.
   const pageReady = !!route && !!allStats;
   useEffect(() => {
@@ -82,8 +82,9 @@ function RouteDetail() {
   }, [focus, pageReady]);
   const stats = route && allStats ? routeStats(route, agg) : null;
 
+  if (routesError || statsError || milestonesError || historyError) throw routesError || statsError || milestonesError || historyError;
   if (!routes || !allStats || !milestoneRows) return <ScreenSkeleton screen="route" />;
-  if (!route || !stats) return <Empty>This route doesn't exist.</Empty>;
+  if (!route || !stats) return <Empty headingLevel={2} illustration="path" title="Route not found" description="This route is no longer available." primaryAction={<Button asChild><Link to="/routes">Back to routes</Link></Button>} />;
 
   const milestones = [...milestoneRows].sort((a, b) => a.position - b.position);
   const due = stats.due;
@@ -315,12 +316,13 @@ function RouteDetail() {
       {route.type === "habit" && (
         <section>
           <SectionTitle>Check-ins</SectionTitle>
-          <HabitHeatmap dates={history?.get(id)} today={localDate()} />
+          {!history ? <ScreenSkeleton screen="route" /> : !history.get(id)?.length ? <Empty illustration="calendar" title="No check-ins yet" description="Your habit practice will appear here." primaryAction={<Button onClick={() => toggleCheckin(id, false, refresh)}>Check in</Button>} /> : <HabitHeatmap dates={history.get(id)} today={localDate()} />}
         </section>
       )}
 
       <section>
         <SectionTitle>{route.type === "habit" ? "Steps" : "Milestones"}</SectionTitle>
+        {milestones.length === 0 && <Empty illustration="path" title="No milestones yet" description="Break this route into small steps." primaryAction={<Button onClick={() => document.getElementById("new-milestone")?.focus()}>Add milestone</Button>} />}
         <ul className="space-y-2">
           {milestones.map((m, i) => (
             <li key={m.id} className="surface flex items-center gap-1 p-1 pl-2">
@@ -337,7 +339,7 @@ function RouteDetail() {
           ))}
         </ul>
         <form onSubmit={addMs} className="mt-3 flex gap-2">
-          <Input aria-label="New milestone" className="h-12" placeholder="Add a milestone" value={newMs} onChange={(e) => setNewMs(e.target.value)} />
+          <Input id="new-milestone" aria-label="New milestone" className="h-12" placeholder="Add a milestone" value={newMs} onChange={(e) => setNewMs(e.target.value)} />
           <Button disabled={submittingMilestone} type="submit" variant="outline" className="h-12 w-12" aria-label="Add"><Plus className="h-4 w-4" /></Button>
         </form>
       </section>
@@ -354,7 +356,7 @@ function RouteDetail() {
         >
           Flashcards
         </SectionTitle>
-        <div className="surface flex flex-wrap items-center gap-2 p-4">
+        {stats.cards === 0 ? <Empty illustration="cards" title="No cards yet" description="Save questions and answers for this route." primaryAction={<Button onClick={() => setCardOpen(true)}>New card</Button>} secondaryLink={<Button variant="link" onClick={() => setImportOpen(true)}>Import CSV</Button>} /> : <div className="surface flex flex-wrap items-center gap-2 p-4">
           <p className="mr-auto text-sm">{stats.cards} cards · {due} due</p>
           <Button variant="outline" className="h-12" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4" /> Import CSV</Button>
           <Button asChild variant="outline" className="h-12">
@@ -368,8 +370,10 @@ function RouteDetail() {
           ) : (
             <Button className="h-12" disabled>Review</Button>
           )}
-        </div>
+        </div>}
       </section>
+
+      <RouteNotes routeId={id} />
 
       <div className="flex flex-wrap gap-2">
       {route.archived_at ? (
@@ -504,7 +508,7 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
   const [limit, setLimit] = useState(8);
   const [editing, setEditing] = useState<Session | null>(null);
 
-  const { data: list } = useQuery({
+  const { data: list, error: listError } = useQuery({
     queryKey: ["sessions", routeId, "list", limit],
     queryFn: () => must<Session[]>(supabase.from("sessions").select("*").eq("route_id", routeId).order("logged_at", { ascending: false }).order("id").limit(limit + 1)),
     placeholderData: (prev) => prev,
@@ -613,7 +617,7 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
           onSubmit={(e) => { e.preventDefault(); if (manual && !manualErr) void save(parseInt(manual, 10), routeId, loggedAtFor(day)); }}
         >
           <div className="flex flex-wrap gap-2">
-            <Input className="h-12 w-28" type="number" inputMode="numeric" min={1} max={MAX_MIN} placeholder="Minutes" aria-label="Minutes" value={manual} onChange={(e) => setManual(e.target.value)} aria-invalid={!!manualErr} />
+            <Input id="session-minutes" className="h-12 w-28" type="number" inputMode="numeric" min={1} max={MAX_MIN} placeholder="Minutes" aria-label="Minutes" value={manual} onChange={(e) => setManual(e.target.value)} aria-invalid={!!manualErr} />
             <Input className="h-12 w-40" type="date" aria-label="Date" value={day} max={localDate()} onChange={(e) => setDay(e.target.value && e.target.value > localDate() ? localDate() : e.target.value)} />
             <Input aria-label="Session note (optional)" className="h-12 min-w-40 flex-1" placeholder="One-line note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
             <Button type="submit" variant="outline" className="h-12" disabled={submittingSession || !manual || !!manualErr}>Log</Button>
@@ -624,7 +628,7 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
 
       <div className="mt-4">
         <p className="mb-1 text-sm text-muted-foreground">Total on this route: <span className="font-medium text-foreground">{minutesLabel(totalMinutes)}</span></p>
-        {list && rows.length === 0 && <p className="py-2 text-sm text-muted-foreground">No sessions logged yet.</p>}
+        {listError ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load sessions.</p> : !list ? <ScreenSkeleton screen="route" /> : rows.length === 0 && <Empty illustration="calendar" title="No sessions yet" description="Your logged study time will appear here." primaryAction={<Button onClick={() => document.getElementById("session-minutes")?.focus()}>Log time</Button>} />}
         <ul className="space-y-1 text-sm">
           {rows.map((s) => (
             <li key={s.id} className="flex items-center justify-between gap-3 border-b py-1 last:border-0">
@@ -720,4 +724,13 @@ function EditSessionDialog({ session, onClose, onSaved }: { session: Session | n
       </DialogContent>
     </Dialog>
   );
+}
+
+function RouteNotes({ routeId }: { routeId: string }) {
+  const { data: count, error } = useQuery({ queryKey: ["notes", "route-count", routeId], queryFn: async () => {
+    const { count, error } = await supabase.from("notes").select("id", { count: "exact", head: true }).eq("route_id", routeId);
+    if (error) throw new Error(error.message);
+    return count ?? 0;
+  } });
+  return <section><SectionTitle>Notes</SectionTitle>{error ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load notes.</p> : count == null ? <ScreenSkeleton screen="notes" /> : count === 0 ? <Empty illustration="notebook" title="No notes yet" description="Capture what you learn along this route." primaryAction={<Button asChild><Link to="/notes/new" search={{ route: routeId }}>New note</Link></Button>} /> : <Button asChild variant="outline" className="h-12"><Link to="/notes" search={{ route: routeId }}>Open notes ({count})</Link></Button>}</section>;
 }
