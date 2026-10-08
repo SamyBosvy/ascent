@@ -52,7 +52,7 @@ const safeTerm = (s: string) => s.replace(/[,()%*\\:"']/g, " ").trim();
 function CardsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { data: routes } = useRoutes();
+  const { data: routes, error: routesError } = useRoutes();
   const refresh = useRefresh();
   const state = search.state ?? "all";
   const sort = search.sort ?? "newest";
@@ -65,7 +65,7 @@ function CardsPage() {
   }, [q, search.q, navigate]);
 
   const term = safeTerm(search.q ?? "");
-  const { data: cards } = useQuery({
+  const { data: cards, error: cardsError } = useQuery({
     queryKey: ["cards", "browse", search.route ?? "all", state, sort, term],
     queryFn: () =>
       fetchPaged<Card>((a, b) => {
@@ -88,9 +88,11 @@ function CardsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editing, setEditing] = useState<Card | null>(null);
   const [moving, setMoving] = useState<string[] | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
   const [bulkDelete, setBulkDelete] = useState(false);
   useEffect(() => setSelected(new Set()), [search.route, state, sort, term]);
 
+  if (routesError || cardsError) throw routesError || cardsError;
   if (!routes || !cards) return <ScreenSkeleton screen="cards" />;
   const live = routes.filter(isLive);
   const archived = routes.filter((r) => !isLive(r));
@@ -120,7 +122,7 @@ function CardsPage() {
       <div className="grid gap-2 sm:grid-cols-[1fr_12rem]">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="h-12 pl-9" placeholder="Search front, back or example" value={q} onChange={(e) => setQ(e.target.value)} />
+          <Input className="h-12 pl-9" aria-label="Search cards" placeholder="Search front, back or example" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <NativeSelect value={search.route ?? ""} onChange={(e) => set({ route: e.target.value || undefined })} aria-label="Route">
           <option value="">All routes</option>
@@ -165,7 +167,7 @@ function CardsPage() {
       )}
 
       {cards.length === 0 ? (
-        <Empty>{term ? "No cards match that search." : "No cards here yet."}</Empty>
+        <Empty headingLevel={2} illustration="cards" title={term || search.route || state !== "all" ? "No matching cards" : "No cards yet"} description={term || search.route || state !== "all" ? "Try another search or remove your filters." : "Save questions and answers to review later."} primaryAction={term || search.route || state !== "all" ? <Button onClick={() => { setQ(""); navigate({ search: {} }); }}>Clear filters</Button> : live.length ? <Button onClick={() => setNewOpen(true)}>New card</Button> : <Button asChild><Link to="/routes">Create route</Link></Button>} />
       ) : (
         <ul className="space-y-2">
           {cards.map((c) => {
@@ -206,6 +208,7 @@ function CardsPage() {
         </ul>
       )}
 
+      <CardDialog open={newOpen} onOpenChange={setNewOpen} />
       <CardDialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)} card={editing} />
       <MoveDialog ids={moving} onClose={() => setMoving(null)} onDone={() => { setSelected(new Set()); refresh(); }} />
       <AlertDialog open={bulkDelete} onOpenChange={setBulkDelete}>
@@ -225,7 +228,7 @@ function CardsPage() {
 }
 
 function MoveDialog({ ids, onClose, onDone }: { ids: string[] | null; onClose: () => void; onDone: () => void }) {
-  const { data: routes } = useRoutes();
+  const { data: routes, error: routesError } = useRoutes();
   const live = (routes ?? []).filter(isLive);
   const [target, setTarget] = useState("");
   const [busy, setBusy] = useState(false);

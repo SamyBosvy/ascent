@@ -4,6 +4,9 @@ import { getRouteApi } from '@tanstack/react-router';
 import { LearningRouteCard } from '@/components/app/LearningRouteCard';
 import { ActivityStrip } from '@/components/app/ActivityStrip';
 import { QuickCapture } from '@/components/app/QuickCapture';
+import { RouteDialog } from "@/components/app/RouteDialog";
+import { useOnboarding } from "@/lib/onboarding";
+import { onboardingStep } from "@/lib/visualProgress";
 import { Onboarding } from "@/components/app/Onboarding";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -23,26 +26,30 @@ export const Route = createFileRoute("/_authenticated/today")({
 });
 
 function Today() {
+  const [routeOpen, setRouteOpen] = useState(false);
+  const onboarding = useOnboarding();
   const [logOpen, setLogOpen] = useState(false);
   const { user } = getRouteApi('/_authenticated').useRouteContext();
   const nameValue = user.user_metadata?.['display_name'] ?? user.user_metadata?.['full_name'] ?? user.user_metadata?.['name'];
   const name = typeof nameValue === 'string' ? nameValue.trim().split(/\s+/)[0] : '';
-  const { data: allRoutes } = useRoutes();
+  const { data: allRoutes, error: routesError } = useRoutes();
   const routes = allRoutes?.filter(isLive);
-  const { data: stats } = useRouteStats();
-  const { data: dueCounts } = useDueCounts();
-  const { data: newPerDay } = useNewPerDay();
-  const { data: newToday } = useNewReviewedToday();
+  const { data: stats, error: statsError } = useRouteStats();
+  const { data: dueCounts, error: dueError } = useDueCounts();
+  const { data: newPerDay, error: settingsError } = useNewPerDay();
+  const { data: newToday, error: newError } = useNewReviewedToday();
   // Same number Review shows: due reviews + new cards up to what's left of today's new-card limit.
   const due = dueCounts && newPerDay != null && newToday != null ? dueCounts.reviews + Math.min(dueCounts.fresh, Math.max(0, newPerDay - newToday)) : null;
-  const { data: weekMinutes } = useWeekMinutes();
+  const { data: weekMinutes, error: weekError } = useWeekMinutes();
   const refresh = useRefresh();
   const { data: settings } = useUserSettings();
   const { data: reviewsToday } = useReviewsToday();
   const { data: history } = useCheckinHistory();
   const { state: running } = useTimer();
-  if (!routes || !stats || due == null || weekMinutes == null) return <ScreenSkeleton screen="today" />;
+  if (routesError || statsError || dueError || settingsError || newError || weekError || onboarding.error) throw routesError || statsError || dueError || settingsError || newError || weekError || onboarding.error;
+  if (!routes || !stats || onboarding.isPending || due == null || weekMinutes == null) return <ScreenSkeleton screen="today" />;
 
+  const guided = onboardingStep(allRoutes ?? routes, stats, onboarding.data?.onboarding_started_at ?? null, onboarding.data?.onboarding_done_at ?? null) != null;
   const habits = routes.filter((r) => r.type === "habit" && r.status === "active");
   const dueHabits = habits.filter((h) => habitDueToday(h, stats.get(h.id)));
   const active = routes.filter((r) => r.status === "active" && r.type !== "habit");
@@ -65,11 +72,13 @@ function Today() {
       <QuickCapture open={logOpen} onOpenChange={setLogOpen} initialKind="session" initialRouteId={routes.filter(r => r.status === 'active').length === 1 ? routes.find(r => r.status === 'active')?.id : undefined} />
 
       <Onboarding routes={allRoutes ?? routes} stats={stats} />
+      <RouteDialog open={routeOpen} onOpenChange={setRouteOpen} />
+      {!guided && <>
 
       {cont && <ContinueCard route={cont.route} agg={stats.get(cont.route.id)} timerBusy={!!running} onCheckin={() => toggle(cont.route.id, false)} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="surface flex flex-col justify-between gap-4 p-5">
+        {due === 0 ? <Empty headingLevel={2} illustration="cards" title="Nothing due" description="Your due flashcards will appear here." primaryAction={<Button asChild><Link to="/review">Open review</Link></Button>} /> : <div className="surface flex flex-col justify-between gap-4 p-5">
           <div>
             <p className="text-sm text-muted-foreground">Flashcards due</p>
             <p className="mt-1 font-display text-4xl font-semibold">{due}</p>
@@ -94,7 +103,7 @@ function Today() {
           ) : (
             <Button className="h-12" disabled>Start review</Button>
           )}
-        </div>
+        </div>}
         <div className="surface p-5">
           <p className="text-sm text-muted-foreground">Time logged this week</p>
           <p className="mt-1 font-display text-4xl font-semibold">{minutesLabel(weekMinutes)}</p>
@@ -105,7 +114,7 @@ function Today() {
       <section>
         <SectionTitle>Habits today</SectionTitle>
         {habits.length === 0 ? (
-          <Empty>No habits yet. Create a Habit route to check in daily.</Empty>
+          <Empty illustration="calendar" title="No habits yet" description="Track regular practice with a habit route." primaryAction={<Button onClick={() => setRouteOpen(true)}>Create route</Button>} />
         ) : (
           <ul className="space-y-2">
             {habits.map((h) => {
@@ -139,9 +148,7 @@ function Today() {
       <section>
         <SectionTitle action={<Link to="/routes" className="text-sm text-primary-strong">All routes</Link>}>Active routes</SectionTitle>
         {active.length === 0 ? (
-          <Empty>
-            No active routes. <Link to="/routes" className="text-primary-strong underline">Start your first climb</Link>.
-          </Empty>
+          <Empty illustration="tent" title="No active routes" description="Your current learning routes will appear here." primaryAction={<Button onClick={() => setRouteOpen(true)}>Create route</Button>} />
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
             {active.map((r) => {
@@ -154,6 +161,7 @@ function Today() {
           </ul>
         )}
       </section>
+      </>}
     </div>
   );
 }

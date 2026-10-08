@@ -38,13 +38,13 @@ export function notesQuery(route?: string, tag?: string, q = "") {
 function Notes() {
   const { route, tag } = Route.useSearch();
   const nav = useNavigate();
-  const { data: routes } = useRoutes();
+  const { data: routes, error: routesError } = useRoutes();
   const all = routes ? { routes } : undefined;
   const [q, setQ] = useState("");
   const [term, setTerm] = useState("");
   useEffect(() => { const t = setTimeout(() => setTerm(q.trim()), 200); return () => clearTimeout(t); }, [q]);
-  const { data: notes, isFetching } = useQuery({ ...notesQuery(route, tag, term), placeholderData: (prev) => prev });
-  const { data: tags } = useQuery({ queryKey: ["notes", "tags"], queryFn: () => must(supabase.rpc("note_tags")) });
+  const { data: notes, isFetching, error: notesError } = useQuery({ ...notesQuery(route, tag, term), placeholderData: (prev) => prev });
+  const { data: tags, error: tagsError } = useQuery({ queryKey: ["notes", "tags"], queryFn: () => must(supabase.rpc("note_tags")) });
   const list = notes ?? [];
   const routeName = (id: string) => all?.routes.find((r) => r.id === id)?.name ?? "";
 
@@ -54,6 +54,7 @@ function Notes() {
     nav({ to: "/notes/new", search: { route } });
   }
 
+  if (routesError || notesError || tagsError) throw routesError || notesError || tagsError;
   if (!notes || !routes) return <ScreenSkeleton screen="notes" />;
 
   return (
@@ -67,7 +68,7 @@ function Notes() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="h-12 pl-9" aria-label="Search notes" placeholder="Search all notes" value={q} onChange={(e) => setQ(e.target.value)} aria-busy={isFetching} />
         </div>
-        <NativeSelect value={route ?? ""} onChange={(e) => nav({ to: "/notes", search: { route: e.target.value || undefined, tag } })}>
+        <NativeSelect aria-label="Filter notes by route" value={route ?? ""} onChange={(e) => nav({ to: "/notes", search: { route: e.target.value || undefined, tag } })}>
           <option value="">All routes</option>
           {all?.routes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
         </NativeSelect>
@@ -77,8 +78,8 @@ function Notes() {
           {tags.map((t) => {
             const on = t.tag === tag;
             return (
-              <Link key={t.tag} to="/notes" search={{ route, tag: on ? undefined : t.tag }} aria-pressed={on}
-                className={`inline-flex min-h-10 items-center rounded-full border px-3 text-sm ${on ? "border-primary bg-primary text-primary-foreground" : "border-input text-foreground hover:bg-accent"}`}>
+              <Link key={t.tag} to="/notes" search={{ route, tag: on ? undefined : t.tag }} aria-current={on ? "true" : undefined}
+                className={`inline-flex min-h-12 items-center rounded-full border px-3 text-sm ${on ? "border-primary bg-primary text-primary-foreground" : "border-input text-foreground hover:bg-accent"}`}>
                 #{t.tag} <span className={`ml-1 text-xs ${on ? "" : "text-muted-foreground"}`}>{t.uses}</span>
               </Link>
             );
@@ -86,7 +87,7 @@ function Notes() {
         </div>
       )}
       {list.length === 0 ? (
-        <Empty>{term || tag ? "No notes match that search." : "No notes yet. Capture what you learn while it's fresh."}</Empty>
+        <Empty headingLevel={2} illustration="notebook" title={term || tag || route ? "No matching notes" : "No notes yet"} description={term || tag || route ? "Try another search or remove your filters." : "Capture what you learn in a note."} primaryAction={term || tag || route ? <Button onClick={() => { setQ(""); setTerm(""); nav({ to: "/notes", search: {} }); }}>Clear filters</Button> : routes.length ? <Button onClick={create}>New note</Button> : <Button asChild><Link to="/routes">Create route</Link></Button>} />
       ) : (
         <ul className="space-y-2">
           {list.map((n) => (

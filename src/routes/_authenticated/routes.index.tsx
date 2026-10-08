@@ -19,12 +19,13 @@ export const Route = createFileRoute("/_authenticated/routes/")({
 const ORDER: RouteStatus[] = ["active", "paused", "summited", "abandoned"];
 
 function RoutesPage() {
-  const { data: routes } = useRoutes();
-  const { data: stats } = useRouteStats();
+  const { data: routes, error: routesError } = useRoutes();
+  const { data: stats, error: statsError } = useRouteStats();
   const refresh = useRefresh();
   const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [showArchived, setShowArchived] = useState(false);
+  if (routesError || statsError) throw routesError || statsError;
   if (!routes || !stats) return <ScreenSkeleton screen="routes" />;
   const live = routes.filter(isLive);
   const archived = routes.filter((r) => !isLive(r));
@@ -47,7 +48,7 @@ function RoutesPage() {
           <Button className="h-12" onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> New route</Button>
         </div>
       </div>
-      {live.length === 0 && <Empty>Every climb starts at base camp. Add a book, language, skill, course, paper or habit.</Empty>}
+      {live.length === 0 && <Empty headingLevel={2} illustration="tent" title="No routes yet" description="Keep what you’re learning together in a route." primaryAction={<Button onClick={() => setOpen(true)}>Create route</Button>} />}
       {ORDER.map((status) => {
         const list = live.filter((r) => r.status === status);
         if (!list.length) return null;
@@ -66,13 +67,13 @@ function RoutesPage() {
           </section>
         );
       })}
-      {archived.length > 0 && (
+      {routes.length > 0 && (
         <section>
           <Button variant="ghost" className="h-12 px-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground" onClick={() => setShowArchived((v) => !v)} aria-expanded={showArchived}>
             Archived ({archived.length}) {showArchived ? "▴" : "▾"}
           </Button>
           {showArchived && (
-            <ul className="mt-2 space-y-2">
+            <><ul className="mt-2 space-y-2">
               {archived.map((r) => (
                 <li key={r.id} className="surface flex items-center gap-3 p-3 pl-4">
                   <Link to="/routes/$id" params={{ id: r.id }} className="min-w-0 flex-1">
@@ -82,7 +83,7 @@ function RoutesPage() {
                   <Button variant="outline" className="h-12" onClick={() => restore(r.id)}><ArchiveRestore className="h-4 w-4" /> Restore</Button>
                 </li>
               ))}
-            </ul>
+            </ul>{archived.length === 0 && <Empty illustration="ridge" title="No archived routes" description="Routes you archive will stay here with their progress." primaryAction={<Button variant="default" onClick={() => setShowArchived(false)}>Back to routes</Button>} />}</>
           )}
         </section>
       )}
