@@ -104,7 +104,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
   const shownActions = actions.filter((a) => match(a.label));
   const shownPages = pages.filter((p) => match(`Go to ${p.label}`));
   const searching = debounced.length >= 2;
-  const nothing = !shownActions.length && !shownPages.length && (!searching || (hits && !hits.routes.length && !hits.notes.length && !hits.cards.length));
+  const nothing = !shownActions.length && !shownPages.length && (!searching || !online || (hits && !hits.routes.length && !hits.notes.length && !hits.cards.length));
 
   return (
     <>
