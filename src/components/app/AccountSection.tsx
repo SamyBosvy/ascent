@@ -1,4 +1,5 @@
 import { useSubmission } from "@/hooks/use-submission";
+import { requireOnline } from "@/lib/sync";
 import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
@@ -81,6 +82,7 @@ export function AccountSection({ email: initialEmail }: { email: string }) {
   function changePassword(e: React.FormEvent) { e.preventDefault(); return submitPassword(() => changePasswordRequest(e)); }
   async function changePasswordRequest(e: React.FormEvent) {
     e.preventDefault();
+    if (!requireOnline("Changing your password")) return;
     setPwErr(null);
     if (next.length < 8) return setPwErr("New password must be at least 8 characters.");
     if (next !== conf) return setPwErr("New passwords don't match.");
@@ -101,6 +103,7 @@ export function AccountSection({ email: initialEmail }: { email: string }) {
   function changeEmail(e: React.FormEvent) { e.preventDefault(); return submitEmail(() => changeEmailRequest(e)); }
   async function changeEmailRequest(e: React.FormEvent) {
     e.preventDefault();
+    if (!requireOnline("Changing your email")) return;
     setEmErr(null);
     setEmMsg(null);
     const target = newEmail.trim().toLowerCase();

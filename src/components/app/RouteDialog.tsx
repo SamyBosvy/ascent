@@ -1,4 +1,5 @@
 import { useSubmission } from "@/hooks/use-submission";
+import { requireOnline } from "@/lib/sync";
 import { markOnboarding, useOnboarding } from "@/lib/onboarding";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -63,6 +64,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
   function save(e: React.FormEvent) { e.preventDefault(); return submitSave(() => saveRequest(e)); }
   async function saveRequest(e: React.FormEvent) {
     e.preventDefault();
+    if (!requireOnline("Saving a route")) return;
     setTried(true);
     if (!valid || busy) return;
     setBusy(true);

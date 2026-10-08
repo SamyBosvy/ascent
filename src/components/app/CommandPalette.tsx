@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isOffline, useOnline } from "@/lib/sync";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Command } from "cmdk";
@@ -23,6 +24,7 @@ function useSearch(q: string, archived: boolean) {
     enabled: q.length >= 2,
     staleTime: 10_000,
     queryFn: async () => {
+      if (isOffline()) throw new Error("offline");
       const term = safeTerm(q);
       const tsq = prefixTsQuery(q);
       let r = supabase.from("routes").select("id, name, archived_at").is("deleted_at", null).ilike("name", `%${term}%`);
