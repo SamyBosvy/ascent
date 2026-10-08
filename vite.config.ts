@@ -14,7 +14,7 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    define: { __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? "0") + `+"-${Date.now()}"` },
+    define: { __APP_VERSION__: JSON.stringify(String(Date.now())) },
     plugins: [
       VitePWA({
         // The worker is generated only for production builds; it is registered by src/lib/pwa.ts.
