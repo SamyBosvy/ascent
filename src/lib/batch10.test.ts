@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { classify, configureOutbox, enqueue, flush, cancel, listOutbox, migrateLegacyReviewQueue, setOutboxUser, type OutboxItem, type SendResult } from "./outbox";
-import { batchPayloads, parseBackup, planImport, payloadRows } from "./backup";
+import { batchPayloads, parseBackup, planImport, payloadRows, type RoutePayload } from "./backup";
 
 // ---------- outbox ----------
 let mem: OutboxItem[] = [];
@@ -36,7 +36,7 @@ describe("outbox", () => {
     results = ["retry"];
     expect(await flush()).toBe(0);
     expect(mem.map((i) => i.id)).toEqual(["a", "b"]);
-    expect(mem[0].attempts).toBe(1);
+    expect(mem[0]!.attempts).toBe(1);
     expect(await flush()).toBe(2);
     expect(sent).toEqual(["a", "a", "b"]);
   });
@@ -144,15 +144,15 @@ describe("planImport", () => {
     for (const old of [R1, R2, C1, u(1), u(2), u(4), u(6)]) expect(all).not.toContain(old);
     expect(all).not.toContain("someone");
     const spanish = plan.payloads.find((p) => p.route.name === "Spanish")!;
-    expect(spanish.cards[0].route_id).toBe(spanish.route.id);
-    expect(spanish.reviews[0].card_id).toBe(spanish.cards[0].id);
-    expect(spanish.reviews[0].route_id).toBe(spanish.route.id);
-    expect(spanish.notes[0].route_id).toBe(spanish.route.id);
-    expect(spanish.cards[0].due_at).toBe(T);
-    expect(spanish.reviews[0].reviewed_at).toBe(T);
+    expect(spanish.cards[0]!.route_id).toBe(spanish.route.id);
+    expect(spanish.reviews[0]!.card_id).toBe(spanish.cards[0]!.id);
+    expect(spanish.reviews[0]!.route_id).toBe(spanish.route.id);
+    expect(spanish.notes[0]!.route_id).toBe(spanish.route.id);
+    expect(spanish.cards[0]!.due_at).toBe(T);
+    expect(spanish.reviews[0]!.reviewed_at).toBe(T);
     const rust = plan.payloads.find((p) => p.route.name === "Rust")!;
     expect(rust.route.summited_at).toBe(T);
-    expect(rust.milestones[0]).toMatchObject({ route_id: rust.route.id, done: true, done_at: T });
+    expect(rust.milestones[0]!).toMatchObject({ route_id: rust.route.id, done: true, done_at: T });
   });
   it("skips rows whose parent is missing and counts them", () => {
     const plan = planImport(parseBackup(file()), [], "skip", ids);
@@ -179,8 +179,10 @@ describe("planImport", () => {
   });
   it("batches routes by ~500 rows without splitting a route", () => {
     const plan = planImport(parseBackup(file()), [], "skip", ids);
-    const big = { ...plan.payloads[0], sessions: Array.from({ length: 600 }, (_, i) => ({ ...plan.payloads[1].sessions[0], id: `s${i}` })) };
-    const batches = batchPayloads([plan.payloads[1], big, plan.payloads[1]], 500);
+    const [a, b] = plan.payloads as [RoutePayload, RoutePayload];
+    const rust = a.sessions.length ? a : b;
+    const big: RoutePayload = { ...a, sessions: Array.from({ length: 600 }, (_, i) => ({ ...rust.sessions[0]!, id: `s${i}` })) };
+    const batches = batchPayloads([b, big, b], 500);
     expect(batches.map((b) => b.length)).toEqual([1, 1, 1]);
     expect(payloadRows(big)).toBeGreaterThan(500);
   });

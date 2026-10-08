@@ -67,7 +67,7 @@ export function ImportBackup() {
       setProgress(Math.round((done / total) * 100));
     }
     const skipped = { ...plan.skipped };
-    setResult({ imported, skipped, invalid: plan.invalid, error });
+    setResult({ imported, skipped, invalid: plan.invalid, ...(error ? { error } : {}) });
     setProgress(null);
     await qc.invalidateQueries();
     if (error) toast.error("Import stopped. Everything listed as imported was saved.");

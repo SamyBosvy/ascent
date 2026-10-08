@@ -2,7 +2,7 @@ import type { RouteAgg, Session } from "./data";
 import { queryClientForSync, queueWrite } from "./sync";
 
 /** Log a study session through the outbox (works offline); the cached lists update at once. */
-export async function logSession(input: { route_id: string; minutes: number; note?: string | null; logged_at?: string }) {
+export async function logSession(input: { route_id: string; minutes: number; note?: string | null | undefined; logged_at?: string | undefined }) {
   const row = { id: crypto.randomUUID(), route_id: input.route_id, minutes: input.minutes, note: input.note ?? null, logged_at: input.logged_at ?? new Date().toISOString() };
   const qc = queryClientForSync();
   if (qc) {

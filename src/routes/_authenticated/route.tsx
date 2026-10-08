@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated")({
 // session (and the role last confirmed online, display only — the database enforces access).
 const IDENTITY_KEY = "ascent:identity";
 type Identity = { user: User; role: string };
-function isNetworkError(e: { message?: string; name?: string; status?: number; code?: string }) {
+function isNetworkError(e: { message?: string | undefined; name?: string | undefined; status?: number | undefined; code?: string | undefined }) {
   return e.name === "AuthRetryableFetchError" || e.status === 0 || /fetch|network|load failed/i.test(e.message ?? "");
 }
 function rememberIdentity(user: User, role: string) {
