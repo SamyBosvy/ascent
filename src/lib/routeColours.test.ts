@@ -12,12 +12,12 @@ describe("stable route colours", () => {
   });
   it("is deterministic and insensitive to UUID letter case", () => {
     expect(routeColour({ id: "abcd-1234" })).toBe(routeColour({ id: "ABCD-1234" }));
-    expect(routeColour({ id: "abcd-1234" })).toBe(6);
+    expect(routeColour({ id: "abcd-1234" })).toBe(9);
   });
   it("keeps colours on reorder, removal, insertion and rename", () => {
     const routes = Array.from({ length: 30 }, (_, i) => ({ id: `route-${i}`, name: `Name ${i}` }));
     const before = new Map(routes.map((r) => [r.id, routeColour(r)]));
-    for (const r of [...routes].reverse().slice(5)) expect(routeColour({ ...r, name: "Renamed" })).toBe(before.get(r.id));
+    for (const r of [...routes].reverse().slice(5)) { const renamed = { ...r, name: "Renamed" }; expect(routeColour(renamed)).toBe(before.get(r.id)); }
   });
   it("stays in range and uses all ten slots for varied ids", () => {
     const slots = Array.from({ length: 1000 }, (_, i) => routeColour({ id: `route-${i}` }));

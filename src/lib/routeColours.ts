@@ -3,7 +3,7 @@ export const ROUTE_COLOURS = [
   "Glacier blue", "Summit gold", "Teal", "Violet", "Forest green",
   "Copper", "Cyan", "Plum", "Lime", "Granite",
 ] as const;
-export type ColourRoute = { id: string; color?: number | null; archived_at?: string | null; deleted_at?: string | null };
+export type ColourRoute = { id: string; color?: number | null | undefined; archived_at?: string | null; deleted_at?: string | null };
 
 export function routeColour(route: ColourRoute): number {
   if (Number.isInteger(route.color) && route.color != null && route.color >= 1 && route.color <= 10) return route.color;
@@ -16,7 +16,10 @@ export function routeColour(route: ColourRoute): number {
 export function leastUsedColour(routes: readonly ColourRoute[]): number {
   const counts = Array<number>(10).fill(0);
   for (const route of routes) {
-    if (!route.archived_at && !route.deleted_at) counts[routeColour(route) - 1] += 1;
+    if (!route.archived_at && !route.deleted_at) {
+      const index = routeColour(route) - 1;
+      counts[index] = (counts[index] ?? 0) + 1;
+    }
   }
   return counts.indexOf(Math.min(...counts)) + 1;
 }
