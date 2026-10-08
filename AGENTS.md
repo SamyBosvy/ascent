@@ -32,3 +32,4 @@
 - Fonts are self-hosted via @fontsource-variable packages imported in styles.css — no third-party font requests and the worker precaches them.
 
 - Route graphics share routeColours.ts: stored palette slot or deterministic id fallback; create selects the least-used live-route slot, and backup imports preserve slots — list order and renames never change route identity.
+- Persisted queries use Map-aware cacheSerialization and a format-version buster — route stats and habit history retain their Map shape after reload instead of crashing screens.
