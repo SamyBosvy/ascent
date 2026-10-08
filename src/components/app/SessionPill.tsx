@@ -2,7 +2,7 @@ import { RouteDot } from "@/components/app/RouteDot";
 import { useSubmission } from "@/hooks/use-submission";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Timer } from "lucide-react";
+import { Pause } from "lucide-react";
 import { toast } from "sonner";
 import { minutesLabel, useRefresh, useRoutes } from "@/lib/data";
 import { logSession } from "@/lib/sessions";
@@ -22,10 +22,12 @@ export function SessionPill({ className = "" }: { className?: string }) {
       to="/routes/$id"
       params={{ id: state.routeId }}
       className={`flex min-h-12 items-center gap-2 rounded-full border bg-background px-4 text-sm shadow-sm ${className}`}
-      aria-label={`Session ${state.paused ? "paused" : "running"} on ${state.routeName}, ${clockLabel(elapsed)}`}
+      aria-label={`${state.paused ? "Paused" : "Running"} session on ${state.routeName}, ${clockLabel(elapsed)}`}
     >
       <RouteDot route={routes?.find((r) => r.id === state.routeId) ?? { id: state.routeId }} />
-      <Timer className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <span className="flex size-4 shrink-0 items-center justify-center text-primary-strong" title={state.paused ? "Paused" : "Running"} aria-hidden="true">
+        {state.paused ? <Pause className="size-4" /> : <span className="session-running size-2 rounded-full border-2 border-primary-strong" />}
+      </span>
       <span className="min-w-0 truncate">{state.routeName}</span>
       <span className="font-medium tabular-nums">{clockLabel(elapsed)}</span>
     </Link>

@@ -333,6 +333,8 @@
 .route-swatch { background: var(--route-color); }
 .route-accent { border-left-width: 3px; }
 .mountain-climber { transition: transform 600ms ease-out; }
+@keyframes session-running { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.5); } }
+.session-running { animation: session-running 1.6s ease-in-out infinite; }
 .stroke-primary-strong { stroke: var(--primary-text); }
 .activity-level-0 { background: var(--muted); }
 .activity-level-1 { background: var(--activity-low); }
@@ -344,6 +346,7 @@
 .activity-cell { border: 1px solid var(--input); }
 .summit-dialog [data-summit-flag] { animation: flag-rise 900ms ease-out both; }
 @media (prefers-reduced-motion: reduce) {
+  .session-running { animation: none; }
   .mountain-climber { transition: none; }
   .summit-dialog, .summit-dialog *, body:has(.summit-dialog) > [data-state] { animation: none !important; transition: none !important; }
 }

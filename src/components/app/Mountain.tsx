@@ -1,16 +1,17 @@
 import { CAMPS } from "@/lib/camp";
 import { cn } from "@/lib/utils";
-import { climberPosition } from '@/lib/visualProgress';
+import { climberPosition, visualScoreForCamp } from '@/lib/visualProgress';
 
-/** Vertical mountain with camps; climber sits at `camp` (0-4), nudged by `score` progress. */
+/** Continuous climber constrained to the displayed camp, including manual overrides. */
 export function Mountain({ camp, score = 0, className }: { camp: number; score?: number; className?: string }) {
-  const position = climberPosition(score);
+  const visualScore = visualScoreForCamp(score, camp);
+  const position = climberPosition(visualScore);
   const H = 320;
   const ys: number[] = CAMPS.map((_, i) => H - 30 - i * ((H - 60) / 4));
   const xs = [70, 110, 80, 120, 100];
   return (
     <div className={cn("flex min-w-0 items-stretch gap-4", className)}>
-      <svg viewBox={`0 0 200 ${H}`} className="h-48 w-28 shrink-0 sm:h-80 sm:w-40" role="img" aria-label={`${Math.round(score * 100)}% progress, between ${CAMPS[position.current]} and ${CAMPS[position.next]}`}>
+      <svg viewBox={`0 0 200 ${H}`} className="h-48 w-28 shrink-0 sm:h-80 sm:w-40" role="img" aria-label={position.current === 4 ? 'At Summit' : `${Math.floor(visualScore * 100)}% visual progress, between ${CAMPS[position.current]} and ${CAMPS[position.next]}`}>
         <path d={`M0 ${H} L100 14 L200 ${H} Z`} className="fill-ridge" opacity="0.55" />
         <path d={`M100 14 L82 66 L94 60 L100 72 L108 58 L118 66 Z`} className="fill-background" />
         <polyline
