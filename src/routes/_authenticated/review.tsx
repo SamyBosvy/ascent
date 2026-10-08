@@ -1,3 +1,4 @@
+import { RouteDot } from "@/components/app/RouteDot";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -310,7 +311,7 @@ function Review() {
     return (
       <div className="mx-auto max-w-xl space-y-5">
         <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-          <span className="truncate">{mode === "cram" ? "Cram · " : mode === "ahead" ? "Ahead · " : ""}{routeName(card.route_id)}</span>
+          <span className="flex min-w-0 items-center gap-2"><RouteDot route={cardRoute ?? { id: card.route_id }} /><span className="truncate">{mode === "cram" ? "Cram · " : mode === "ahead" ? "Ahead · " : ""}{routeName(card.route_id)}</span></span>
           <div className="flex items-center gap-1">
             <span className="mr-2 whitespace-nowrap">{queue.length} left</span>
             <Button variant="ghost" className="h-12" onClick={() => setEditing(card)}>
@@ -381,7 +382,7 @@ function Review() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold">Review</h1>
+        <div><h1 className="text-3xl font-semibold">Review</h1>{route && <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><RouteDot route={routes.find((r) => r.id === route) ?? { id: route }} />{routeName(route)}</p>}</div>
         <div className="flex gap-2">
           <Button asChild variant="outline" className="h-12">
             <Link to="/cards" search={route ? { route } : {}}>Cards</Link>

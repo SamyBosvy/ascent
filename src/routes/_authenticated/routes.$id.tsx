@@ -1,3 +1,4 @@
+import { RouteDot } from "@/components/app/RouteDot";
 import { useSubmission } from "@/hooks/use-submission";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import type { Database } from "@/integrations/supabase/types";
@@ -235,7 +236,7 @@ function RouteDetail() {
       <div>
         <Link to="/routes" className="text-sm text-muted-foreground">← Routes</Link>
         <div className="mt-2 flex items-start justify-between gap-3">
-          <h1 className="text-3xl font-semibold">{route.name}</h1>
+          <h1 className="flex min-w-0 items-center gap-2 text-3xl font-semibold"><RouteDot route={route} /><span className="break-words">{route.name}</span></h1>
           <Button variant="outline" className="h-12 shrink-0" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4" /> Edit route</Button>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">

@@ -1,3 +1,4 @@
+import { RouteDot } from "@/components/app/RouteDot";
 import { useEffect, useState } from "react";
 import { isOffline, useOnline } from "@/lib/sync";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
@@ -16,7 +17,7 @@ import { CardDialog } from "./CardDialog";
 
 import { prefixTsQuery, safeTerm } from "@/lib/search";
 
-type Hit = { id: string; label: string; sub?: string; routeId?: string };
+type Hit = { id: string; label: string; sub?: string; routeId?: string; color?: number | null };
 
 function useSearch(q: string, archived: boolean) {
   return useQuery({
@@ -27,7 +28,7 @@ function useSearch(q: string, archived: boolean) {
       if (isOffline()) throw new Error("offline");
       const term = safeTerm(q);
       const tsq = prefixTsQuery(q);
-      let r = supabase.from("routes").select("id, name, archived_at").is("deleted_at", null).ilike("name", `%${term}%`);
+      let r = supabase.from("routes").select("id, name, archived_at, color").is("deleted_at", null).ilike("name", `%${term}%`);
       if (!archived) r = r.is("archived_at", null);
       let n = supabase.from("notes").select("id, title, body, routes!inner(id, name)").is("routes.deleted_at", null);
       if (!archived) n = n.is("routes.archived_at", null);
@@ -40,7 +41,7 @@ function useSearch(q: string, archived: boolean) {
       ]);
       const name = (x: unknown) => (x as { name?: string } | null)?.name ?? "";
       return {
-        routes: (routes as { id: string; name: string; archived_at: string | null }[]).map((x): Hit => ({ id: x.id, label: x.name, ...(x.archived_at ? { sub: "Archived" } : {}) })),
+        routes: (routes as { id: string; name: string; archived_at: string | null; color: number | null }[]).map((x): Hit => ({ id: x.id, color: x.color, label: x.name, ...(x.archived_at ? { sub: "Archived" } : {}) })),
         notes: (notes as { id: string; title: string; body: string; routes: unknown }[]).map((x): Hit => ({ id: x.id, label: x.title || x.body.split("\n")[0] || "Untitled", sub: name(x.routes) })),
         cards: (cards as { id: string; front: string; route_id: string; routes: unknown }[]).map((x): Hit => ({ id: x.id, label: x.front, sub: name(x.routes), routeId: x.route_id })),
       };
@@ -127,7 +128,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
                 <Command.Group heading="Routes" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
                   {hits.routes.map((h) => (
                     <Command.Item key={h.id} value={`route-${h.id}`} className={item} onSelect={() => run(() => navigate({ to: "/routes/$id", params: { id: h.id } }))}>
-                      <Mountain className="h-4 w-4 shrink-0" aria-hidden /><span className="truncate">{h.label}</span>{h.sub && <span className="ml-auto text-xs text-muted-foreground">{h.sub}</span>}
+                      <RouteDot route={h} /><span className="truncate">{h.label}</span>{h.sub && <span className="ml-auto text-xs text-muted-foreground">{h.sub}</span>}
                     </Command.Item>
                   ))}
                 </Command.Group>

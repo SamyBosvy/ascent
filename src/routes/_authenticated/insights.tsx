@@ -1,3 +1,4 @@
+import { routeColourToken } from "@/lib/routeColours";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/insights")({
   component: Insights,
 });
 
-const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+
 
 /** Last eight weeks in the user's timezone and week start; each bucket is [start, end). */
 function eightWeeks() {
@@ -75,7 +76,7 @@ function Insights() {
     const row: Record<string, string | number> = { week: shortDate(w.day) };
     for (const rid of routeIds) {
       const m = rows.sessions.filter((s) => s.route_id === rid && new Date(s.logged_at).getTime() >= w.start && new Date(s.logged_at).getTime() < w.end).reduce((a, s) => a + s.minutes, 0);
-      row[name(rid)] = Math.round((m / 60) * 10) / 10;
+      row[rid] = Math.round((m / 60) * 10) / 10;
     }
     return row;
   });
@@ -98,7 +99,7 @@ function Insights() {
           <table className="sr-only">
             <caption>Hours per route, by week</caption>
             <thead><tr><th scope="col">Week</th>{routeIds.map(rid => <th key={rid} scope="col">{name(rid)} (hours)</th>)}</tr></thead>
-            <tbody>{timeData.map(row => <tr key={row["week"]}><th scope="row">{row["week"]}</th>{routeIds.map(rid => <td key={rid}>{row[name(rid)]}</td>)}</tr>)}</tbody>
+            <tbody>{timeData.map(row => <tr key={row["week"]}><th scope="row">{row["week"]}</th>{routeIds.map(rid => <td key={rid}>{row[rid]}</td>)}</tr>)}</tbody>
           </table>
           {routeIds.length ? (
             <div aria-hidden="true" className="h-full">
@@ -109,7 +110,7 @@ function Insights() {
                 <YAxis {...axis} width={30} />
                 <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12 }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                {routeIds.map((rid, i) => <Bar key={rid} dataKey={name(rid)} stackId="a" fill={COLORS[i % COLORS.length]} />)}
+                {routeIds.map((rid) => <Bar key={rid} dataKey={rid} name={name(rid)} stackId="a" fill={routeColourToken(routes.find((r) => r.id === rid) ?? { id: rid })} />)}
               </BarChart>
             </ResponsiveContainer>
             </div>

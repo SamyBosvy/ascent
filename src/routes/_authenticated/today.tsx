@@ -1,3 +1,4 @@
+import { RouteDot } from "@/components/app/RouteDot";
 import { Onboarding } from "@/components/app/Onboarding";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -104,7 +105,7 @@ function Today() {
               return (
                 <li key={h.id} className="surface flex items-center gap-3 p-3 pl-4">
                   <Link to="/routes/$id" params={{ id: h.id }} className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{h.name}</p>
+                    <p className="flex items-center gap-2 font-medium"><RouteDot route={h} /><span className="truncate">{h.name}</span></p>
                     <p className="text-xs text-muted-foreground">{Math.round(habitConsistency(h, stats.get(h.id)) * 100)}% over the last 30 days</p>
                     <StreakLine route={h} dates={history?.get(h.id)} today={today} />
                   </Link>
@@ -140,7 +141,7 @@ function Today() {
                 <li key={r.id}>
                   <Link to="/routes/$id" params={{ id: r.id }} className="surface block space-y-3 p-4 transition-colors hover:border-primary/50">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-medium">{r.name}</p>
+                      <p className="flex min-w-0 items-center gap-2 font-medium"><RouteDot route={r} /><span className="truncate">{r.name}</span></p>
                       <CampBadge camp={s.camp} />
                     </div>
                     <AltitudeBar camp={s.camp} />
@@ -191,7 +192,7 @@ function ContinueCard({ route, agg, timerBusy, onCheckin }: { route: RouteRow; a
     <section aria-labelledby="continue-title" className="surface flex flex-wrap items-center justify-between gap-3 p-5">
       <div className="min-w-0">
         <p id="continue-title" className="text-sm text-muted-foreground">Continue where you left off</p>
-        <Link to="/routes/$id" params={{ id: route.id }} className="mt-1 block truncate font-display text-xl font-semibold hover:underline">{route.name}</Link>
+        <Link to="/routes/$id" params={{ id: route.id }} className="mt-1 flex items-center gap-2 font-display text-xl font-semibold hover:underline"><RouteDot route={route} /><span className="truncate">{route.name}</span></Link>
         <PacingLine route={route} agg={agg} className="mt-1" />
       </div>
       {action}
