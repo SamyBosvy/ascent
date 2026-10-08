@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { classify, configureOutbox, enqueue, flush, cancel, listOutbox, migrateLegacyReviewQueue, setOutboxUser, type OutboxItem, type SendResult } from "./outbox";
 import { batchPayloads, parseBackup, planImport, payloadRows } from "./backup";
 
@@ -186,4 +186,3 @@ describe("planImport", () => {
   });
 });
 
-vi.stubGlobal("navigator", { onLine: true });
