@@ -2,6 +2,7 @@ import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { minutesLabel, TYPE_LABEL, useRouteStats, useRoutes } from "@/lib/data";
+import { Button } from "@/components/ui/button";
 import { Empty } from "@/components/app/fields";
 
 export const Route = createFileRoute("/_authenticated/summits")({
@@ -10,8 +11,9 @@ export const Route = createFileRoute("/_authenticated/summits")({
 });
 
 function Summits() {
-  const { data: routes } = useRoutes();
-  const { data: stats } = useRouteStats();
+  const { data: routes, error: routesError } = useRoutes();
+  const { data: stats, error: statsError } = useRouteStats();
+  if (routesError || statsError) throw routesError || statsError;
   if (!routes || !stats) return <ScreenSkeleton screen="summits" />;
   const list = routes.filter((r) => r.summited_at).sort((a, b) => b.summited_at!.localeCompare(a.summited_at!));
   return (
@@ -19,7 +21,7 @@ function Summits() {
       <Link to="/routes" className="text-sm text-muted-foreground">← Routes</Link>
       <h1 className="text-3xl font-semibold">Summits</h1>
       {list.length === 0 ? (
-        <Empty>Your trophy shelf is waiting. Every summit you reach lands here.</Empty>
+        <Empty headingLevel={2} illustration="flag" title="No summits yet" description="Routes you finish will appear here." primaryAction={<Button asChild><Link to="/routes">Open routes</Link></Button>} />
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
           {list.map((r) => {

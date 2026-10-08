@@ -1,6 +1,6 @@
 import { routeColourToken } from "@/lib/routeColours";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useQuery } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import { fetchPaged, useRouteStats, useRoutes, weekStartDate } from "@/lib/data"
 import { getPrefs } from "@/lib/prefs";
 import { addDays, shortDate, zonedMidnight } from "@/lib/time";
 import { habitConsistency } from "@/lib/camp";
+import { Button } from "@/components/ui/button";
 import { Empty, SectionTitle } from "@/components/app/fields";
 
 export const Route = createFileRoute("/_authenticated/insights")({
@@ -33,7 +34,7 @@ function useInsightRows() {
   return useQuery({
     queryKey: ["insights", "rows"],
     queryFn: async () => {
-      const from = new Date(eightWeeks()[0]!.start).toISOString();
+      const from = new Date((eightWeeks()[0]?.start ?? Date.now())).toISOString();
       const [sessions, reviews] = await Promise.all([
         fetchPaged<{ route_id: string; minutes: number; logged_at: string }>((a, b) =>
           supabase.from("sessions").select("route_id, minutes, logged_at, routes!inner(id)").is("routes.deleted_at", null).gte("logged_at", from).order("logged_at").order("id").range(a, b)),
@@ -49,9 +50,10 @@ function useInsightRows() {
 }
 
 function Insights() {
-  const { data: routes } = useRoutes();
-  const { data: stats } = useRouteStats();
-  const { data: rows } = useInsightRows();
+  const { data: routes, error: routesError } = useRoutes();
+  const { data: stats, error: statsError } = useRouteStats();
+  const { data: rows, error: rowsError } = useInsightRows();
+  if (routesError || statsError || rowsError) throw routesError || statsError || rowsError;
   if (!routes || !stats || !rows) return <ScreenSkeleton screen="insights" />;
 
   const sessionCount = [...stats.values()].reduce((a, s) => a + s.session_count, 0);
@@ -59,7 +61,7 @@ function Insights() {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-semibold">Insights</h1>
-        <Empty>Log 3 sessions or do 10 reviews to unlock Insights.</Empty>
+        <Empty headingLevel={2} illustration="chart" title="Not enough activity yet" description="Log 3 sessions or do 10 reviews to see your progress." primaryAction={<Button asChild><Link to="/today">Back to Today</Link></Button>} />
       </div>
     );
   }
@@ -95,7 +97,7 @@ function Insights() {
       <h1 className="text-3xl font-semibold">Insights</h1>
       <section>
         <SectionTitle>Hours per route, by week</SectionTitle>
-        <div role="group" aria-label="Hours spent per route each week, over the last eight weeks" className="surface h-72 p-3">
+        <div role="group" aria-label="Hours spent per route each week, over the last eight weeks" className={routeIds.length ? "surface h-72 p-3" : ""}>
           <table className="sr-only">
             <caption>Hours per route, by week</caption>
             <thead><tr><th scope="col">Week</th>{routeIds.map(rid => <th key={rid} scope="col">{name(rid)} (hours)</th>)}</tr></thead>
@@ -114,19 +116,19 @@ function Insights() {
               </BarChart>
             </ResponsiveContainer>
             </div>
-          ) : <Empty>No sessions logged yet.</Empty>}
+          ) : <Empty illustration="chart" title="No study time yet" description="Your logged time will appear here by week." primaryAction={<Button asChild><Link to="/today">Log time on Today</Link></Button>} />}
         </div>
       </section>
       <section>
         <SectionTitle>Flashcard retention</SectionTitle>
-        <div role="group" aria-label="Weekly flashcard retention percentage over the last eight weeks" className="surface h-64 p-3">
+        <div role="group" aria-label="Weekly flashcard retention percentage over the last eight weeks" className={retention.every(r => r.retention == null) ? "" : "surface h-64 p-3"}>
           <table className="sr-only">
             <caption>Flashcard retention</caption>
             <thead><tr><th scope="col">Week</th><th scope="col">Retention (%)</th></tr></thead>
             <tbody>{retention.map(row => <tr key={row.week}><th scope="row">{row.week}</th><td>{row.retention == null ? "No reviews" : `${row.retention}%`}</td></tr>)}</tbody>
           </table>
           {retention.every((r) => r.retention == null) ? (
-            <Empty>No reviews in the last 8 weeks. Retention appears here once you review cards.</Empty>
+            <Empty illustration="cards" title="No recent reviews" description="Your recall over the last eight weeks will appear here." primaryAction={<Button asChild><Link to="/review">Open review</Link></Button>} />
           ) : (
           <div aria-hidden="true" className="h-full">
           <ResponsiveContainer>
@@ -156,7 +158,7 @@ function Insights() {
               );
             })}
           </ul>
-        ) : <Empty>No habits yet.</Empty>}
+        ) : <Empty illustration="calendar" title="No habits yet" description="Habit routes show your 30-day consistency here." primaryAction={<Button asChild><Link to="/routes">Open routes</Link></Button>} />}
       </section>
       <section>
         <SectionTitle>Routes summited</SectionTitle>
@@ -169,7 +171,7 @@ function Insights() {
               </li>
             ))}
           </ul>
-        ) : <Empty>No summits yet. They'll be listed here.</Empty>}
+        ) : <Empty illustration="flag" title="No summits yet" description="Finished routes will appear here." primaryAction={<Button asChild><Link to="/routes">Open routes</Link></Button>} />}
       </section>
     </div>
   );
