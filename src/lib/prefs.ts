@@ -47,6 +47,12 @@ export function applyTheme(theme: Theme) {
   el.classList.toggle("dark", dark);
   el.classList.toggle("light", !dark);
   el.style.colorScheme = dark ? "dark" : "light";
+  // Read the actual themed background rather than maintaining a separate palette.
+  const background = getComputedStyle(el).getPropertyValue("--background").trim();
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta) => {
+    meta.content = background || (dark ? "#15202D" : "#F9FBFD");
+    meta.media = "";
+  });
 }
 
 /** Follow the OS setting live while the theme is System. Call from an effect. */
@@ -58,4 +64,4 @@ export function watchSystemTheme() {
 }
 
 /** Runs before first paint (inline in <head>) so there is no theme flash. */
-export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('${THEME_KEY}')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);var e=document.documentElement;e.classList.add(d?'dark':'light');e.classList.remove(d?'light':'dark');e.style.colorScheme=d?'dark':'light'}catch(_){}})()`;
+export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('${THEME_KEY}')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);var e=document.documentElement;e.classList.add(d?'dark':'light');e.classList.remove(d?'light':'dark');e.style.colorScheme=d?'dark':'light';if(t!=='system'){document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=d?'#15202D':'#F9FBFD';m.media=''})}}catch(_){}})()`;
