@@ -19,3 +19,8 @@
 - [x] Displayed-camp climber clamping and matching accessible label
 - [x] Running/paused session indicator and current-kind capture title
 - [x] All tests, signed-in checks, account restoration, report and credits
+
+# Batch 14
+- [ ] Shared accessible illustrated Empty and existing-flow actions across all locations
+- [ ] Loading/error precedence and onboarding priority
+- [ ] Component/screen tests, both-theme checks, report and credits
