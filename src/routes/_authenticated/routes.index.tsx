@@ -1,3 +1,4 @@
+import { RouteDot } from "@/components/app/RouteDot";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -63,7 +64,7 @@ function RoutesPage() {
                     <Link to="/routes/$id" params={{ id: r.id }} className="surface block space-y-3 p-4 hover:border-primary/50">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="truncate font-medium">{r.name}</p>
+                          <p className="flex items-center gap-2 font-medium"><RouteDot route={r} /><span className="truncate">{r.name}</span></p>
                           <p className="text-xs text-muted-foreground">{TYPE_LABEL[r.type]}</p>
                         </div>
                         <CampBadge camp={s.camp} />
@@ -88,7 +89,7 @@ function RoutesPage() {
               {archived.map((r) => (
                 <li key={r.id} className="surface flex items-center gap-3 p-3 pl-4">
                   <Link to="/routes/$id" params={{ id: r.id }} className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{r.name}</p>
+                    <p className="flex items-center gap-2 font-medium"><RouteDot route={r} /><span className="truncate">{r.name}</span></p>
                     <p className="text-xs text-muted-foreground">{TYPE_LABEL[r.type]}</p>
                   </Link>
                   <Button variant="outline" className="h-12" onClick={() => restore(r.id)}><ArchiveRestore className="h-4 w-4" /> Restore</Button>

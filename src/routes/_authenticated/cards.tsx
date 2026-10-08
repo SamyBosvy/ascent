@@ -1,3 +1,4 @@
+import { RouteDot } from "@/components/app/RouteDot";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -177,12 +178,12 @@ function CardsPage() {
                 <button className="min-w-0 flex-1 py-2 text-left" onClick={() => setEditing(c)}>
                   <CardText text={c.front} className="card-clamp font-medium" />
                   <CardText text={c.back} className="card-clamp text-sm text-muted-foreground" />
-                  <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <Badge variant={BADGE[st].variant}>{BADGE[st].label}</Badge>
-                    <span>{routeName(c.route_id)}</span>
+                    <span className="inline-flex items-center gap-1.5"><RouteDot route={routes.find((r) => r.id === c.route_id) ?? { id: c.route_id }} />{routeName(c.route_id)}</span>
                     <span>· due {format(new Date(c.due_at), "MMM d")}</span>
                     <span>· {c.interval_days}d interval</span>
-                  </p>
+                  </div>
                 </button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

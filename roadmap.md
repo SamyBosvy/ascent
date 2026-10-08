@@ -1,7 +1,6 @@
-# Batch 10
-- [x] Bug: check-in history query only for habit routes
-- [x] F36 import backup
-- [x] F37 offline (worker, persisted cache, outbox, banner, auth offline)
-- [x] F38 manifest
-- [x] F39 self-hosted fonts
-- [x] Tests, signed-in + offline check, cleanup
+# Batch 11
+- [x] A4 stable colours, swatches, displays, backup preservation
+- [x] Browser bar follows system and explicit theme
+- [x] Outbox drop reasons
+- [x] Migration, unit suite, contrast measurements
+- [x] Signed-in light/dark screenshots, temporary-data cleanup, report

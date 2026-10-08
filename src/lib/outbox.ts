@@ -25,7 +25,7 @@ export type OutboxOp =
 export type OutboxItem = OutboxOp & { id: string; user_id: string; created_at: string; attempts: number };
 
 /** "ok" = applied (or already applied), "drop" = can never succeed, "retry" = try again later. */
-export type SendResult = "ok" | "drop" | "retry";
+export type SendResult = "ok" | "drop" | "retry" | { status: "drop"; reason: string };
 export type Sender = (item: OutboxItem) => Promise<SendResult>;
 
 export type Storage = { get: () => Promise<OutboxItem[]>; set: (items: OutboxItem[]) => Promise<void> };
@@ -125,12 +125,14 @@ export function flush(): Promise<number> {
           res = "retry";
           reason = e instanceof Error ? e.message : String(e);
         }
-        if (res === "retry") {
+        if (typeof res === "object") reason = res.reason;
+        const status = typeof res === "object" ? res.status : res;
+        if (status === "retry") {
           await mutate((list) => list.map((i) => (i.id === next.id ? { ...i, attempts: i.attempts + 1 } : i)));
           break;
         }
         await mutate((list) => list.filter((i) => i.id !== next.id));
-        if (res === "ok") applied++;
+        if (status === "ok") applied++;
         else onDropped(next, reason);
       }
     } finally {
@@ -179,4 +181,16 @@ export function classify(error: { code?: string; message?: string } | null, isIn
   // Missing parent / row, bad input, permission or check failures will never succeed on replay.
   if (error.code && /^(23503|23514|22P02|22023|P0002|42501|PGRST116)$/.test(error.code)) return "drop";
   return "retry";
+}
+
+/** Preserve permanent failure categories all the way to the drop toast. */
+export function dropReason(code?: string): string {
+  if (code === "42501") return "you no longer have access";
+  if (code && /^(23514|22P02|22023)$/.test(code)) return "it was rejected as invalid";
+  if (code && /^(23503|P0002|PGRST116)$/.test(code)) return "its route or card no longer exists";
+  return "it could not be applied";
+}
+export function classifyResult(error: { code?: string; message?: string } | null, isInsert = false): SendResult {
+  const status = classify(error, isInsert);
+  return status === "drop" ? { status, reason: dropReason(error?.code) } : status;
 }

@@ -18,6 +18,7 @@ const routeSchema = z.object({
   description: txt(5000).nullish(),
   target_date: day.nullish(),
   status: z.enum(["active", "paused", "summited", "abandoned"]).default("active"),
+  color: z.number().int().min(1).max(10).nullish(),
   camp_override: z.number().int().min(0).max(4).nullish(),
   current_page: z.number().int().min(0).nullish(),
   total_pages: z.number().int().min(0).nullish(),

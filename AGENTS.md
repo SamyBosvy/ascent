@@ -30,3 +30,6 @@
 - Theme: user_settings is the source of truth, mirrored to localStorage and applied as .dark/.light on <html> by an inline boot script before paint; CSS dark tokens apply under `.dark` and under the OS media query unless `.light` — no flash, explicit Light wins.
 - Offline: vite-plugin-pwa (generateSW, prompt updates) registered only from `src/lib/pwa.ts`, precaching the client build's shell; HTML is NetworkFirst and backend/API traffic is never cached; the query cache persists to IndexedDB (`src/lib/persist.ts`, 7-day maxAge, buster = build + user) and is cleared on sign-out — the installed app opens offline without serving stale code or another user's data.
 - Fonts are self-hosted via @fontsource-variable packages imported in styles.css — no third-party font requests and the worker precaches them.
+
+- Route graphics share routeColours.ts: stored palette slot or deterministic id fallback; create selects the least-used live-route slot, and backup imports preserve slots — list order and renames never change route identity.
+- Persisted queries use Map-aware cacheSerialization and a format-version buster — route stats and habit history retain their Map shape after reload instead of crashing screens.

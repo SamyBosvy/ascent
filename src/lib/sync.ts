@@ -2,7 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import type { QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { classify, configureOutbox, enqueue, flushWithRetry, migrateLegacyReviewQueue, setOutboxUser, subscribePending, type OutboxItem, type OutboxOp, type SendResult } from "./outbox";
+import { classifyResult, configureOutbox, enqueue, flushWithRetry, migrateLegacyReviewQueue, setOutboxUser, subscribePending, type OutboxItem, type OutboxOp, type SendResult } from "./outbox";
 
 async function send(item: OutboxItem): Promise<SendResult> {
   switch (item.kind) {
@@ -11,32 +11,32 @@ async function send(item: OutboxItem): Promise<SendResult> {
       const { error } = await supabase.rpc("record_review", {
         _review_id: p.id, _card_id: p.card_id, _rating: p.rating, _ease: p.ease, _interval_days: p.interval_days, _due_at: p.due_at, _reps: p.reps, _reviewed_at: p.reviewed_at,
       });
-      return classify(error);
+      return classifyResult(error);
     }
     case "undo_review": {
       const p = item.data;
       const { error } = await supabase.rpc("undo_review", { _review_id: p.review_id, _card_id: p.card_id, _ease: p.ease, _interval_days: p.interval_days, _due_at: p.due_at, _reps: p.reps });
-      return classify(error);
+      return classifyResult(error);
     }
     case "checkin_add": {
       const { error } = await supabase.from("checkins").insert(item.data);
-      return classify(error, true);
+      return classifyResult(error, true);
     }
     case "checkin_del": {
       const { error } = await supabase.from("checkins").delete().eq("route_id", item.data.route_id).eq("checked_on", item.data.checked_on);
-      return classify(error);
+      return classifyResult(error);
     }
     case "session_add": {
       const { error } = await supabase.from("sessions").insert(item.data);
-      return classify(error, true);
+      return classifyResult(error, true);
     }
     case "milestone": {
       const { error } = await supabase.from("milestones").update({ done: item.data.done, done_at: item.data.done_at }).eq("id", item.data.id);
-      return classify(error);
+      return classifyResult(error);
     }
     case "pages": {
       const { error } = await supabase.from("routes").update({ current_page: item.data.current_page }).eq("id", item.data.route_id);
-      return classify(error);
+      return classifyResult(error);
     }
   }
 }
@@ -51,7 +51,7 @@ export async function startSync(queryClient: QueryClient, userId: string) {
   qc = queryClient;
   configureOutbox({
     sender: send,
-    onDropped: (item) => toast.error(`Couldn't sync ${LABEL[item.kind]} — its route or card no longer exists.`),
+    onDropped: (item, reason) => toast.error(`Couldn't sync ${LABEL[item.kind]} — ${reason || "it could not be applied"}.`),
     onSynced: () => void queryClient.invalidateQueries(),
   });
   setOutboxUser(userId);

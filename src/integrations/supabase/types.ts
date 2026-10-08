@@ -257,6 +257,7 @@ export type Database = {
         Row: {
           archived_at: string | null
           camp_override: number | null
+          color: number | null
           created_at: string
           current_page: number | null
           deleted_at: string | null
@@ -277,6 +278,7 @@ export type Database = {
         Insert: {
           archived_at?: string | null
           camp_override?: number | null
+          color?: number | null
           created_at?: string
           current_page?: number | null
           deleted_at?: string | null
@@ -297,6 +299,7 @@ export type Database = {
         Update: {
           archived_at?: string | null
           camp_override?: number | null
+          color?: number | null
           created_at?: string
           current_page?: number | null
           deleted_at?: string | null

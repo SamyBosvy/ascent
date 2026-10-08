@@ -47,6 +47,23 @@ export function applyTheme(theme: Theme) {
   el.classList.toggle("dark", dark);
   el.classList.toggle("light", !dark);
   el.style.colorScheme = dark ? "dark" : "light";
+  // Read the actual themed background rather than maintaining a separate palette.
+  const background = getComputedStyle(el).getPropertyValue("--background").trim();
+  // Browser chrome support for OKLCH varies; resolve the CSS token to sRGB hex.
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 1;
+  const context = canvas.getContext("2d");
+  let colour = dark ? "#15202D" : "#F9FBFD";
+  if (context && background) {
+    context.fillStyle = background;
+    context.fillRect(0, 0, 1, 1);
+    colour = "#" + Array.from(context.getImageData(0, 0, 1, 1).data).slice(0, 3).map((n) => n.toString(16).padStart(2, "0")).join("");
+  }
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta, i) => {
+    if (i > 0) { meta.remove(); return; }
+    meta.content = colour;
+    meta.removeAttribute("media");
+  });
 }
 
 /** Follow the OS setting live while the theme is System. Call from an effect. */
@@ -58,4 +75,4 @@ export function watchSystemTheme() {
 }
 
 /** Runs before first paint (inline in <head>) so there is no theme flash. */
-export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('${THEME_KEY}')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);var e=document.documentElement;e.classList.add(d?'dark':'light');e.classList.remove(d?'light':'dark');e.style.colorScheme=d?'dark':'light'}catch(_){}})()`;
+export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('${THEME_KEY}')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);var e=document.documentElement;e.classList.add(d?'dark':'light');e.classList.remove(d?'light':'dark');e.style.colorScheme=d?'dark':'light';if(t!=='system'){document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=d?'#15202D':'#F9FBFD';m.media=''})}}catch(_){}})()`;

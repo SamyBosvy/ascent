@@ -1,3 +1,5 @@
+import { leastUsedColour, routeColour } from "@/lib/routeColours";
+import { RouteColourPicker } from "./RouteColourPicker";
 import { useSubmission } from "@/hooks/use-submission";
 import { requireOnline } from "@/lib/sync";
 import { markOnboarding, useOnboarding } from "@/lib/onboarding";
@@ -43,6 +45,8 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
   const [freq, setFreq] = useState(route?.habit_frequency ?? "daily");
   const [times, setTimes] = useState(route?.habit_target ? String(route.habit_target) : "3");
   const [lang, setLang] = useState(route?.speech_lang ?? "");
+  const [pickedColour, setPickedColour] = useState<number | null>(route ? routeColour(route) : null);
+  const colour = pickedColour ?? leastUsedColour(existingRoutes ?? []);
   const [busy, setBusy] = useState(false);
   const [tried, setTried] = useState(false);
 
@@ -70,6 +74,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
     setBusy(true);
     const total = type === "book" && pages ? parseInt(pages, 10) : null;
     const common = {
+      color: colour,
       name: name.trim(),
       description: description.trim() || null,
       target_date: target || null,
@@ -137,6 +142,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
               </NativeSelect>
             )}
           </div>
+          <RouteColourPicker value={colour} onChange={setPickedColour} disabled={busy || submittingSave} />
           {type === "book" && (
             <div className="grid grid-cols-2 gap-3">
               {!editing && (

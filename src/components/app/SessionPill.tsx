@@ -1,9 +1,10 @@
+import { RouteDot } from "@/components/app/RouteDot";
 import { useSubmission } from "@/hooks/use-submission";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Timer } from "lucide-react";
 import { toast } from "sonner";
-import { minutesLabel, useRefresh } from "@/lib/data";
+import { minutesLabel, useRefresh, useRoutes } from "@/lib/data";
 import { logSession } from "@/lib/sessions";
 import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 /** Small "session running" pill that links back to the route being timed. */
 export function SessionPill({ className = "" }: { className?: string }) {
   const { state, elapsed } = useTimer();
+  const { data: routes } = useRoutes();
   if (!state) return null;
   return (
     <Link
@@ -22,7 +24,7 @@ export function SessionPill({ className = "" }: { className?: string }) {
       className={`flex min-h-12 items-center gap-2 rounded-full border bg-background px-4 text-sm shadow-sm ${className}`}
       aria-label={`Session ${state.paused ? "paused" : "running"} on ${state.routeName}, ${clockLabel(elapsed)}`}
     >
-      <span className={`h-2 w-2 shrink-0 rounded-full ${state.paused ? "bg-muted-foreground" : "animate-pulse bg-primary"}`} />
+      <RouteDot route={routes?.find((r) => r.id === state.routeId) ?? { id: state.routeId }} />
       <Timer className="h-4 w-4 shrink-0 text-muted-foreground" />
       <span className="min-w-0 truncate">{state.routeName}</span>
       <span className="font-medium tabular-nums">{clockLabel(elapsed)}</span>
