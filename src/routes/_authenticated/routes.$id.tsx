@@ -8,7 +8,7 @@ import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Check, Info, Minus, MoreHo
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPaged, localDate, minutesLabel, useCheckinHistory, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteStatus, type Session } from "@/lib/data";
+import { fetchPaged, localDate, minutesLabel, useCheckinHistory, must, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type Milestone, type RouteRow, type RouteStatus, type Session } from "@/lib/data";
 import { RouteDialog } from "@/components/app/RouteDialog";
 import { CsvImportDialog } from "@/components/app/CsvImportDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";

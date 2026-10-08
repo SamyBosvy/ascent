@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Timer } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { minutesLabel, useRefresh } from "@/lib/data";
 import { logSession } from "@/lib/sessions";
 import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
