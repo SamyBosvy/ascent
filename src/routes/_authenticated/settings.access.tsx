@@ -1,4 +1,5 @@
 import { useSubmission } from "@/hooks/use-submission";
+import { requireOnline } from "@/lib/sync";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -40,6 +41,7 @@ function Access() {
   function invite(e: React.FormEvent) { e.preventDefault(); return submitInvite(() => inviteRequest(e)); }
   async function inviteRequest(e: React.FormEvent) {
     e.preventDefault();
+    if (!requireOnline("Sending an invite")) return;
     try {
       const res = await add({ data: { email, origin: window.location.origin } });
       setEmail("");

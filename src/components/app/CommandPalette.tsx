@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isOffline, useOnline } from "@/lib/sync";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Command } from "cmdk";
@@ -23,6 +24,7 @@ function useSearch(q: string, archived: boolean) {
     enabled: q.length >= 2,
     staleTime: 10_000,
     queryFn: async () => {
+      if (isOffline()) throw new Error("offline");
       const term = safeTerm(q);
       const tsq = prefixTsQuery(q);
       let r = supabase.from("routes").select("id, name, archived_at").is("deleted_at", null).ilike("name", `%${term}%`);
@@ -67,6 +69,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
   useEffect(() => { if (!open) { setQ(""); setDebounced(""); } }, [open]);
 
   const { data: hits, isFetching } = useSearch(debounced, archived);
+  const online = useOnline();
 
   const run = (fn: () => void) => { onOpenChange(false); fn(); };
   const go = (to: "/today" | "/routes" | "/review" | "/cards" | "/notes" | "/insights" | "/summits" | "/settings") => run(() => navigate({ to }));
@@ -101,7 +104,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
   const shownActions = actions.filter((a) => match(a.label));
   const shownPages = pages.filter((p) => match(`Go to ${p.label}`));
   const searching = debounced.length >= 2;
-  const nothing = !shownActions.length && !shownPages.length && (!searching || (hits && !hits.routes.length && !hits.notes.length && !hits.cards.length));
+  const nothing = !shownActions.length && !shownPages.length && (!searching || !online || (hits && !hits.routes.length && !hits.notes.length && !hits.cards.length));
 
   return (
     <>
@@ -119,7 +122,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
               Show archived
             </label>
             <Command.List className="max-h-[60vh] overflow-y-auto p-2">
-              {nothing && <Command.Empty className="p-4 text-center text-sm text-muted-foreground">{isFetching ? "Searching…" : "Nothing found."}</Command.Empty>}
+              {nothing && <Command.Empty className="p-4 text-center text-sm text-muted-foreground">{!online ? "You're offline. Search needs a connection." : isFetching ? "Searching…" : "Nothing found."}</Command.Empty>}
               {searching && hits && hits.routes.length > 0 && (
                 <Command.Group heading="Routes" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
                   {hits.routes.map((h) => (

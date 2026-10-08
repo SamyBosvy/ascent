@@ -200,9 +200,10 @@ export function localDate(d = new Date()) {
 }
 
 /** Every check-in date per route (paged past 1,000 rows), for streaks and the heatmap. */
-export function useCheckinHistory(routeId?: string) {
+export function useCheckinHistory(routeId?: string, enabled = true) {
   return useQuery({
     queryKey: ["checkins", "history", routeId ?? "all"],
+    enabled,
     queryFn: async () => {
       const rows = await fetchPaged<{ route_id: string; checked_on: string }>((a, b) => {
         let q = supabase.from("checkins").select("route_id, checked_on, routes!inner(id)").is("routes.deleted_at", null).eq("routes.type", "habit");

@@ -421,6 +421,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_route: { Args: { _data: Json }; Returns: undefined }
       minutes_since: { Args: { _since: string }; Returns: number }
       move_cards: { Args: { _ids: string[]; _route: string }; Returns: number }
       new_cards_reviewed_since: { Args: { _since: string }; Returns: number }

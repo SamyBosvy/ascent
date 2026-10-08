@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { requireOnline } from "@/lib/sync";
 import { useSubmission } from "@/hooks/use-submission";
 import { Label } from "@/components/ui/label";
 import { useQueryClient } from "@tanstack/react-query";
@@ -86,6 +87,7 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
 
   function run() { return submit(runRequest); }
   async function runRequest() {
+    if (!requireOnline("Importing cards")) return;
     if (!rows) return;
     const fi = col("front"), bi = col("back"), ei = col("example"), pi = col("pronunciation");
     let invalid = 0, dupes = 0;

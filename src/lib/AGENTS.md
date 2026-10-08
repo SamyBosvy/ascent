@@ -1,6 +1,7 @@
 # Review, cards and notes logic
-- Reviews save through the idempotent `record_review` RPC via a localStorage-backed queue (`src/lib/reviewQueue.ts`) — ratings are never lost and never double-counted.
-- Undoing a rating goes through the atomic, idempotent `undo_review` RPC after cancelling/awaiting the queued save (`undoReview` in `reviewQueue.ts`) — a card is never left updated without its review row or vice versa.
+- Offline-capable writes (ratings, undo, check-ins, sessions, milestone toggles, book pages) go through the IndexedDB outbox (`outbox.ts`, wired in `sync.ts`) with client ids and idempotent replays (duplicate insert = success); screens patch the query cache optimistically — nothing is lost offline or double-counted on reconnect.
+- Reviews save through the idempotent `record_review` RPC via the outbox (`src/lib/reviewQueue.ts`) — ratings are never lost and never double-counted.
+- Undoing a rating goes through the atomic, idempotent `undo_review` RPC (queued behind the rating in the outbox, or simply removing a never-sent rating; `undoReview` in `reviewQueue.ts`) — a card is never left updated without its review row or vice versa.
 - Single-card delete snapshots the card + its reviews and re-inserts both (same ids) on Undo; moving cards uses the `move_cards` RPC so review rows follow their card.
 - Interval fuzz lives in `schedule()` (srs.ts) wrapping the unchanged `sm2()`; the per-user new-card limit is in `user_settings`.
 - Card text renders through `CardText` (react-markdown, raw HTML skipped, images dropped); cloze `{{cN::answer::hint}}` is rewritten to private `#cloze` links in `src/lib/cardText.ts` — one renderer for Review, Cards and the dialog preview, no HTML injection.
@@ -9,3 +10,4 @@
 - Review ordering uses the tested pure reviewOrdering helpers (earlier local due days, shuffled within each day) — testing does not change queue semantics.
 - Habit streaks/heatmap and route pacing are pure tested functions (`streaks.ts`, `pacing.ts`) fed by paged check-in history and route_stats — no streak state stored.
 - Note tags are normalised by a database trigger; note search uses the generated `notes.search` tsvector ('simple' config) via prefix tsqueries from `src/lib/search.ts` — server-side, language-agnostic.
+- Backup import is planned by pure `backup.ts` (zod validation, fresh ids, remapped references) and written one route per `import_route` RPC call — a failure never leaves half a route.

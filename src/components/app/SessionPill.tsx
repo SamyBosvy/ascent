@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Timer } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { minutesLabel, useRefresh } from "@/lib/data";
+import { logSession } from "@/lib/sessions";
 import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,8 +55,7 @@ export function StaleSessionPrompt() {
     const s = timer.get();
     if (!s) { setOpen(false); return; }
     if (mins < 1) { toast.error("Log at least one minute."); return; }
-    const { error } = await supabase.from("sessions").insert({ route_id: s.routeId, minutes: mins });
-    if (error) { toast.error(error.message); return; }
+    try { await logSession({ route_id: s.routeId, minutes: mins }); } catch (e) { toast.error((e as Error).message); return; }
     timer.clear();
     toast.success(`${minutesLabel(mins)} logged.`);
     refresh();
