@@ -102,6 +102,19 @@ function RouteDetail() {
     return !error;
   }
 
+  // Page updates go through the offline outbox; the cached route updates at once.
+  async function savePages(p: number) {
+    qc.setQueryData<RouteRow[]>(["routes"], (rows) => rows?.map((r) => (r.id === id ? { ...r, current_page: p, updated_at: new Date().toISOString() } : r)));
+    try {
+      await queueWrite({ kind: "pages", data: { route_id: id, current_page: p } });
+      return true;
+    } catch (e) {
+      toast.error((e as Error).message);
+      refresh();
+      return false;
+    }
+  }
+
   const msKey = ["milestones", id];
   const setMs = (fn: (rows: Milestone[]) => Milestone[]) => qc.setQueryData<Milestone[]>(msKey, (old) => fn(old ?? []));
   const msRefresh = () => {
@@ -264,7 +277,7 @@ function RouteDetail() {
             </label>
           </div>
           {route.type === "book" && route.total_pages ? (
-            <BookPages current={route.current_page ?? 0} total={route.total_pages} onSave={(p) => update({ current_page: p })} />
+            <BookPages current={route.current_page ?? 0} total={route.total_pages} onSave={savePages} />
           ) : null}
           {route.type === "habit" && (
             <div className="surface flex items-center justify-between gap-3 p-4">
