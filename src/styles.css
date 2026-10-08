@@ -345,5 +345,5 @@
 .summit-dialog [data-summit-flag] { animation: flag-rise 900ms ease-out both; }
 @media (prefers-reduced-motion: reduce) {
   .mountain-climber { transition: none; }
-  .summit-dialog, .summit-dialog *, [data-slot="dialog-overlay"] { animation: none !important; transition: none !important; }
+  .summit-dialog, .summit-dialog *, body:has(.summit-dialog) > [data-state] { animation: none !important; transition: none !important; }
 }

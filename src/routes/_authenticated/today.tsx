@@ -13,7 +13,7 @@ import { StreakLine } from "@/components/app/Habit";
 import { timer, useTimer } from "@/lib/timer";
 import { toggleCheckin } from "@/lib/checkins";
 import { isLive, localDate, minutesLabel, useCheckinHistory, useDueCounts, useNewPerDay, useNewReviewedToday, useRefresh, useReviewsToday, useRouteStats, useRoutes, useUserSettings, useWeekMinutes, type RouteAgg, type RouteRow } from "@/lib/data";
-import { habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
+import { habitConsistency, habitDueToday } from "@/lib/camp";
 import { Empty, SectionTitle } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 
