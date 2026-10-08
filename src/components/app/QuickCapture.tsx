@@ -60,7 +60,7 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-           <DialogTitle>{initialKind === 'session' ? 'Log time' : 'Quick capture'}</DialogTitle>
+           <DialogTitle>{kind === 'session' ? 'Log time' : 'Quick capture'}</DialogTitle>
         </DialogHeader>
         {routes.length === 0 ? (
           <p className="text-sm text-muted-foreground">Create a Route first, then capture notes and sessions here.</p>

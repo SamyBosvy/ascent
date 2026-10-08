@@ -12,3 +12,10 @@
 - [x] A9 greeting, activity strip and log time
 - [x] A10 guided first run
 - [x] Tests, signed-in checks, cleanup and report
+
+# Batch 13
+- [x] Display-name editing and immediate greeting refresh
+- [x] Milestones-or-cards onboarding progression
+- [x] Displayed-camp climber clamping and matching accessible label
+- [x] Running/paused session indicator and current-kind capture title
+- [x] All tests, signed-in checks, account restoration, report and credits

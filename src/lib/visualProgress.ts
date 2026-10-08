@@ -3,6 +3,14 @@ import { addDays, dateInZone, daysBetween, weekStartOf, type WeekStart } from '.
 
 export const CAMP_SCORES = [0, 0.15, 0.4, 0.65, 0.9] as const;
 const XS = [70, 110, 80, 120, 100];
+/** Keep continuous progress inside the displayed camp's segment. */
+export function visualScoreForCamp(score: number, camp: number) {
+  const displayedCamp = Number.isFinite(camp) ? Math.max(0, Math.min(4, Math.trunc(camp))) : 0;
+  if (displayedCamp === 4) return CAMP_SCORES[4];
+  const start = CAMP_SCORES[displayedCamp] ?? 0;
+  const end = CAMP_SCORES[displayedCamp + 1] ?? 0.9;
+  return Math.max(start, Math.min(end - Number.EPSILON, Number.isFinite(score) ? score : start));
+}
 export function climberPosition(score: number) {
   const value = Number.isFinite(score) ? Math.max(0, Math.min(0.9, score)) : 0;
   let current = 0;
@@ -38,7 +46,8 @@ export function onboardingStep(routes: RouteRow[], stats: Map<string, RouteAgg>,
   if (!routes.length) return 1;
   const first = routes[0];
   if (!first) return 1;
-  return (stats.get(first.id)?.cards_total ?? 0) > 0 ? 3 : 2;
+  const agg = stats.get(first.id);
+  return (agg?.milestones_total ?? 0) > 0 || (agg?.cards_total ?? 0) > 0 ? 3 : 2;
 }
 export const summitSeenKey = (userId: string, routeId: string, at: string) => `ascent:summit-seen:${userId}:${routeId}:${at}`;
 export function claimSummit(storage: Pick<Storage, 'getItem' | 'setItem'>, key: string) {

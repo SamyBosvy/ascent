@@ -9,6 +9,7 @@ import { SectionTitle } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getRouteApi } from "@tanstack/react-router";
 
 async function verifyPassword(email: string, password: string) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -36,6 +37,33 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function AccountSection({ email: initialEmail }: { email: string }) {
   const [email, setEmail] = useState(initialEmail);
+  const { user } = getRouteApi('/_authenticated').useRouteContext();
+  const initialName = user.user_metadata?.['display_name'];
+  const [displayName, setDisplayName] = useState(typeof initialName === 'string' ? initialName : '');
+  const [nameErr, setNameErr] = useState<string | null>(null);
+  const { submitting: submittingName, submit: submitName } = useSubmission();
+
+  function changeDisplayName(e: React.FormEvent) {
+    e.preventDefault();
+    return submitName(async () => {
+      setNameErr(null);
+      if (!requireOnline('Changing your display name')) {
+        setNameErr("You're offline. Changing your display name needs a connection.");
+        return;
+      }
+      const name = displayName.trim();
+      if (name.length > 50) { setNameErr('Display name must be 50 characters or fewer.'); return; }
+      try {
+        const { error } = await supabase.auth.updateUser({ data: { display_name: name } });
+        if (error) { setNameErr(error.message); return; }
+        // The root USER_UPDATED subscriber refreshes the authenticated route context.
+        setDisplayName(name);
+        toast.success('Display name updated.');
+      } catch (err) {
+        setNameErr(err instanceof Error ? err.message : 'Could not update display name.');
+      }
+    });
+  }
 
   // Password form
   const [cur, setCur] = useState("");
@@ -137,6 +165,16 @@ export function AccountSection({ email: initialEmail }: { email: string }) {
     <section>
       <SectionTitle>Account</SectionTitle>
       <div className="space-y-4">
+        <form onSubmit={changeDisplayName} className="surface space-y-4 p-4">
+          <div className="space-y-2">
+            <Label htmlFor="display-name">Display name</Label>
+            <Input id="display-name" autoComplete="nickname" maxLength={50} value={displayName}
+              disabled={submittingName} aria-invalid={!!nameErr} aria-describedby={nameErr ? 'display-name-error' : undefined}
+              onChange={(e) => setDisplayName(e.target.value)} className="h-12" />
+          </div>
+          {nameErr && <p id="display-name-error" className="rounded-lg bg-muted p-3 text-sm" role="alert">{nameErr}</p>}
+          <Button type="submit" className="h-12 w-full" disabled={submittingName}>{submittingName ? 'Saving…' : 'Save display name'}</Button>
+        </form>
         <form onSubmit={changePassword} className="surface space-y-4 p-4">
           <h3 className="font-medium">Change password</h3>
           <div className="space-y-2">

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { activityBuckets, activityLabel, CAMP_SCORES, claimSummit, climberPosition, onboardingStep, summitSeenKey } from './visualProgress';
+import { activityBuckets, activityLabel, CAMP_SCORES, claimSummit, climberPosition, onboardingStep, summitSeenKey, visualScoreForCamp } from './visualProgress';
 import type { RouteRow, RouteAgg } from './data';
 const route = { id: 'route', type: 'skill' } as RouteRow;
 describe('continuous climber', () => {
@@ -16,6 +16,27 @@ describe('continuous climber', () => {
     expect(climberPosition(4)).toEqual(climberPosition(0.9));
   });
   it('is continuous at thresholds', () => { for (const score of CAMP_SCORES.slice(1)) expect(Math.abs(climberPosition(score).y - climberPosition(score - 1e-9).y)).toBeLessThan(0.001); });
+  it('clamps a manual camp above score to the camp start', () => {
+    expect(visualScoreForCamp(0.1, 3)).toBe(0.65);
+    expect(climberPosition(visualScoreForCamp(0.1, 3)).current).toBe(3);
+  });
+  it.each([0, 1, 2, 3])('keeps a manual camp below score inside segment %s', camp => {
+    const score = visualScoreForCamp(0.99, camp);
+    expect(score).toBeGreaterThanOrEqual(CAMP_SCORES[camp] ?? 0);
+    expect(score).toBeLessThan(CAMP_SCORES[camp + 1] ?? 1);
+    expect(climberPosition(score).current).toBe(camp);
+  });
+  it('puts a manual camp 4 exactly at the summit', () => {
+    expect(visualScoreForCamp(0.05, 4)).toBe(0.9);
+    expect(climberPosition(visualScoreForCamp(0.05, 4))).toEqual(climberPosition(0.9));
+  });
+  it('preserves continuous scores within the displayed segment', () => {
+    expect(visualScoreForCamp(0.275, 1)).toBe(0.275);
+  });
+  it('handles invalid inputs safely', () => {
+    expect(visualScoreForCamp(NaN, 2)).toBe(0.4);
+    expect(visualScoreForCamp(0.05, NaN)).toBe(0.05);
+  });
 });
 describe('seven-day activity', () => {
   it('includes zero days and excludes outside events', () => {
@@ -39,9 +60,15 @@ describe('seven-day activity', () => {
 describe('first run', () => {
   it('offers creation for zero routes only if not dismissed', () => { expect(onboardingStep([], new Map(), null, null)).toBe(1); expect(onboardingStep([], new Map(), null, 'done')).toBeNull(); });
   it('does not show for existing-route accounts', () => expect(onboardingStep([route], new Map(), null, null)).toBeNull());
-  it('resumes explicitly started guidance until a card exists', () => {
+  it('resumes guidance while no milestone or card exists', () => {
     expect(onboardingStep([route], new Map(), 'started', null)).toBe(2);
+    expect(onboardingStep([route], new Map([['route', { cards_total: 0, milestones_total: 0 } as RouteAgg]]), 'started', null)).toBe(2);
+  });
+  it('advances with cards only', () => {
     expect(onboardingStep([route], new Map([['route', { cards_total: 1 } as RouteAgg]]), 'started', null)).toBe(3);
+  });
+  it('advances with milestones only', () => {
+    expect(onboardingStep([route], new Map([['route', { cards_total: 0, milestones_total: 1 } as RouteAgg]]), 'started', null)).toBe(3);
   });
   it('stays hidden after explicit dismissal', () => expect(onboardingStep([route], new Map(), 'started', 'done')).toBeNull());
 });
