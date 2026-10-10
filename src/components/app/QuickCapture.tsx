@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "@tanstack/react-router";
-import { ScreenSkeleton } from "./ScreenSkeleton";
+import { InlineSkeleton } from "./ScreenSkeleton";
 import { Empty, NativeSelect } from "./fields";
 import { logSession } from "@/lib/sessions";
 import { requireOnline } from "@/lib/sync";
@@ -65,7 +65,7 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
         <DialogHeader>
            <DialogTitle>{kind === 'session' ? 'Log time' : 'Quick capture'}</DialogTitle>
         </DialogHeader>
-        {routesError ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load routes.</p> : !routes_ ? <ScreenSkeleton screen="notes" /> : routes.length === 0 ? (
+        {routesError ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load routes.</p> : !routes_ ? <InlineSkeleton /> : routes.length === 0 ? (
           <Empty headingLevel={2} illustration="tent" title="No active routes" description="Choose a route before saving notes or study time." primaryAction={<Button onClick={() => { onOpenChange(false); navigate({ to: "/routes" }); }}>Open routes</Button>} />
         ) : (
           <form onSubmit={save} className="space-y-4">

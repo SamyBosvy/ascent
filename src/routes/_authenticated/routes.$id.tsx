@@ -1,7 +1,7 @@
 import { blockingError } from "@/lib/queryState";
 import { RouteDot } from "@/components/app/RouteDot";
 import { useSubmission } from "@/hooks/use-submission";
-import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
+import { InlineSkeleton, ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import type { Database } from "@/integrations/supabase/types";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
@@ -63,6 +63,7 @@ function RouteDetail() {
   const [cardOpen, setCardOpen] = useState(false);
   const [newMs, setNewMs] = useState("");
   const { submitting: submittingMilestone, submit: submitMilestone } = useSubmission();
+  const { submitting: checkinBusy, submit: submitCheckin } = useSubmission();
   const [importOpen, setImportOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editKey, setEditKey] = useState(0);
@@ -317,7 +318,7 @@ function RouteDetail() {
       {route.type === "habit" && (
         <section>
           <SectionTitle>Check-ins</SectionTitle>
-          {!history ? <ScreenSkeleton screen="route" /> : !history.get(id)?.length ? <Empty illustration="calendar" title="No check-ins yet" description="Your habit practice will appear here." primaryAction={<Button onClick={() => toggleCheckin(id, false, refresh)}>Check in</Button>} /> : <HabitHeatmap dates={history.get(id)} today={localDate()} />}
+          {!history ? <InlineSkeleton /> : !history.get(id)?.length ? <Empty illustration="calendar" title="No check-ins yet" description="Your habit practice will appear here." primaryAction={<Button disabled={checkinBusy} onClick={() => void submitCheckin(() => toggleCheckin(id, false, refresh))}>Check in</Button>} /> : <HabitHeatmap dates={history.get(id)} today={localDate()} />}
         </section>
       )}
 
@@ -629,7 +630,7 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
 
       <div className="mt-4">
         <p className="mb-1 text-sm text-muted-foreground">Total on this route: <span className="font-medium text-foreground">{minutesLabel(totalMinutes)}</span></p>
-        {listError ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load sessions.</p> : !list ? <ScreenSkeleton screen="route" /> : rows.length === 0 && <Empty illustration="calendar" title="No sessions yet" description="Your logged study time will appear here." primaryAction={<Button onClick={() => document.getElementById("session-minutes")?.focus()}>Log time</Button>} />}
+        {listError ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load sessions.</p> : !list ? <InlineSkeleton /> : rows.length === 0 && <Empty illustration="calendar" title="No sessions yet" description="Your logged study time will appear here." primaryAction={<Button onClick={() => document.getElementById("session-minutes")?.focus()}>Log time</Button>} />}
         <ul className="space-y-1 text-sm">
           {rows.map((s) => (
             <li key={s.id} className="flex items-center justify-between gap-3 border-b py-1 last:border-0">
@@ -733,5 +734,5 @@ function RouteNotes({ routeId }: { routeId: string }) {
     if (error) throw new Error(error.message);
     return count ?? 0;
   } });
-  return <section><SectionTitle>Notes</SectionTitle>{error ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load notes.</p> : count == null ? <ScreenSkeleton screen="notes" /> : count === 0 ? <Empty illustration="notebook" title="No notes yet" description="Capture what you learn along this route." primaryAction={<Button asChild><Link to="/notes/new" search={{ route: routeId }}>New note</Link></Button>} /> : <Button asChild variant="outline" className="h-12"><Link to="/notes" search={{ route: routeId }}>Open notes ({count})</Link></Button>}</section>;
+  return <section><SectionTitle>Notes</SectionTitle>{error ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load notes.</p> : count == null ? <InlineSkeleton lines={2} /> : count === 0 ? <Empty illustration="notebook" title="No notes yet" description="Capture what you learn along this route." primaryAction={<Button asChild><Link to="/notes/new" search={{ route: routeId }}>New note</Link></Button>} /> : <Button asChild variant="outline" className="h-12"><Link to="/notes" search={{ route: routeId }}>Open notes ({count})</Link></Button>}</section>;
 }

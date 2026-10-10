@@ -13,3 +13,8 @@ export function ScreenSkeleton({ screen }: { screen: Screen }) {
       screen === 'routes' || screen === 'summits' ? <div className="grid gap-3 sm:grid-cols-2">{[0, 1, 2, 3].map(i => <div key={i} className="surface space-y-4 p-4"><Skeleton className="h-6 w-3/4" /><Skeleton className="h-16 w-full" /><Skeleton className="h-4 w-1/2" /></div>)}</div> : <><Skeleton className="h-12 w-full" />{rows}</>}
   </div>;
 }
+
+/** Small in-section placeholder for lists and dialogs inside an already-rendered screen. */
+export function InlineSkeleton({ lines = 3 }: { lines?: number }) {
+  return <div role="status" aria-busy="true" className="space-y-2 py-2"><span className="sr-only">Loading…</span>{Array.from({ length: lines }, (_, i) => <Skeleton key={i} className={i === 0 ? "h-5 w-1/2" : "h-4 w-full"} />)}</div>;
+}
