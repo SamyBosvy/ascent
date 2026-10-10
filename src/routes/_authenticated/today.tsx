@@ -9,6 +9,8 @@ import { RouteDialog } from "@/components/app/RouteDialog";
 import { useOnboarding } from "@/lib/onboarding";
 import { onboardingStep } from "@/lib/visualProgress";
 import { Onboarding } from "@/components/app/Onboarding";
+import { CardDialog } from "@/components/app/CardDialog";
+import { useNextDue, nextDueLabel } from "@/lib/nextDue";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen, Check, Layers, Play } from "lucide-react";
@@ -43,6 +45,8 @@ function Today() {
   const due = dueCounts && newPerDay != null && newToday != null ? dueCounts.reviews + Math.min(dueCounts.fresh, Math.max(0, newPerDay - newToday)) : null;
   const { data: weekMinutes, error: weekError } = useWeekMinutes();
   const refresh = useRefresh();
+  const [cardOpen, setCardOpen] = useState(false);
+  const { data: nextDue } = useNextDue(undefined, due === 0);
   const { data: settings } = useUserSettings();
   const { data: reviewsToday } = useReviewsToday();
   const { data: history } = useCheckinHistory();
@@ -50,6 +54,7 @@ function Today() {
   { const e = blockingError([routesError, allRoutes], [statsError, stats], [dueError, dueCounts], [settingsError, newPerDay], [newError, newToday], [weekError, weekMinutes], [onboarding.error, onboarding.data]); if (e) throw e; }
   if (!routes || !stats || onboarding.isPending || due == null || weekMinutes == null) return <ScreenSkeleton screen="today" />;
 
+  const totalCards = routes.reduce((a, r) => a + Number(stats.get(r.id)?.cards_total ?? 0), 0);
   const guided = onboardingStep(allRoutes ?? routes, stats, onboarding.data?.onboarding_started_at ?? null, onboarding.data?.onboarding_done_at ?? null) != null;
   const habits = routes.filter((r) => r.type === "habit" && r.status === "active");
   const dueHabits = habits.filter((h) => habitDueToday(h, stats.get(h.id)));
@@ -74,12 +79,13 @@ function Today() {
 
       <Onboarding routes={allRoutes ?? routes} stats={stats} />
       <RouteDialog open={routeOpen} onOpenChange={setRouteOpen} />
+      <CardDialog open={cardOpen} onOpenChange={setCardOpen} />
       {!guided && <>
 
       {cont && <ContinueCard route={cont.route} agg={stats.get(cont.route.id)} timerBusy={!!running} onCheckin={() => toggle(cont.route.id, false)} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {due === 0 ? <Empty headingLevel={2} illustration="cards" title="Nothing due" description="Your due flashcards will appear here." primaryAction={<Button asChild><Link to="/review">Open review</Link></Button>} /> : <div className="surface flex flex-col justify-between gap-4 p-5">
+        {due === 0 ? (totalCards === 0 ? <Empty headingLevel={2} illustration="cards" title="No cards yet" description="Flashcards you add will be scheduled here." primaryAction={<Button onClick={() => setCardOpen(true)}>New card</Button>} /> : <div className="surface flex flex-col justify-center gap-2 p-5"><h2 className="font-display text-base font-semibold">Nothing due</h2><p className="text-sm text-muted-foreground">{nextDueLabel(nextDue)}</p><Link to="/review" className="inline-flex min-h-12 items-center text-sm text-primary-strong underline underline-offset-4">Open review</Link></div>) : <div className="surface flex flex-col justify-between gap-4 p-5">
           <div>
             <p className="text-sm text-muted-foreground">Flashcards due</p>
             <p className="mt-1 font-display text-4xl font-semibold">{due}</p>
