@@ -1,3 +1,4 @@
+import { blockingError } from "@/lib/queryState";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/summits")({
 function Summits() {
   const { data: routes, error: routesError } = useRoutes();
   const { data: stats, error: statsError } = useRouteStats();
-  if (routesError || statsError) throw routesError || statsError;
+  { const e = blockingError([routesError, routes], [statsError, stats]); if (e) throw e; }
   if (!routes || !stats) return <ScreenSkeleton screen="summits" />;
   const list = routes.filter((r) => r.summited_at).sort((a, b) => b.summited_at!.localeCompare(a.summited_at!));
   return (

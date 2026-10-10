@@ -1,3 +1,4 @@
+import { blockingError } from "@/lib/queryState";
 import { RouteDot } from "@/components/app/RouteDot";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -19,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { previewSchedules, intervalLabel } from "@/lib/reviewPreview";
 import { orderQueue, shuffle } from "@/lib/reviewOrdering";
 import { getPrefs } from "@/lib/prefs";
+import { useNextDue, nextDueLabel } from "@/lib/nextDue";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 
 export const Route = createFileRoute("/_authenticated/review")({
@@ -82,16 +84,7 @@ function Review() {
         return q.order("due_at").order("id").range(a, b);
       }),
   });
-  const { data: nextDue } = useQuery({
-    queryKey: ["cards", "next-due", route ?? "all"], enabled: dueCards?.length === 0,
-    queryFn: async () => {
-      let q = liveCards().or(`buried_until.is.null,buried_until.lte.${localDate()}`).gt("due_at", new Date().toISOString());
-      if (route) q = q.eq("route_id", route);
-      const { data, error } = await q.order("due_at").limit(1);
-      if (error) throw new Error(error.message);
-      return data?.[0]?.due_at ?? null;
-    },
-  });
+  const { data: nextDue } = useNextDue(route, dueCards?.length === 0);
   const refresh = useRefresh();
   const [queue, setQueue] = useState<Card[] | null>(null);
   const [flipped, setFlipped] = useState(false);
@@ -282,14 +275,14 @@ function Review() {
     }
   }
 
-  if (routesError || statsError || settingsError || newError || dueError) throw routesError || statsError || settingsError || newError || dueError;
+  { const e = blockingError([routesError, allRoutes], [statsError, stats], [settingsError, newPerDay], [newError, newToday], [dueError, dueCards]); if (e) throw e; }
   if (!routes || !stats || !dueCards || newPerDay == null || newToday == null) return <ScreenSkeleton screen="review" />;
   const dueNow = dueCards.filter((c) => new Date(c.due_at).getTime() <= Date.now());
   const dueReviews = dueNow.filter((c) => c.last_reviewed_at);
   const newLeft = Math.max(0, newPerDay - newToday);
   const newCards = dueNow.filter((c) => !c.last_reviewed_at).sort((a, b) => a.created_at.localeCompare(b.created_at)).slice(0, newLeft);
   const startCount = dueReviews.length + newCards.length;
-  const totalCards = routes.reduce((a, r) => a + (stats.get(r.id)?.cards_total ?? 0), 0);
+  const totalCards = route ? Number(stats.get(route)?.cards_total ?? 0) : routes.reduce((a, r) => a + Number(stats.get(r.id)?.cards_total ?? 0), 0);
   const routeName = (rid: string) => routes.find((r) => r.id === rid)?.name ?? "";
   const editDialog = (
     <CardDialog
@@ -406,7 +399,7 @@ function Review() {
         <option value="">All routes</option>
         {routes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
       </NativeSelect>
-      {startCount === 0 ? <Empty headingLevel={2} illustration="cards" title="Nothing due right now" description={nextDue ? `Next due: ${new Intl.DateTimeFormat(undefined, { timeZone: getPrefs().tz, month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(nextDue))}.` : "Your next scheduled cards will appear here when they’re due."} primaryAction={<Button asChild><Link to="/today">Back to Today</Link></Button>} /> : <div className="surface space-y-4 p-6 text-center">
+      {totalCards === 0 ? <Empty headingLevel={2} illustration="cards" title="No cards yet" description="Flashcards you add will be scheduled for review here." primaryAction={<Button onClick={() => setNewOpen(true)}>New card</Button>} secondaryLink={route ? <Link to="/routes/$id" params={{ id: route }}>Import CSV</Link> : <Link to="/routes">Open routes</Link>} /> : startCount === 0 ? <Empty headingLevel={2} illustration="cards" title="Nothing due right now" description={nextDueLabel(nextDue)} primaryAction={<Button asChild><Link to="/today">Back to Today</Link></Button>} /> : <div className="surface space-y-4 p-6 text-center">
         <p className="font-display text-5xl font-semibold">{startCount}</p>
         <p className="text-muted-foreground">{startCount ? `${startCount} card${startCount > 1 ? "s" : ""} due. Keep climbing.` : "Nothing due right now."}</p>
         <p className="text-sm text-muted-foreground">{newLeft} new card{newLeft === 1 ? "" : "s"} left today</p>

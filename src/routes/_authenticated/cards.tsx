@@ -1,3 +1,4 @@
+import { blockingError } from "@/lib/queryState";
 import { RouteDot } from "@/components/app/RouteDot";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -92,7 +93,7 @@ function CardsPage() {
   const [bulkDelete, setBulkDelete] = useState(false);
   useEffect(() => setSelected(new Set()), [search.route, state, sort, term]);
 
-  if (routesError || cardsError) throw routesError || cardsError;
+  { const e = blockingError([routesError, routes], [cardsError, cards]); if (e) throw e; }
   if (!routes || !cards) return <ScreenSkeleton screen="cards" />;
   const live = routes.filter(isLive);
   const archived = routes.filter((r) => !isLive(r));

@@ -22,5 +22,5 @@
 
 # Batch 14
 - [ ] Shared accessible illustrated Empty and existing-flow actions across all locations
-- [ ] Loading/error precedence and onboarding priority
+- [x] Loading/error precedence and onboarding priority (14b: errors only block without data)
 - [ ] Component/screen tests, both-theme checks, report and credits

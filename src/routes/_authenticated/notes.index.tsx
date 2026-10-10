@@ -1,3 +1,4 @@
+import { blockingError } from "@/lib/queryState";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -54,7 +55,7 @@ function Notes() {
     nav({ to: "/notes/new", search: { route } });
   }
 
-  if (routesError || notesError || tagsError) throw routesError || notesError || tagsError;
+  { const e = blockingError([routesError, routes], [notesError, notes], [tagsError, tags]); if (e) throw e; }
   if (!notes || !routes) return <ScreenSkeleton screen="notes" />;
 
   return (
