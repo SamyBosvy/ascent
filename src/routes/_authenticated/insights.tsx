@@ -1,3 +1,4 @@
+import { blockingError } from "@/lib/queryState";
 import { routeColourToken } from "@/lib/routeColours";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -53,7 +54,7 @@ function Insights() {
   const { data: routes, error: routesError } = useRoutes();
   const { data: stats, error: statsError } = useRouteStats();
   const { data: rows, error: rowsError } = useInsightRows();
-  if (routesError || statsError || rowsError) throw routesError || statsError || rowsError;
+  { const e = blockingError([routesError, routes], [statsError, stats], [rowsError, rows]); if (e) throw e; }
   if (!routes || !stats || !rows) return <ScreenSkeleton screen="insights" />;
 
   const sessionCount = [...stats.values()].reduce((a, s) => a + s.session_count, 0);

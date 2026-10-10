@@ -1,3 +1,4 @@
+import { blockingError } from "@/lib/queryState";
 import { useSubmission } from "@/hooks/use-submission";
 import { requireOnline } from "@/lib/sync";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
@@ -55,7 +56,7 @@ function Access() {
     }
   }
 
-  if (accessError) throw accessError;
+  { const e = blockingError([accessError, data]); if (e) throw e; }
   if (!data) return <ScreenSkeleton screen="settings" />;
 
   const members = (data?.members ?? []).filter((m) => m.id !== user.id);

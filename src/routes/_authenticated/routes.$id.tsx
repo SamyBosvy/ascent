@@ -1,3 +1,4 @@
+import { blockingError } from "@/lib/queryState";
 import { RouteDot } from "@/components/app/RouteDot";
 import { useSubmission } from "@/hooks/use-submission";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
@@ -82,7 +83,7 @@ function RouteDetail() {
   }, [focus, pageReady]);
   const stats = route && allStats ? routeStats(route, agg) : null;
 
-  if (routesError || statsError || milestonesError || historyError) throw routesError || statsError || milestonesError || historyError;
+  { const e = blockingError([routesError, routes], [statsError, allStats], [milestonesError, milestoneRows], [historyError, history]); if (e) throw e; }
   if (!routes || !allStats || !milestoneRows) return <ScreenSkeleton screen="route" />;
   if (!route || !stats) return <Empty headingLevel={2} illustration="path" title="Route not found" description="This route is no longer available." primaryAction={<Button asChild><Link to="/routes">Back to routes</Link></Button>} />;
 

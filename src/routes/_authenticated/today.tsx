@@ -1,3 +1,4 @@
+import { blockingError } from "@/lib/queryState";
 import { RouteDot } from "@/components/app/RouteDot";
 import { useState } from 'react';
 import { getRouteApi } from '@tanstack/react-router';
@@ -46,7 +47,7 @@ function Today() {
   const { data: reviewsToday } = useReviewsToday();
   const { data: history } = useCheckinHistory();
   const { state: running } = useTimer();
-  if (routesError || statsError || dueError || settingsError || newError || weekError || onboarding.error) throw routesError || statsError || dueError || settingsError || newError || weekError || onboarding.error;
+  { const e = blockingError([routesError, allRoutes], [statsError, stats], [dueError, dueCounts], [settingsError, newPerDay], [newError, newToday], [weekError, weekMinutes], [onboarding.error, onboarding.data]); if (e) throw e; }
   if (!routes || !stats || onboarding.isPending || due == null || weekMinutes == null) return <ScreenSkeleton screen="today" />;
 
   const guided = onboardingStep(allRoutes ?? routes, stats, onboarding.data?.onboarding_started_at ?? null, onboarding.data?.onboarding_done_at ?? null) != null;

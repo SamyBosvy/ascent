@@ -1,3 +1,4 @@
+import { blockingError } from "@/lib/queryState";
 import { RouteDot } from "@/components/app/RouteDot";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -282,7 +283,7 @@ function Review() {
     }
   }
 
-  if (routesError || statsError || settingsError || newError || dueError) throw routesError || statsError || settingsError || newError || dueError;
+  { const e = blockingError([routesError, allRoutes], [statsError, stats], [settingsError, newPerDay], [newError, newToday], [dueError, dueCards]); if (e) throw e; }
   if (!routes || !stats || !dueCards || newPerDay == null || newToday == null) return <ScreenSkeleton screen="review" />;
   const dueNow = dueCards.filter((c) => new Date(c.due_at).getTime() <= Date.now());
   const dueReviews = dueNow.filter((c) => c.last_reviewed_at);

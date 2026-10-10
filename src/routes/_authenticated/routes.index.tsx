@@ -1,3 +1,4 @@
+import { blockingError } from "@/lib/queryState";
 import { RouteDot } from "@/components/app/RouteDot";
 import { LearningRouteCard } from '@/components/app/LearningRouteCard';
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
@@ -25,7 +26,7 @@ function RoutesPage() {
   const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [showArchived, setShowArchived] = useState(false);
-  if (routesError || statsError) throw routesError || statsError;
+  { const e = blockingError([routesError, routes], [statsError, stats]); if (e) throw e; }
   if (!routes || !stats) return <ScreenSkeleton screen="routes" />;
   const live = routes.filter(isLive);
   const archived = routes.filter((r) => !isLive(r));
