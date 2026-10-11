@@ -16,6 +16,7 @@ import { ResponsiveDialog } from "@/components/app/ResponsiveDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { HabitReminderFields } from "./HabitReminderFields";
+import { ensureReminderTimezone } from "@/lib/reminderTimezone";
 import { Textarea } from "@/components/ui/textarea";
 
 import { ROUTE_TYPE_ICONS } from "./icons";
@@ -80,6 +81,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
     if (!requireOnline("Saving a route")) return;
     setTried(true);
     if (!valid || busy) return;
+    if (type === "habit" && reminderEnabled) await ensureReminderTimezone(qc);
     setBusy(true);
     const total = type === "book" && pages ? parseInt(pages, 10) : null;
     const common = {
@@ -196,7 +198,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
               {err("lang")}
             </div>
           )}
-          {type === "habit" && <><HabitReminderFields enabled={reminderEnabled} time={reminderTime} onEnabled={setReminderEnabled} onTime={setReminderTime} disabled={busy || submittingSave} />{err("reminder")}</>}
+          {type === "habit" && <><HabitReminderFields enabled={reminderEnabled} time={reminderTime} onEnabled={(next) => { if (!next) { setReminderEnabled(false); return; } void submitSave(async () => { if (!requireOnline("Enabling a reminder")) return; await ensureReminderTimezone(qc); setReminderEnabled(true); }); }} onTime={setReminderTime} disabled={busy || submittingSave} />{err("reminder")}</>}
           <div className="space-y-2">
             <Label htmlFor="rd">Description (optional)</Label>
             <Textarea id="rd" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />

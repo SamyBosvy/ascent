@@ -32,10 +32,11 @@ function decodeKey(value: string) {
   return Uint8Array.from(atob(value.replaceAll("-", "+").replaceAll("_", "/")), (c) => c.charCodeAt(0));
 }
 /** Invoked only by the Enable button: no permission prompt during status reads. */
-export async function enablePush() {
+export async function enablePush(prepare?: () => Promise<unknown>) {
   // Keep permission request in the original tap's task (Safari requires user activation).
   if (serviceWorkerRefused() || !("Notification" in window) || !("PushManager" in window)) throw new Error("Notifications are unavailable on this host.");
-  const permission = await Notification.requestPermission();
+  const permissionRequest = Notification.requestPermission();
+  const [permission] = await Promise.all([permissionRequest, prepare?.()]);
   if (permission !== "granted") return pushState();
   const registration = await navigator.serviceWorker.getRegistration("/");
   if (!registration?.active) throw new Error("The notification worker is not ready. Reopen the published app.");

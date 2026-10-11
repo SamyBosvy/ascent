@@ -1,6 +1,8 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 const mock = vi.hoisted(() => ({ state: vi.fn(), enable: vi.fn(), disable: vi.fn() }));
+vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: vi.fn() }) }));
+vi.mock("@/lib/reminderTimezone", () => ({ ensureReminderTimezone: vi.fn().mockResolvedValue("Australia/Sydney") }));
 vi.mock("@/lib/push", () => ({ pushState: mock.state, enablePush: mock.enable, disablePush: mock.disable }));
 vi.mock("@/lib/sync", () => ({ requireOnline: () => true }));
 import { PushPreferences } from "./PushPreferences";
