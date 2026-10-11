@@ -16,3 +16,8 @@ export function MotionTooltip(props: ComponentProps<typeof Tooltip>) {
   const reduced = usePrefersReducedMotion();
   return <Tooltip {...props} isAnimationActive={!reduced} />;
 }
+
+// Recharts discovers series and tooltips by displayName before rendering children.
+MotionBar.displayName = 'Bar';
+MotionLine.displayName = 'Line';
+MotionTooltip.displayName = 'Tooltip';
