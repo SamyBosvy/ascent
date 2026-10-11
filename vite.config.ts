@@ -25,6 +25,7 @@ export default defineConfig({
         outDir: "dist/client",
         devOptions: { enabled: false },
         workbox: {
+          importScripts: ["/push-handlers.js"],
           // App shell: hashed JS/CSS, self-hosted fonts, icons and the manifest.
           globDirectory: "dist/client",
           globPatterns: ["**/*.{js,css,woff2,png,svg,ico,webmanifest}"],

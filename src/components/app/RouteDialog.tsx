@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/app/ResponsiveDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { HabitReminderFields } from "./HabitReminderFields";
 import { Textarea } from "@/components/ui/textarea";
 
 import { ROUTE_TYPE_ICONS } from "./icons";
@@ -49,6 +50,8 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
   const [pages, setPages] = useState(route?.total_pages ? String(route.total_pages) : "");
   const [freq, setFreq] = useState(route?.habit_frequency ?? "daily");
   const [times, setTimes] = useState(route?.habit_target ? String(route.habit_target) : "3");
+  const [reminderEnabled, setReminderEnabled] = useState(route?.reminder_enabled ?? false);
+  const [reminderTime, setReminderTime] = useState(route?.reminder_time?.slice(0,5) ?? "19:00");
   const [lang, setLang] = useState(route?.speech_lang ?? "");
   const [pickedColour, setPickedColour] = useState<number | null>(route ? routeColour(route) : null);
   const colour = pickedColour ?? leastUsedColour(existingRoutes ?? []);
@@ -85,6 +88,8 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
       target_date: target || null,
       total_pages: total,
       habit_frequency: type === "habit" ? freq : null,
+      reminder_enabled: type === "habit" && reminderEnabled,
+      reminder_time: reminderTime || "19:00",
       habit_target: type === "habit" && freq === "x_per_week" ? parseInt(times, 10) : null,
       speech_lang: type === "language" && lang.trim() ? lang.trim() : null,
     };
@@ -190,6 +195,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
               {err("lang")}
             </div>
           )}
+          {type === "habit" && <HabitReminderFields enabled={reminderEnabled} time={reminderTime} onEnabled={setReminderEnabled} onTime={setReminderTime} disabled={busy || submittingSave} />}
           <div className="space-y-2">
             <Label htmlFor="rd">Description (optional)</Label>
             <Textarea id="rd" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />

@@ -31,6 +31,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { SummitOverlay } from "@/components/app/SummitOverlay";
 import { PacingLine } from "@/components/app/Pacing";
 import { HabitHeatmap, StreakLine } from "@/components/app/Habit";
+import { HabitReminderSettings } from "@/components/app/HabitReminderSettings";
 import { z } from "zod";
 import { CardDialog } from "@/components/app/CardDialog";
 import { Empty, NativeSelect, SectionTitle } from "@/components/app/fields";

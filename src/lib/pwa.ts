@@ -3,7 +3,7 @@
 
 const SW_PATH = "/sw.js";
 
-function refused() {
+export function serviceWorkerRefused() {
   if (!import.meta.env.PROD) return true;
   try { if (window.self !== window.top) return true; } catch { return true; }
   const h = window.location.hostname;
@@ -39,7 +39,7 @@ let started = false;
 export async function registerServiceWorker() {
   if (started || typeof window === "undefined" || !("serviceWorker" in navigator)) return;
   started = true;
-  if (refused()) { await unregisterOurs(); return; }
+  if (serviceWorkerRefused()) { await unregisterOurs(); return; }
   const { registerSW } = await import("virtual:pwa-register");
   updateFn = registerSW({
     immediate: true,

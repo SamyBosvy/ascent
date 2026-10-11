@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { PushPreferences } from "./PushPreferences";
 
 function allZones(): string[] {
   try {
@@ -105,6 +106,7 @@ export function Preferences() {
           <Button type="submit" className="h-12" disabled={!valid || !changed || submitting}>Save preferences</Button>
         </div>
       </form>
+      <PushPreferences />
     </section>
   );
 }
