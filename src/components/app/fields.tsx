@@ -1,18 +1,6 @@
-import type { SelectHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 import { cloneElement, type ReactElement } from "react";
-
-export function NativeSelect({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select
-      {...props}
-      className={cn(
-        "h-12 w-full rounded-md border border-input bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        className,
-      )}
-    />
-  );
-}
+export { ResponsiveSelect as NativeSelect } from "./ResponsiveSelect";
 
 export function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
