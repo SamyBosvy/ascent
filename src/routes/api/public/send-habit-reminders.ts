@@ -14,7 +14,7 @@ export async function handleSendHabitReminders(request: Request) {
   const supplied = request.headers.get("authorization")?.replace(/^Bearer /, "");
   if (!supplied) return new Response("Unauthorized", { status: 401 });
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("scheduler_tokens" as never).select("token").eq("name", "habit-reminders").maybeSingle();
+  const { data } = await supabaseAdmin.from("scheduler_tokens").select("token").eq("name", "habit-reminders").maybeSingle();
   const candidates = [(data as { token?: string } | null)?.token, process.env["LOVABLE_CRON_SECRET"]].filter((v): v is string => !!v);
   let ok = false;
   for (const c of candidates) if (await safeEqual(c, supplied)) ok = true;
