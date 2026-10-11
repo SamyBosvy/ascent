@@ -95,6 +95,8 @@
 - [x] Recorded credits since Batch 23: 1074.064648311 → 1096.564648311 (22.50); report partial completion and exact blockers
 
 # Batch 24b
-- [ ] Initialize missing timezone only through notification/reminder opt-in; preserve chosen zones and show timezone/Preferences link
-- [ ] Secure supported scheduler or pg_cron/pg_net + Vault; confirm job and manual empty sender 200 (permission/publishing blockers must be reported)
-- [ ] Full tests/typography and no-data/no-metadata-change verification; credits report
+- [x] Initialize missing timezone only through notification/reminder opt-in; duplicate-safe settings creation/null-only writes preserve chosen zones; show timezone/Preferences link; five regression tests including invalid zones and concurrent edits
+- [x] Enable pg_cron and pg_net through applied migration 0014; both extensions verified present
+- [ ] Secure Vault scheduler setup rejected: "Agent access to secrets is not allowed". User must set the relevant Lovable Cloud agent permission to Ask each time, then resume; no job exists. After permission: transfer server-only cron credential to Vault without displaying it, configure */15 * * * * against production POST /api/public/send-habit-reminders, verify job and manually confirm 200/empty counts. Production target still requires publishing.
+- [x] 289 tests and typography pass, build clean; all eight application data tables confirmed empty; no real opt-in exercised (so account timezone/settings and metadata left unchanged)
+- [x] Recorded usage since Batch 24 report: 1096.564648311 → 1105.964648311 (9.40); pause for scheduler permission rather than bypass restriction
