@@ -93,3 +93,8 @@
 - [x] 284 tests and typography pass; build clean; signed-in settings refusal, public-key availability, unauthenticated sender 401 and temporary habit save/reload verified; temporary route and all eight data tables confirmed empty; account settings/metadata untouched
 - [ ] Published-device permission/subscription/delivery/click test and real sender failure-path integration: blocked by unpublished app and unscheduled job; sender failure logic covered with mocked subscriptions (not a real fake-subscription request)
 - [x] Recorded credits since Batch 23: 1074.064648311 → 1096.564648311 (22.50); report partial completion and exact blockers
+
+# Batch 24b
+- [ ] Initialize missing timezone only through notification/reminder opt-in; preserve chosen zones and show timezone/Preferences link
+- [ ] Secure supported scheduler or pg_cron/pg_net + Vault; confirm job and manual empty sender 200 (permission/publishing blockers must be reported)
+- [ ] Full tests/typography and no-data/no-metadata-change verification; credits report

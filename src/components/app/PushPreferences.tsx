@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ensureReminderTimezone } from "@/lib/reminderTimezone";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useSubmission } from "@/hooks/use-submission";
@@ -13,12 +15,13 @@ const COPY: Record<PushState, string> = {
   "host-unavailable": "Notifications are unavailable on this host. Open the published Ascent app to enable them.",
 };
 export function PushPreferences() {
+  const qc = useQueryClient();
   const [state, setState] = useState<PushState>("loading");
   const { submitting, submit } = useSubmission();
   useEffect(() => { void pushState().then(setState).catch(() => setState("host-unavailable")); }, []);
   function change() { return submit(async () => {
     if (!requireOnline("Changing notifications")) return;
-    try { setState(await (state === "enabled" ? disablePush() : enablePush())); }
+    try { setState(await (state === "enabled" ? disablePush() : enablePush(() => ensureReminderTimezone(qc)))); }
     catch (error) { toast.error((error as Error).message); }
   }); }
   return <section className="mt-6 space-y-3" aria-labelledby="habit-reminders-heading">

@@ -14,3 +14,4 @@
 - Vibration preference is device-only in prefs.ts and separate from account preference caching; feedback.ts guards support, reduced motion and opt-out — refreshing account preferences cannot reset local feedback choices.
 - Habit push uses server-only seed-derived P-256 VAPID keys, a secret-authenticated sender, provider-restricted endpoints and atomic daily pre-send claims — overlapping jobs cannot duplicate attempts or send secrets to arbitrary hosts.
 - Push handlers are imported by the existing generated PWA worker; registration keeps its preview guards and permission requests happen only on explicit taps — offline behaviour and preview safety remain intact.
+- Reminder opt-in initializes a missing account timezone through owner-scoped settings writes with duplicate-safe insert and null-only update — existing or concurrently chosen timezones are never overwritten, and no settings write runs on mount.
