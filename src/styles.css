@@ -316,7 +316,7 @@
   & p { margin: 0.5rem 0; }
   & ul { list-style: disc; padding-left: 1.25rem; }
   & ol { list-style: decimal; padding-left: 1.25rem; }
-  & code { background: var(--color-muted); padding: 0.1rem 0.3rem; border-radius: 0.3rem; font-size: 0.9em; }
+  & code { background: var(--color-muted); padding: 0.1rem 0.3rem; border-radius: 0.3rem; font-size: max(0.75rem, 0.9em); }
   & pre { background: var(--color-muted); padding: 0.75rem; border-radius: 0.5rem; overflow-x: auto; }
   & blockquote { border-left: 3px solid var(--color-primary); padding-left: 0.75rem; color: var(--color-muted-foreground); }
   & a { color: var(--primary-text); text-decoration: underline; }
@@ -357,7 +357,7 @@
 .card-md > * + * { margin-top: 0.5em; }
 .card-md ul { list-style: disc; padding-left: 1.25em; text-align: left; display: inline-block; }
 .card-md ol { list-style: decimal; padding-left: 1.25em; text-align: left; display: inline-block; }
-.card-md code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; background: var(--muted); border-radius: 0.25rem; padding: 0.05em 0.3em; }
+.card-md code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: max(0.75rem, 0.9em); background: var(--muted); border-radius: 0.25rem; padding: 0.05em 0.3em; }
 .card-md pre { text-align: left; background: var(--muted); border-radius: 0.5rem; padding: 0.75em; overflow-x: auto; }
 .card-md pre code { background: transparent; padding: 0; }
 .card-md strong { font-weight: 700; }
