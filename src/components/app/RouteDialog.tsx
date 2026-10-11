@@ -17,6 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import { ROUTE_TYPE_ICONS } from "./icons";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+
 const LIMITS = { pages: 20000, chapters: 200, times: 7 };
 function wholeError(v: string, min: number, max: number, label: string) {
   if (v.trim() === "") return null;
@@ -39,6 +42,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
   const editing = !!route;
   const [name, setName] = useState(route?.name ?? "");
   const [type, setType] = useState<RouteType>(route?.type ?? "book");
+  const TypeIcon = ROUTE_TYPE_ICONS[type];
   const [description, setDescription] = useState(route?.description ?? "");
   const [target, setTarget] = useState(route?.target_date ?? "");
   const [chapters, setChapters] = useState("");
@@ -134,11 +138,12 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
           <div className="space-y-2">
             <Label htmlFor="rt">Type</Label>
             {editing ? (
-              <Input id="rt" readOnly value={`${TYPE_LABEL[type]} · can't be changed`} className="h-12 border-dashed text-muted-foreground" />
+              <div className="relative"><TypeIcon className="pointer-events-none absolute left-3 top-3.5 size-5 text-muted-foreground" /><Input id="rt" readOnly value={`${TYPE_LABEL[type]} · can't be changed`} className="h-12 border-dashed pl-10 text-muted-foreground" /></div>
             ) : (
-              <NativeSelect id="rt" value={type} onChange={(e) => setType(e.target.value as RouteType)}>
-                {Object.entries(TYPE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </NativeSelect>
+              <Select value={type} onValueChange={(value) => { if (value in ROUTE_TYPE_ICONS) setType(value as RouteType); }} disabled={busy || submittingSave}>
+                <SelectTrigger id="rt" className="h-12 bg-background text-base"><SelectValue /></SelectTrigger>
+                <SelectContent>{(Object.keys(ROUTE_TYPE_ICONS) as RouteType[]).map((key) => { const Icon = ROUTE_TYPE_ICONS[key]; return <SelectItem key={key} value={key} className="min-h-12 body-text"><span className="flex items-center gap-2"><Icon className="size-5 shrink-0" />{TYPE_LABEL[key]}</span></SelectItem>; })}</SelectContent>
+              </Select>
             )}
           </div>
           <RouteColourPicker value={colour} onChange={setPickedColour} disabled={busy || submittingSave} />

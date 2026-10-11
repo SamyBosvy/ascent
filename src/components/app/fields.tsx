@@ -1,5 +1,6 @@
 import type { SelectHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
+import { BaseCampIcon, SummitIcon } from "./icons";
 import { cloneElement, type ReactElement } from "react";
 
 export function NativeSelect({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
@@ -29,8 +30,8 @@ export function EmptyIllustration({ variant }: { variant: EmptyIllustration }) {
   const shapes: Record<EmptyIllustration, React.ReactNode> = {
     ridge: <path d="M16 84 52 30 78 64 94 44 128 84Z" className="fill-ridge stroke-muted-foreground" />,
     path: <><path d="M16 84 72 22 128 84Z" className="fill-ridge stroke-muted-foreground" /><path d="m48 84 20-16-6-14 16-10-6-22" className="stroke-primary" /></>,
-    flag: <><path d="M16 84 72 36 128 84Z" className="fill-ridge stroke-muted-foreground" /><path d="M72 36V12" /><path d="m72 12 26 8-26 8Z" className="fill-gold-text stroke-gold-text" /></>,
-    tent: <><path d="M24 82 72 28 120 82Z" className="fill-ridge stroke-muted-foreground" /><path d="m50 82 22-42 22 42Z" className="fill-primary stroke-primary" /><path d="M16 84h112" /></>,
+    flag: <SummitIcon x="24" y="6" width="96" height="96" className="text-gold-text" />,
+    tent: <BaseCampIcon x="24" y="6" width="96" height="96" className="text-primary-strong" />,
     cards: <><rect x="30" y="18" width="68" height="64" rx="5" className="fill-ridge stroke-muted-foreground" /><rect x="46" y="30" width="68" height="64" rx="5" className="fill-background stroke-primary" /><path d="m60 70 18-24 22 24M60 82h40" className="stroke-primary" /></>,
     notebook: <><rect x="36" y="16" width="76" height="78" rx="4" className="fill-ridge stroke-muted-foreground" /><path d="M50 16v78M62 38h34M62 52h34M62 66h24" className="stroke-primary" /></>,
     chart: <><path d="M28 18v72h94" /><path d="M48 78V60M72 78V42M96 78V26" strokeWidth="10" className="stroke-primary" /><path d="m42 44 27-22 30-8" className="stroke-gold-text" /></>,

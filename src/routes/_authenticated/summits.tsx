@@ -4,6 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { minutesLabel, TYPE_LABEL, useRouteStats, useRoutes } from "@/lib/data";
 import { Button } from "@/components/ui/button";
+import { SummitIcon, ROUTE_TYPE_ICONS } from "@/components/app/icons";
 import { Empty } from "@/components/app/fields";
 
 export const Route = createFileRoute("/_authenticated/summits")({
@@ -26,18 +27,15 @@ function Summits() {
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
           {list.map((r) => {
+            const TypeIcon = ROUTE_TYPE_ICONS[r.type];
             const mins = Number(stats.get(r.id)?.minutes ?? 0);
             return (
               <li key={r.id}>
                 <Link to="/routes/$id" params={{ id: r.id }} className="surface relative block overflow-hidden p-5">
                   <div className="absolute inset-x-0 top-0 h-1 bg-gold" />
-                  <svg viewBox="0 0 40 30" className="mb-3 h-8 w-10" aria-hidden>
-                    <path d="M2 28 L20 6 L38 28 Z" className="fill-ridge" />
-                    <line x1="20" y1="6" x2="20" y2="-4" className="stroke-foreground" strokeWidth="1.5" />
-                    <path d="M20 -4 L30 -1 L20 2 Z" className="fill-gold" />
-                  </svg>
+                  <SummitIcon className="mb-3 h-8 w-10 text-gold-text" />
                   <p className="card-title">{r.name}</p>
-                  <p className="meta-text text-muted-foreground">{TYPE_LABEL[r.type]}</p>
+                  <p className="flex items-center gap-2 meta-text text-muted-foreground"><TypeIcon className="size-4" />{TYPE_LABEL[r.type]}</p>
                   <dl className="mt-4 grid grid-cols-3 gap-2 body-text">
                     <div><dt className="meta-text text-muted-foreground">Started</dt><dd>{format(new Date(r.created_at), "MMM d, yy")}</dd></div>
                     <div><dt className="meta-text text-muted-foreground">Summited</dt><dd>{format(new Date(r.summited_at!), "MMM d, yy")}</dd></div>

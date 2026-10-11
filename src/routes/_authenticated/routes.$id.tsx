@@ -1,4 +1,5 @@
 import { blockingError } from "@/lib/queryState";
+import { ROUTE_TYPE_ICONS } from "@/components/app/icons";
 import { RouteDot } from "@/components/app/RouteDot";
 import { useSubmission } from "@/hooks/use-submission";
 import { InlineSkeleton, ScreenSkeleton } from "@/components/app/ScreenSkeleton";
@@ -90,6 +91,7 @@ function RouteDetail() {
 
   const milestones = [...milestoneRows].sort((a, b) => a.position - b.position);
   const due = stats.due;
+  const TypeIcon = ROUTE_TYPE_ICONS[route.type];
   // Reaching the summit never writes anything by itself; the user confirms.
   const offerSummit = stats.camp === 4 && route.status !== "summited" && !dismissed;
 
@@ -251,8 +253,8 @@ function RouteDetail() {
           <h1 tabIndex={-1} className="flex min-w-0 items-center gap-2 page-title"><RouteDot route={route} /><span className="break-words">{route.name}</span></h1>
           <Button variant="outline" className="h-12 shrink-0" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4" /> Edit route</Button>
         </div>
-        <p className="mt-1 body-text text-muted-foreground">
-          {TYPE_LABEL[route.type]}
+        <p className="mt-1 flex flex-wrap items-center gap-2 body-text text-muted-foreground">
+          <TypeIcon className="size-4 shrink-0" />{TYPE_LABEL[route.type]}
           {route.target_date && ` · target ${format(new Date(`${route.target_date}T12:00:00`), "MMM d, yyyy")}`}
         </p>
         <PacingLine route={route} agg={agg} className="mt-1 body-text" />

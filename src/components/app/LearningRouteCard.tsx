@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { BookOpen, Languages, Wrench, GraduationCap, FileText, Repeat } from 'lucide-react';
+import { ROUTE_TYPE_ICONS } from './icons';
 import { routeStats } from '@/lib/camp';
 import { TYPE_LABEL, localDate, type RouteRow, type RouteAgg } from '@/lib/data';
 import { getPrefs } from '@/lib/prefs';
@@ -8,10 +8,9 @@ import { routeColourToken } from '@/lib/routeColours';
 import { pacing } from '@/lib/pacing';
 import { RouteDot } from './RouteDot';
 import { AltitudeBar, CampBadge } from './Mountain';
-const ICONS = { book: BookOpen, language: Languages, skill: Wrench, course: GraduationCap, paper: FileText, habit: Repeat };
 export function LearningRouteCard({ route, agg }: { route: RouteRow; agg?: RouteAgg | undefined }) {
   const stats = routeStats(route, agg);
-  const Icon = ICONS[route.type];
+  const Icon = ROUTE_TYPE_ICONS[route.type];
   const pace = pacing({ ...route, milestonesTotal: stats.total, milestonesDone: stats.done }, localDate());
   const activity = activityLabel(lastRouteActivity(route, agg), localDate(), getPrefs().tz);
   return <Link to="/routes/$id" params={{ id: route.id }} className="surface route-accent block min-w-0 space-y-3 p-4 hover:border-primary/50" style={{ borderLeftColor: routeColourToken(route) }}>

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isLive, STATUS_LABEL, TYPE_LABEL, useRefresh, useRouteStats, useRoutes, type RouteStatus } from "@/lib/data";
 import { RouteDialog } from "@/components/app/RouteDialog";
+import { ROUTE_TYPE_ICONS } from "@/components/app/icons";
 import { Empty } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 
@@ -75,15 +76,15 @@ function RoutesPage() {
           </Button>
           {showArchived && (
             <><ul className="mt-2 space-y-2">
-              {archived.map((r) => (
+              {archived.map((r) => { const Icon = ROUTE_TYPE_ICONS[r.type]; return (
                 <li key={r.id} className="surface flex items-center gap-3 p-3 pl-4">
                   <Link to="/routes/$id" params={{ id: r.id }} className="min-w-0 flex-1">
                     <p className="flex items-center gap-2 card-title"><RouteDot route={r} /><span className="truncate">{r.name}</span></p>
-                    <p className="meta-text text-muted-foreground">{TYPE_LABEL[r.type]}</p>
+                    <p className="flex items-center gap-2 meta-text text-muted-foreground"><Icon className="size-4" />{TYPE_LABEL[r.type]}</p>
                   </Link>
                   <Button variant="outline" className="h-12" onClick={() => restore(r.id)}><ArchiveRestore className="h-4 w-4" /> Restore</Button>
                 </li>
-              ))}
+              ); })}
             </ul>{archived.length === 0 && <Empty illustration="ridge" title="No archived routes" description="Routes you archive will stay here with their progress." primaryAction={<Button variant="default" onClick={() => setShowArchived(false)}>Back to routes</Button>} />}</>
           )}
         </section>
