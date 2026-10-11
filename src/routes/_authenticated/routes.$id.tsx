@@ -25,7 +25,7 @@ import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
 import { CAMPS, habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
 import { Mountain } from "@/components/app/Mountain";
 import { toggleCheckin } from "@/lib/checkins";
-import { logSession } from "@/lib/sessions";
+import { logSession, minutesError, SESSION_MAX_MINUTES } from "@/lib/sessions";
 import { queueWrite } from "@/lib/sync";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SummitOverlay } from "@/components/app/SummitOverlay";
@@ -514,12 +514,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-const MAX_MIN = 1440;
-const minutesError = (v: string) => {
-  if (!/^\d+$/.test(v.trim())) return "Minutes must be a whole number.";
-  const n = parseInt(v, 10);
-  return n < 1 || n > MAX_MIN ? `Minutes must be between 1 and ${MAX_MIN}.` : null;
-};
+const MAX_MIN = SESSION_MAX_MINUTES;
 /** Today keeps the current time of day; past dates are saved at noon local time. */
 function loggedAtFor(day: string) {
   if (!day || day === localDate()) return new Date().toISOString();

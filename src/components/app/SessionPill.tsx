@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { Pause } from "lucide-react";
 import { toast } from "sonner";
 import { minutesLabel, useRefresh, useRoutes } from "@/lib/data";
-import { logSession } from "@/lib/sessions";
+import { logSession, minutesError, SESSION_MAX_MINUTES } from "@/lib/sessions";
 import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ export function StaleSessionPrompt() {
   const refresh = useRefresh();
   const [open, setOpen] = useState(false);
   const [hours, setHours] = useState(0);
-  const [adjust, setAdjust] = useState(false);
+  const [capped, setCapped] = useState(false);
   const [minutes, setMinutes] = useState("");
 
   useEffect(() => {
@@ -49,16 +49,18 @@ export function StaleSessionPrompt() {
     const ms = elapsedMs(s);
     if (s && ms > TWELVE_H) {
       setHours(Math.floor(ms / 3600000));
+      setCapped(ms > 2 * TWELVE_H);
+      setMinutes(String(Math.min(Math.round(ms / 60000), SESSION_MAX_MINUTES)));
       setOpen(true);
     }
   }, []);
 
+  const err = minutesError(minutes);
   const { submitting: submittingStale, submit: submitStale } = useSubmission();
-  function save(mins: number) { return submitStale(() => saveRequest(mins)); }
+  function save() { if (err) return; return submitStale(() => saveRequest(parseInt(minutes, 10))); }
   async function saveRequest(mins: number) {
     const s = timer.get();
     if (!s) { setOpen(false); return; }
-    if (mins < 1) { toast.error("Log at least one minute."); return; }
     try { await logSession({ route_id: s.routeId, minutes: mins }); } catch (e) { toast.error((e as Error).message); return; }
     timer.clear();
     toast.success(`${minutesLabel(mins)} logged.`);
@@ -72,26 +74,20 @@ export function StaleSessionPrompt() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Session still running</DialogTitle>
-          <DialogDescription>You left a session running for {hours}h{name && ` on ${name}`}. Save it, adjust the time, or discard?</DialogDescription>
+          <DialogDescription>You left a session running for {hours}h on {name}. How many minutes did you actually spend?</DialogDescription>
         </DialogHeader>
-        {adjust ? (
-          <form
-            className="space-y-4"
-            onSubmit={(e) => { e.preventDefault(); void save(parseInt(minutes) || 0); }}
-          >
-            <div className="space-y-2">
-              <Label htmlFor="stale-min">Minutes actually spent</Label>
-              <Input id="stale-min" type="number" inputMode="numeric" min={1} required className="h-12" value={minutes} onChange={(e) => setMinutes(e.target.value)} />
-            </div>
-            <Button disabled={submittingStale} type="submit" className="h-12 w-full">Save adjusted time</Button>
-          </form>
-        ) : (
-          <div className="grid gap-2 sm:grid-cols-3">
-            <Button disabled={submittingStale} className="h-12" onClick={() => save(Math.max(1, Math.round(elapsedMs(timer.get()) / 60000)))}>Save</Button>
-            <Button variant="outline" className="h-12" onClick={() => setAdjust(true)}>Adjust</Button>
-            <Button variant="outline" className="h-12 text-destructive-strong" onClick={() => { timer.clear(); setOpen(false); }}>Discard</Button>
+        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+          <div className="space-y-2">
+            <Label htmlFor="stale-min">Minutes</Label>
+            <Input id="stale-min" type="number" inputMode="numeric" min={1} max={SESSION_MAX_MINUTES} required className="h-12" value={minutes} onChange={(e) => setMinutes(e.target.value)} aria-invalid={!!err} aria-describedby={err ? "stale-min-err" : undefined} />
+            {err && <p id="stale-min-err" className="meta-text text-destructive-strong">{err}</p>}
+            {capped && <p className="meta-text text-muted-foreground">Capped at 24 hours. Change it if you studied less.</p>}
           </div>
-        )}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button type="submit" disabled={!!err || submittingStale} className="h-12">Save</Button>
+            <Button type="button" variant="outline" className="h-12" onClick={() => { timer.clear(); setOpen(false); }}>Discard</Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

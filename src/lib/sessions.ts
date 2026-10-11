@@ -1,8 +1,18 @@
 import type { RouteAgg, Session } from "./data";
 import { queryClientForSync, queueWrite } from "./sync";
 
+export const SESSION_MAX_MINUTES = 1440;
+
+/** Validation message for a typed minutes value, or null when valid. */
+export function minutesError(v: string): string | null {
+  if (!/^\d+$/.test(v.trim())) return "Minutes must be a whole number.";
+  const n = parseInt(v, 10);
+  return n < 1 || n > SESSION_MAX_MINUTES ? `Minutes must be between 1 and ${SESSION_MAX_MINUTES}.` : null;
+}
+
 /** Log a study session through the outbox (works offline); the cached lists update at once. */
 export async function logSession(input: { route_id: string; minutes: number; note?: string | null | undefined; logged_at?: string | undefined }) {
+  if (!Number.isInteger(input.minutes) || input.minutes < 1 || input.minutes > SESSION_MAX_MINUTES) throw new Error(`Log between 1 and ${SESSION_MAX_MINUTES} minutes.`);
   const row = { id: crypto.randomUUID(), route_id: input.route_id, minutes: input.minutes, note: input.note ?? null, logged_at: input.logged_at ?? new Date().toISOString() };
   const qc = queryClientForSync();
   if (qc) {
