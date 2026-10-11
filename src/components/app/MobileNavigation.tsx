@@ -53,11 +53,11 @@ export function MobileNavigation({ onQuickCapture }: { onQuickCapture: () => voi
     <div hidden={hidden} className="mobile-session fixed inset-x-4 z-30 md:hidden"><SessionPill className="max-w-full" /></div>
     <nav hidden={hidden} aria-label="Mobile navigation" className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur md:hidden">
       <div className="mobile-nav-side">
-        {LEFT.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="mobile-nav-link text-muted-foreground" activeProps={{ className: "text-primary-strong font-semibold", "aria-current": "page" }}><Icon className="size-5" aria-hidden />{label}</Link>)}
+        {LEFT.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="mobile-nav-link text-muted-foreground" activeProps={{ className: "!text-primary-strong font-semibold", "aria-current": "page" }}><Icon className="size-5" aria-hidden />{label}</Link>)}
       </div>
       <Button size="icon" aria-label="Quick capture" onClick={onQuickCapture} className="mobile-capture size-14 rounded-full shadow-lg"><Plus className="size-6" aria-hidden /></Button>
       <div className="mobile-nav-side">
-        {RIGHT.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="mobile-nav-link text-muted-foreground" activeProps={{ className: "text-primary-strong font-semibold", "aria-current": "page" }}><Icon className="size-5" aria-hidden />{label}</Link>)}
+        {RIGHT.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="mobile-nav-link text-muted-foreground" activeProps={{ className: "!text-primary-strong font-semibold", "aria-current": "page" }}><Icon className="size-5" aria-hidden />{label}</Link>)}
       </div>
     </nav>
   </>;

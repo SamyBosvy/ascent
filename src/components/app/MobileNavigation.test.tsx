@@ -36,13 +36,13 @@ describe("MobileNavigation", () => {
     await mount();
     const nav = screen.getByRole("navigation");
     const drawer = document.createElement("div");
-    drawer.dataset.responsiveMode = "drawer";
-    drawer.dataset.state = "open";
-    act(() => { document.body.append(drawer); });
+    drawer.dataset["responsiveMode"] = "drawer";
+    drawer.dataset["state"] = "open";
+    await act(async () => { document.body.append(drawer); });
     await waitFor(() => expect(nav).toHaveAttribute("hidden"));
-    act(() => { drawer.dataset.state = "closed"; });
+    await act(async () => { drawer.dataset["state"] = "closed"; });
     await waitFor(() => expect(nav).not.toHaveAttribute("hidden"));
-    drawer.remove();
+    await act(async () => { drawer.remove(); });
   });
 
   it("hides for a focused input with a reduced visual viewport, then returns", async () => {
