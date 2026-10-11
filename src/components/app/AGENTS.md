@@ -7,3 +7,4 @@
 - Empty lists share illustrated Empty and existing-flow actions; loading/errors/onboarding win — no misleading empties.
 - Today time logging reuses QuickCapture's outbox/lock — no competing write flow.
 - Editable overlays share ResponsiveDialog, latching mode while open and guarding dirty/saving closes; footers live outside scrollable forms — resize preserves input and keyboard space preserves Save.
+- MobileNavigation owns mobile destinations and keyboard/drawer visibility; global bottom-nav dimensions drive shell padding, safe areas and session/toast clearance — fixed controls never cover the last action.

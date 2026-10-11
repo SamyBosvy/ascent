@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SessionPill, StaleSessionPrompt } from "@/components/app/SessionPill";
+import { MobileNavigation } from "@/components/app/MobileNavigation";
 import { supabase } from "@/integrations/supabase/client";
 import { QuickCapture } from "@/components/app/QuickCapture";
 import { CommandPalette } from "@/components/app/CommandPalette";
@@ -186,35 +187,12 @@ function Shell() {
             {online ? `Syncing ${pending} change${pending === 1 ? "" : "s"}…` : `Offline — changes will sync${pending ? ` (${pending} waiting)` : ""}`}
           </div>
         )}
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-4 pb-32 pt-6 md:px-10 md:pb-12 md:pt-10">
+        <main id="main" tabIndex={-1} className="authenticated-main mx-auto w-full max-w-4xl flex-1 px-4 pt-6 md:px-10 md:pt-10">
           <Outlet />
         </main>
       </div>
 
-      <div className="fixed inset-x-4 bottom-24 z-30 flex justify-start pr-16 md:hidden">
-        <SessionPill className="max-w-full" />
-      </div>
-      <button
-        onClick={() => setCapture(true)}
-        aria-label="Quick capture"
-        className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:hidden"
-      >
-        <Plus className="h-6 w-6" />
-      </button>
-
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        {NAV.filter((n) => !("desktopOnly" in n)).map(({ to, label, icon: Icon }) => (
-          <Link
-            key={to}
-            to={to}
-            className="flex min-h-16 flex-col items-center justify-center gap-1 text-xs text-muted-foreground"
-            activeProps={{ className: "!text-primary-strong font-semibold", "aria-current": "page" }}
-          >
-            <Icon className="h-5 w-5" />
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <MobileNavigation onQuickCapture={() => setCapture(true)} />
 
       <QuickCapture open={capture} onOpenChange={setCapture} />
       <CommandPalette open={palette} onOpenChange={setPalette} onQuickCapture={() => setCapture(true)} />

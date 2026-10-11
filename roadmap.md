@@ -37,3 +37,10 @@
 - [x] Add width, resize/input preservation, dirty-confirmation and saving-close tests
 - [x] Read-only signed-in RouteDialog checks; no persistent data or account changes
 - [x] Report: 202 passing tests; recorded credits 657 → 662 (5)
+
+# Batch 16
+- [x] Shared bottom-nav height, content/safe-area clearance and session/toast placement (existing toasts remain top-centre)
+- [x] Centred Quick capture, all destinations retained, accessible active links (two left, three right)
+- [x] Hide navigation for keyboard and responsive drawers
+- [x] Four regression tests; full suite 206 passing; signed-in Today light/dark checks at 390×844 and capture drawer verified
+- [ ] Existing route-page bottom visual check: blocked because the signed-in account has no routes; no persistent test data created
