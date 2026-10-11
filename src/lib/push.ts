@@ -12,7 +12,11 @@ export async function pushState(): Promise<PushState> {
   if (Notification.permission === "denied") return "blocked";
   const registration = await navigator.serviceWorker.getRegistration("/");
   if (!registration?.active) return "host-unavailable";
-  return await registration.pushManager.getSubscription() ? "enabled" : "available";
+  const subscription = await registration.pushManager.getSubscription();
+  if (!subscription) return "available";
+  const { data, error } = await supabase.from("push_subscriptions").select("id").eq("endpoint", subscription.endpoint).maybeSingle();
+  if (error) throw new Error("Notification status could not be read.");
+  return data ? "enabled" : "available";
 }
 export async function saveSubscription(subscription: Pick<PushSubscription, "toJSON">) {
   const json = subscription.toJSON();
