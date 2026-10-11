@@ -4,7 +4,7 @@ import { useSubmission } from "@/hooks/use-submission";
 import { InlineSkeleton, ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import type { Database } from "@/integrations/supabase/types";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useId } from "react";
 import { getRouteApi } from '@tanstack/react-router';
 import { claimSummit, summitSeenKey } from '@/lib/visualProgress';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,7 +16,7 @@ import { fetchPaged, localDate, minutesLabel, useCheckinHistory, must, STATUS_LA
 import { RouteDialog } from "@/components/app/RouteDialog";
 import { CsvImportDialog } from "@/components/app/CsvImportDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/app/ResponsiveDialog";
 import { Label } from "@/components/ui/label";
 import { clockLabel, elapsedMs, timer, useTimer } from "@/lib/timer";
 import { CAMPS, habitConsistency, habitDueToday, routeStats } from "@/lib/camp";
@@ -677,10 +677,10 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
 }
 
 function EditSessionDialog({ session, onClose, onSaved }: { session: Session | null; onClose: () => void; onSaved: () => void }) {
+  const formId = useId();
   const [minutes, setMinutes] = useState("");
   const [note, setNote] = useState("");
   const [when, setWhen] = useState("");
-  const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (session) { setMinutes(String(session.minutes)); setNote(session.note ?? ""); setWhen(toLocalInput(session.logged_at)); }
   }, [session]);
@@ -693,20 +693,16 @@ function EditSessionDialog({ session, onClose, onSaved }: { session: Session | n
   function save(e: React.FormEvent) { e.preventDefault(); return submitEditSession(() => saveRequest(e)); }
   async function saveRequest(e: React.FormEvent) {
     e.preventDefault();
-    if (!session || errs.minutes || errs.when || busy) return;
-    setBusy(true);
+    if (!session || errs.minutes || errs.when) return;
     const { error } = await supabase.from("sessions").update({ minutes: parseInt(minutes, 10), note: note.trim() || null, logged_at: new Date(when).toISOString() }).eq("id", session.id);
-    setBusy(false);
     if (error) { toast.error(`Couldn't save the session: ${error.message}`); return; }
     toast.success("Session updated.");
     onSaved();
     onClose();
   }
   return (
-    <Dialog open={!!session} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader><DialogTitle>Edit session</DialogTitle></DialogHeader>
-        <form onSubmit={save} noValidate className="space-y-4">
+    <ResponsiveDialog open={!!session} onOpenChange={(o) => !o && onClose()} title="Edit session" className="sm:max-w-sm" submitting={submittingEditSession} footer={<Button form={formId} type="submit" className="h-12 w-full" disabled={submittingEditSession || !!errs.minutes || !!errs.when}>Save</Button>}>
+        <form id={formId} onSubmit={save} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="sm">Minutes</Label>
             <Input id="sm" className="h-12" type="number" inputMode="numeric" min={1} max={MAX_MIN} value={minutes} onChange={(e) => setMinutes(e.target.value)} aria-invalid={!!errs.minutes} />
@@ -721,10 +717,8 @@ function EditSessionDialog({ session, onClose, onSaved }: { session: Session | n
             <Label htmlFor="sn">Note (optional)</Label>
             <Input id="sn" className="h-12" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
-          <Button type="submit" className="h-12 w-full" disabled={busy || submittingEditSession || !!errs.minutes || !!errs.when}>Save</Button>
         </form>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   );
 }
 

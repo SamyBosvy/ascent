@@ -3,7 +3,8 @@ import { RouteDot } from "@/components/app/RouteDot";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { useSubmission } from "@/hooks/use-submission";
 import { z } from "zod";
 import { format } from "date-fns";
 import { MoreHorizontal, Search } from "lucide-react";
@@ -18,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/app/ResponsiveDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
@@ -229,30 +230,27 @@ function CardsPage() {
 }
 
 function MoveDialog({ ids, onClose, onDone }: { ids: string[] | null; onClose: () => void; onDone: () => void }) {
+  const formId = useId();
   const { data: routes, error: routesError } = useRoutes();
   const live = (routes ?? []).filter(isLive);
   const [target, setTarget] = useState("");
-  const [busy, setBusy] = useState(false);
+  const { submitting, submit } = useSubmission();
   useEffect(() => { if (ids) setTarget(live[0]?.id ?? ""); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [ids]);
   async function move() {
     if (!ids || !target) return;
-    setBusy(true);
     const { error } = await supabase.rpc("move_cards", { _ids: ids, _route: target });
-    setBusy(false);
     if (error) { toast.error(`Couldn't move: ${error.message}`); return; }
     toast.success(`Moved ${ids.length} card${ids.length === 1 ? "" : "s"}.`);
     onDone();
     onClose();
   }
   return (
-    <Dialog open={!!ids} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader><DialogTitle>Move {ids?.length ?? 0} card{ids?.length === 1 ? "" : "s"}</DialogTitle></DialogHeader>
-        <NativeSelect value={target} onChange={(e) => setTarget(e.target.value)} aria-label="Move to route">
+    <ResponsiveDialog open={!!ids} onOpenChange={(o) => !o && onClose()} title={`Move ${ids?.length ?? 0} card${ids?.length === 1 ? "" : "s"}`} className="sm:max-w-sm" submitting={submitting} footer={<Button form={formId} type="submit" className="h-12 w-full" disabled={!target || submitting}>Move</Button>}>
+      <form id={formId} onSubmit={(e) => { e.preventDefault(); void submit(move); }}>
+        <NativeSelect disabled={submitting} value={target} onChange={(e) => setTarget(e.target.value)} aria-label="Move to route">
           {live.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
         </NativeSelect>
-        <Button className="h-12 w-full" disabled={!target || busy} onClick={() => void move()}>Move</Button>
-      </DialogContent>
-    </Dialog>
+      </form>
+    </ResponsiveDialog>
   );
 }

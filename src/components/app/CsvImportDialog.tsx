@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { requireOnline } from "@/lib/sync";
 import { useSubmission } from "@/hooks/use-submission";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { NativeSelect } from "./fields";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "./ResponsiveDialog";
 
 type Field = "front" | "back" | "example" | "pronunciation" | "ignore";
 const FIELDS: Field[] = ["front", "back", "example", "pronunciation", "ignore"];
@@ -43,6 +43,7 @@ function detect(header: string[] | null, width: number): Field[] {
 }
 
 export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean; onOpenChange: (o: boolean) => void; routeId: string }) {
+  const formId = useId();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState("");
@@ -59,6 +60,12 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
     if (fileRef.current) fileRef.current.value = "";
   }
 
+  useEffect(() => {
+    if (open) return;
+    const timeout = setTimeout(reset, 200);
+    return () => clearTimeout(timeout);
+  }, [open]);
+
   function pick(file: File) {
     setSummary(null);
     Papa.parse<string[]>(file, {
@@ -69,7 +76,8 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
         const data = res.data.map((r) => r.map((c) => (c ?? "").replace(/^\uFEFF/, "")));
         if (!data.length) { toast.error("That file has no rows."); return; }
         const width = Math.max(...data.map((r) => r.length));
-        const first = data[0]!;
+        const first = data[0];
+        if (!first) return;
         const looksHeader = first.some((h) => Object.values(ALIASES).flat().includes(norm(h)));
         setHasHeader(looksHeader);
         setMap(detect(looksHeader ? first : null, width));
@@ -138,14 +146,16 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (progress != null || submitting) return; onOpenChange(o); if (!o) setTimeout(reset, 200); }}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Import flashcards</DialogTitle>
-          <DialogDescription>CSV or TSV. Files exported from Settings re-import as they are.</DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title="Import flashcards" description="CSV or TSV. Files exported from Settings re-import as they are." className="sm:max-w-2xl" dirty={!!rows && !summary} submitting={progress != null || submitting} footer={rows ? summary ? (
+      <Button className="h-12 w-full" onClick={() => onOpenChange(false)}>Done</Button>
+    ) : (
+      <Button form={formId} type="submit" className="h-12 w-full" disabled={!canImport}>
+        {progress != null ? `Importing… ${progress}%` : `Import ${body.length} row${body.length === 1 ? "" : "s"}`}
+      </Button>
+    ) : undefined}>
+      <form id={formId} onSubmit={(e) => { e.preventDefault(); if (canImport) void run(); }}>
         <input aria-label="Flashcards file" ref={fileRef} type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" className="hidden" onChange={(e) => e.target.files?.[0] && pick(e.target.files[0])} />
-        <Button variant="outline" className="h-12" onClick={() => fileRef.current?.click()} disabled={progress != null || submitting}>
+        <Button type="button" variant="outline" className="h-12" onClick={() => fileRef.current?.click()} disabled={progress != null || submitting}>
           {fileName ? `${fileName} · choose another` : "Choose file"}
         </Button>
 
@@ -189,18 +199,9 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
             {(col("front") < 0 || col("back") < 0) && <p className="text-sm text-destructive-strong">Pick a Front and a Back column.</p>}
             {progress != null && <Progress value={progress} aria-label="Import progress" />}
             {summary && <p className="rounded-md bg-muted p-3 text-sm" role="status">{summary}</p>}
-            <div className="flex gap-2">
-              {summary ? (
-                <Button className="h-12 flex-1" onClick={() => { onOpenChange(false); setTimeout(reset, 200); }}>Done</Button>
-              ) : (
-                <Button className="h-12 flex-1" disabled={!canImport} onClick={() => void run()}>
-                  {progress != null ? `Importing… ${progress}%` : `Import ${body.length} row${body.length === 1 ? "" : "s"}`}
-                </Button>
-              )}
-            </div>
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </form>
+    </ResponsiveDialog>
   );
 }
