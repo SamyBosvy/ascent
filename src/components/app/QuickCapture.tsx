@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "@tanstack/react-router";
 import { InlineSkeleton } from "./ScreenSkeleton";
 import { Empty, NativeSelect } from "./fields";
-import { logSession } from "@/lib/sessions";
+import { logSession, minutesError, SESSION_MAX_MINUTES } from "@/lib/sessions";
 import { requireOnline } from "@/lib/sync";
 import { haptic } from "@/lib/feedback";
 import { successFeedback } from "./SuccessTick";
@@ -41,6 +41,7 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  const minutesErr = kind === "session" ? minutesError(minutes) : null;
   const { submitting: submittingSave, submit: submitSave } = useSubmission();
   function save(e: React.FormEvent) { e.preventDefault(); return submitSave(async () => {
     try { await saveRequest(e); }
@@ -50,6 +51,7 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
   async function saveRequest(e: React.FormEvent) {
     e.preventDefault();
     if (!routeId) return;
+    if (kind === "session" && minutesErr) return;
     if (kind === "note" && !requireOnline("Saving a note")) { haptic("warning"); return; }
     setBusy(true);
     localStorage.setItem(LAST_KEY, routeId);
@@ -57,7 +59,7 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
     if (kind === "note") {
       ({ error } = await supabase.from("notes").insert({ route_id: routeId, title: (text.split("\n")[0] ?? "").slice(0, 80), body: text }));
     } else {
-      try { await logSession({ route_id: routeId, minutes: Math.max(1, parseInt(minutes) || 0), note: text || null }); } catch (e) { error = e as Error; }
+      try { await logSession({ route_id: routeId, minutes: parseInt(minutes, 10), note: text || null }); } catch (e) { error = e as Error; }
     }
     setBusy(false);
     if (error) { haptic("warning"); toast.error(error.message); return; }
@@ -68,7 +70,7 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
   }
 
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={kind === "session" ? "Log time" : "Quick capture"} submitting={busy || submittingSave} className="sm:max-w-md" footer={routes.length > 0 && !routesError ? <Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave}>Save</Button> : undefined}>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={kind === "session" ? "Log time" : "Quick capture"} submitting={busy || submittingSave} className="sm:max-w-md" footer={routes.length > 0 && !routesError ? <Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave || !!minutesErr}>Save</Button> : undefined}>
         {routesError ? <p role="alert" className="body-text text-muted-foreground">Couldn’t load routes.</p> : !routes_ ? <InlineSkeleton /> : routes.length === 0 ? (
           <Empty headingLevel={2} illustration="tent" title="No active routes" description="Choose a route before saving notes or study time." primaryAction={<Button onClick={() => { onOpenChange(false); navigate({ to: "/routes" }); }}>Open routes</Button>} />
         ) : (
@@ -90,7 +92,8 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
             {kind === "session" && (
               <div className="space-y-2">
                 <Label htmlFor="qc-min">Minutes</Label>
-                <Input id="qc-min" type="number" inputMode="numeric" min={1} value={minutes} onChange={(e) => setMinutes(e.target.value)} className="h-12" />
+                <Input id="qc-min" type="number" inputMode="numeric" min={1} max={SESSION_MAX_MINUTES} value={minutes} onChange={(e) => setMinutes(e.target.value)} className="h-12" aria-invalid={!!minutesErr} aria-describedby={minutesErr ? "qc-min-err" : undefined} />
+                {minutesErr && <p id="qc-min-err" className="meta-text text-destructive-strong">{minutesErr}</p>}
               </div>
             )}
             <div className="space-y-2">
