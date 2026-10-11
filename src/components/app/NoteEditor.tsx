@@ -1,5 +1,6 @@
 import { ScreenSkeleton } from "./ScreenSkeleton";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
+import { draftIsNewer, draftKey, moveDraft, readDraft, removeDraft, retryDelay, writeDraft } from "@/lib/noteDraft";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -18,7 +19,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type Status = "saved" | "pending" | "saving" | "draft";
+type Status = "saved" | "pending" | "saving" | "draft" | "retrying";
 
 /**
  * Note editor. `note` undefined = draft: no row exists until the first real edit.
@@ -54,27 +55,61 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deleted = useRef(false);
 
+  const { user } = getRouteApi("/_authenticated").useRouteContext();
+  const userId = user.id;
+  const failing = useRef(false);
+  const attempts = useRef(0);
+  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keyFor = (id: string | null) => draftKey(userId, id);
+
+  function clearRetry() {
+    if (retryRef.current) { clearTimeout(retryRef.current); retryRef.current = null; }
+  }
+  function scheduleRetry() {
+    clearRetry();
+    if (deleted.current) return;
+    retryRef.current = setTimeout(() => { retryRef.current = null; dirty.current = true; void flush(); }, retryDelay(attempts.current));
+    attempts.current++;
+  }
+
   async function doSave() {
     if (!dirty.current || deleted.current) return;
     const v = latest.current;
     if (!v.routeId) return; // waits for the route picker
     const empty = !v.title.trim() && !v.body.trim() && !v.tags.length;
-    if (!idRef.current && empty) { dirty.current = false; return; }
+    if (!idRef.current && empty) { dirty.current = false; removeDraft(keyFor(null)); return; }
     dirty.current = false;
     inflight.current++;
     setStatus("saving");
-    const { data, error } = idRef.current
-      ? await supabase.from("notes").update({ title: v.title, body: v.body, route_id: v.routeId, tags: v.tags }).eq("id", idRef.current).select("id").single()
-      : await supabase.from("notes").insert({ title: v.title, body: v.body, route_id: v.routeId, tags: v.tags }).select("id").single();
+    let data: { id: string } | null = null;
+    let error: { message: string } | null = null;
+    try {
+      const res = idRef.current
+        ? await supabase.from("notes").update({ title: v.title, body: v.body, route_id: v.routeId, tags: v.tags }).eq("id", idRef.current).select("id").single()
+        : await supabase.from("notes").insert({ title: v.title, body: v.body, route_id: v.routeId, tags: v.tags }).select("id").single();
+      data = res.data; error = res.error;
+    } catch (e) {
+      error = { message: e instanceof Error ? e.message : "Couldn't save the note." };
+    }
     inflight.current--;
+    if (deleted.current) return;
     if (error || !data) {
       dirty.current = true;
-      setStatus("pending");
-      toast.error(error?.message ?? "Couldn't save the note.");
+      setStatus("retrying");
+      if (!failing.current) {
+        failing.current = true;
+        const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+        toast.error(offline ? "You're offline. Your note is kept on this device and will save when you're back online." : error?.message ?? "Couldn't save the note.", { id: "note-save-error" });
+      }
+      scheduleRetry();
       return;
     }
+    if (!idRef.current) moveDraft(keyFor(null), keyFor(data.id));
     idRef.current = data.id;
-    if (!dirty.current) setStatus("saved");
+    if (failing.current) { failing.current = false; toast.dismiss("note-save-error"); }
+    attempts.current = 0;
+    clearRetry();
+    if (!dirty.current) { setStatus("saved"); removeDraft(keyFor(data.id)); }
     void qc.invalidateQueries({ queryKey: ["notes"] });
     void qc.invalidateQueries({ queryKey: ["note", data.id] });
   }
@@ -83,12 +118,40 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
     chain.current = chain.current.then(doSave);
     return chain.current;
   }
+  function persistDraft() {
+    writeDraft(keyFor(idRef.current), { ...latest.current, savedAt: new Date().toISOString() });
+  }
   function edit() {
     dirty.current = true;
-    setStatus("pending");
+    persistDraft();
+    setStatus(failing.current ? "retrying" : "pending");
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => void flush(), 700);
   }
+
+  // Restore an unsaved local draft that is newer than the server copy.
+  useEffect(() => {
+    const key = keyFor(idRef.current);
+    const draft = readDraft(key);
+    if (!draft) return;
+    if (!draftIsNewer(draft, note?.updated_at)) { removeDraft(key); return; }
+    const next = { title: draft.title, body: draft.body, routeId: draft.routeId || latest.current.routeId, tags: draft.tags };
+    setTitle(next.title); setBody(next.body); setRouteId(next.routeId); setTags(next.tags);
+    latest.current = next;
+    dirty.current = true;
+    setStatus("pending");
+    toast("Restored unsaved changes.");
+    void flush();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Retry immediately when the connection returns.
+  useEffect(() => {
+    const onOnline = () => { if (failing.current && !deleted.current) { clearRetry(); dirty.current = true; void flush(); } };
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Warn before closing the tab with unsaved changes.
   useEffect(() => {
@@ -100,11 +163,15 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
   }, []);
 
   // Leaving within the app: flush the pending save, then drop a completely empty note.
+  // Retry timers stop on unmount; the local draft stays until a later save succeeds.
   useEffect(() => () => {
+    clearRetry();
     void flush().then(async () => {
+      clearRetry();
       const v = latest.current;
       if (idRef.current && !deleted.current && !v.title.trim() && !v.body.trim() && !v.tags.length) {
         await supabase.from("notes").delete().eq("id", idRef.current);
+        removeDraft(keyFor(idRef.current));
       }
       void qc.invalidateQueries({ queryKey: ["notes"] });
     });
@@ -170,19 +237,23 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
 
   async function remove() {
     deleted.current = true;
+    clearRetry();
     if (timerRef.current) clearTimeout(timerRef.current);
     await chain.current;
     if (idRef.current) {
       const { error } = await supabase.from("notes").delete().eq("id", idRef.current);
       if (error) { deleted.current = false; toast.error(error.message); return; }
     }
+    removeDraft(keyFor(idRef.current));
+    removeDraft(keyFor(null));
+    if (failing.current) { failing.current = false; toast.dismiss("note-save-error"); }
     void qc.invalidateQueries({ queryKey: ["notes"] });
     nav({ to: "/notes" });
   }
 
   const pickable = (routes ?? []).filter((r) => isLive(r) || r.id === routeId);
   const needsRoute = !routeId;
-  const label = status === "saved" ? "Saved" : status === "saving" ? "Saving…" : status === "draft" ? "Draft" : needsRoute ? "Pick a route to save" : "Saving…";
+  const label = status === "retrying" ? "Not saved yet — will retry" : status === "saved" ? "Saved" : status === "saving" ? "Saving…" : status === "draft" ? "Draft" : needsRoute ? "Pick a route to save" : "Saving…";
 
   if (!routes) return <ScreenSkeleton screen="editor" />;
 

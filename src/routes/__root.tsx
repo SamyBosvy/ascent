@@ -114,6 +114,7 @@ function RootComponent() {
         stopSync();
         void clearPersisted();
         localStorage.removeItem("ascent:identity");
+        try { for (const k of Object.keys(localStorage)) if (k.startsWith("ascent:note-draft:")) localStorage.removeItem(k); } catch { /* storage unavailable */ }
       }
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
