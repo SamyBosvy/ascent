@@ -1,4 +1,6 @@
 import { blockingError } from "@/lib/queryState";
+import { haptic } from "@/lib/feedback";
+import { SuccessTick, successFeedback, useSuccessTick } from "@/components/app/SuccessTick";
 import { ROUTE_TYPE_ICONS } from "@/components/app/icons";
 import { RouteDot } from "@/components/app/RouteDot";
 import { useSubmission } from "@/hooks/use-submission";
@@ -46,6 +48,8 @@ export const Route = createFileRoute("/_authenticated/routes/$id")({
 });
 
 function RouteDetail() {
+  const milestoneTick = useSuccessTick();
+  const checkinTick = useSuccessTick();
   const { id } = Route.useParams();
   const { focus } = Route.useSearch();
   const { data: routes, error: routesError } = useRoutes();
@@ -142,10 +146,18 @@ function RouteDetail() {
     setMs((rows) => rows.map((r) => (r.id === m.id ? { ...r, done, done_at } : r)));
     try {
       await queueWrite({ kind: "milestone", data: { id: m.id, done, done_at } });
+      if (done) { milestoneTick.show(m.id); successFeedback("Milestone completed."); }
     } catch (e) {
+      haptic("warning");
       setMs((rows) => rows.map((r) => (r.id === m.id ? m : r)));
       toast.error(`Couldn't update the milestone: ${(e as Error).message}`);
     }
+  }
+  function checkIn(checked: boolean) {
+    return submitCheckin(async () => {
+      const ok = await toggleCheckin(id, checked, refresh);
+      if (ok && !checked) checkinTick.show(id);
+    });
   }
   function addMs(e: React.FormEvent) { e.preventDefault(); return submitMilestone(() => addMsRequest(e)); }
   async function addMsRequest(e: React.FormEvent) {
@@ -304,16 +316,17 @@ function RouteDetail() {
                 <StreakLine route={route} dates={history?.get(id)} today={localDate()} className="mt-1" />
               </div>
               {agg?.checked_today ? (
-                <Button variant="ghost" className="h-12 text-primary-strong" onClick={() => toggleCheckin(id, true, refresh)} aria-label="Checked in today. Tap to undo.">
+                <Button disabled={checkinBusy} variant="ghost" className="h-12 text-primary-strong" onClick={() => checkIn(true)} aria-label="Checked in today. Tap to undo.">
                   <Check className="h-4 w-4" /> Checked in today
                 </Button>
               ) : habitDueToday(route, agg) ? (
-                <Button className="h-12" onClick={() => toggleCheckin(id, false, refresh)}>
+                <Button disabled={checkinBusy} className="h-12" onClick={() => checkIn(false)}>
                   <Check className="h-4 w-4" /> Check in
                 </Button>
               ) : (
                 <span className="body-text text-primary-strong">Done for now</span>
               )}
+              {checkinTick.active === id && <SuccessTick className="text-primary-strong" />}
             </div>
           )}
         </div>
@@ -323,7 +336,7 @@ function RouteDetail() {
       {route.type === "habit" && (
         <section aria-labelledby="route-checkins-heading" className="order-2 min-w-0">
           <div id="route-checkins-heading"><SectionTitle>Check-ins</SectionTitle></div>
-          {!history ? <InlineSkeleton /> : !history.get(id)?.length ? <Empty illustration="calendar" title="No check-ins yet" description="Your habit practice will appear here." primaryAction={<Button disabled={checkinBusy} onClick={() => void submitCheckin(() => toggleCheckin(id, false, refresh))}>Check in</Button>} /> : <HabitHeatmap dates={history.get(id)} today={localDate()} />}
+          {!history ? <InlineSkeleton /> : !history.get(id)?.length ? <Empty illustration="calendar" title="No check-ins yet" description="Your habit practice will appear here." primaryAction={<Button disabled={checkinBusy} onClick={() => void checkIn(false)}>Check in</Button>} /> : <HabitHeatmap dates={history.get(id)} today={localDate()} />}
         </section>
       )}
 
@@ -367,6 +380,7 @@ function RouteDetail() {
                   {m.done && <Check className="h-4 w-4" />}
                 </span>
                 <span className={m.done ? "text-muted-foreground line-through" : ""}>{m.title}</span>
+                {milestoneTick.active === m.id && <SuccessTick className="text-primary-strong" />}
               </button>
               <button className="tap flex items-center justify-center text-muted-foreground disabled:opacity-30" disabled={i === 0} onClick={() => moveMs(i, -1)} aria-label="Move up"><ArrowUp className="h-4 w-4" /></button>
               <button className="tap flex items-center justify-center text-muted-foreground disabled:opacity-30" disabled={i === milestones.length - 1} onClick={() => moveMs(i, 1)} aria-label="Move down"><ArrowDown className="h-4 w-4" /></button>
@@ -543,11 +557,11 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
   const { submitting: submittingSession, submit: submitSession } = useSubmission();
   function save(minutes: number, forRoute = routeId, loggedAt?: string) { return submitSession(() => saveRequest(minutes, forRoute, loggedAt)); }
   async function saveRequest(minutes: number, forRoute = routeId, loggedAt?: string) {
-    if (minutes < 1 || minutes > MAX_MIN) { toast.error(`Log between 1 and ${MAX_MIN} minutes.`); return false; }
+    if (minutes < 1 || minutes > MAX_MIN) { haptic("warning"); toast.error(`Log between 1 and ${MAX_MIN} minutes.`); return false; }
     try {
       await logSession({ route_id: forRoute, minutes, note: note.trim() || null, logged_at: loggedAt });
-    } catch (e) { toast.error((e as Error).message); return false; }
-    toast.success(`${minutesLabel(minutes)} logged. Keep climbing.`);
+    } catch (e) { haptic("warning"); toast.error((e as Error).message); return false; }
+    successFeedback(`${minutesLabel(minutes)} logged. Keep climbing.`);
     setNote("");
     setManual("");
     setDay(localDate());

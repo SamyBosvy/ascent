@@ -11,3 +11,4 @@
 - Habit streaks/heatmap and route pacing are pure tested functions (`streaks.ts`, `pacing.ts`) fed by paged check-in history and route_stats — no streak state stored.
 - Note tags are normalised by a database trigger; note search uses the generated `notes.search` tsvector ('simple' config) via prefix tsqueries from `src/lib/search.ts` — server-side, language-agnostic.
 - Backup import is planned by pure `backup.ts` (zod validation, fresh ids, remapped references) and written one route per `import_route` RPC call — a failure never leaves half a route.
+- Vibration preference is device-only in prefs.ts and separate from account preference caching; feedback.ts guards support, reduced motion and opt-out — refreshing account preferences cannot reset local feedback choices.

@@ -1,5 +1,7 @@
 import { blockingError } from "@/lib/queryState";
 import { RouteDot } from "@/components/app/RouteDot";
+import { SuccessTick, useSuccessTick } from "@/components/app/SuccessTick";
+import { useSubmission } from "@/hooks/use-submission";
 import { useState } from 'react';
 import { getRouteApi } from '@tanstack/react-router';
 import { LearningRouteCard } from '@/components/app/LearningRouteCard';
@@ -29,6 +31,8 @@ export const Route = createFileRoute("/_authenticated/today")({
 });
 
 function Today() {
+  const checkinTick = useSuccessTick();
+  const { submitting: checkinBusy, submit: submitCheckin } = useSubmission();
   const [routeOpen, setRouteOpen] = useState(false);
   const onboarding = useOnboarding();
   const [logOpen, setLogOpen] = useState(false);
@@ -60,7 +64,10 @@ function Today() {
   const dueHabits = habits.filter((h) => habitDueToday(h, stats.get(h.id)));
   const active = routes.filter((r) => r.status === "active" && r.type !== "habit");
 
-  const toggle = (routeId: string, checked: boolean) => toggleCheckin(routeId, checked, refresh);
+  const toggle = (routeId: string, checked: boolean) => submitCheckin(async () => {
+    const ok = await toggleCheckin(routeId, checked, refresh);
+    if (ok && !checked) checkinTick.show(routeId);
+  });
 
   const today = localDate();
   const goal = settings?.daily_goal ?? null;
@@ -82,7 +89,7 @@ function Today() {
       <CardDialog open={cardOpen} onOpenChange={setCardOpen} />
       {!guided && <>
 
-      {cont && <ContinueCard route={cont.route} agg={stats.get(cont.route.id)} timerBusy={!!running} onCheckin={() => toggle(cont.route.id, false)} />}
+      {cont && <ContinueCard route={cont.route} agg={stats.get(cont.route.id)} timerBusy={!!running} checkinBusy={checkinBusy} onCheckin={() => void toggle(cont.route.id, false)} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
         {due === 0 ? (totalCards === 0 ? <Empty headingLevel={2} illustration="cards" title="No cards yet" description="Flashcards you add will be scheduled here." primaryAction={<Button onClick={() => setCardOpen(true)}>New card</Button>} /> : <div className="surface flex flex-col justify-center gap-2 p-5"><h2 className="card-title">Nothing due</h2><p className="meta-text text-muted-foreground">{nextDueLabel(nextDue)}</p><Link to="/review" className="inline-flex min-h-12 items-center body-text text-primary-strong underline underline-offset-4">Open review</Link></div>) : <div className="surface flex flex-col justify-between gap-4 p-5">
@@ -134,12 +141,13 @@ function Today() {
                     <p className="meta-text text-muted-foreground">{Math.round(habitConsistency(h, stats.get(h.id)) * 100)}% over the last 30 days</p>
                     <StreakLine route={h} dates={history?.get(h.id)} today={today} />
                   </Link>
+                  {checkinTick.active === h.id && <SuccessTick className="text-primary-strong" />}
                   {checkedToday ? (
-                    <Button onClick={() => toggle(h.id, true)} variant="ghost" className="h-12 px-3 text-primary-strong" aria-label="Checked in today. Tap to undo.">
+                    <Button disabled={checkinBusy} onClick={() => toggle(h.id, true)} variant="ghost" className="h-12 px-3 text-primary-strong" aria-label="Checked in today. Tap to undo.">
                       <Check className="h-4 w-4" /> Done
                     </Button>
                   ) : isDue ? (
-                    <Button onClick={() => toggle(h.id, false)} variant="outline" className="h-12 px-4">
+                    <Button disabled={checkinBusy} onClick={() => toggle(h.id, false)} variant="outline" className="h-12 px-4">
                       <Check className="h-4 w-4" /> Check in
                     </Button>
                   ) : (
@@ -188,7 +196,7 @@ function pickContinue(routes: RouteRow[], stats: Map<string, RouteAgg>) {
   return best;
 }
 
-function ContinueCard({ route, agg, timerBusy, onCheckin }: { route: RouteRow; agg: RouteAgg | undefined; timerBusy: boolean; onCheckin: () => void }) {
+function ContinueCard({ route, agg, timerBusy, checkinBusy, onCheckin }: { route: RouteRow; agg: RouteAgg | undefined; timerBusy: boolean; checkinBusy: boolean; onCheckin: () => void }) {
   const cards = Number(agg?.cards_total ?? 0);
   let action: React.ReactNode;
   if (route.type === "book" && route.total_pages) {
@@ -196,7 +204,7 @@ function ContinueCard({ route, agg, timerBusy, onCheckin }: { route: RouteRow; a
   } else if (route.type === "habit") {
     action = agg?.checked_today
       ? <span className="flex h-12 items-center gap-1 body-text text-primary-strong"><Check className="h-4 w-4" /> Checked in today</span>
-      : <Button className="h-12" onClick={onCheckin}><Check className="h-4 w-4" /> Check in</Button>;
+      : <Button disabled={checkinBusy} className="h-12" onClick={onCheckin}><Check className="h-4 w-4" /> Check in</Button>;
   } else if (route.type === "language" || cards > 0) {
     action = <Button asChild className="h-12"><Link to="/review" search={{ route: route.id }}><Layers className="h-4 w-4" /> Start review</Link></Button>;
   } else if (!timerBusy) {

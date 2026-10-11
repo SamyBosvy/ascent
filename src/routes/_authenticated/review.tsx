@@ -1,5 +1,6 @@
 import { blockingError } from "@/lib/queryState";
 import { usePrefersReducedMotion } from "@/lib/motion";
+import { haptic } from "@/lib/feedback";
 import { RouteDot } from "@/components/app/RouteDot";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -140,6 +141,7 @@ function Review() {
 
   function rate(c: Card, r: Rating) {
     if (busy) return;
+    haptic("light");
     focusReview.current = true;
     if (mode === "cram") {
       // Cram never changes scheduling and records nothing.

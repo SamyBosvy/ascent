@@ -15,3 +15,4 @@
 
 - Route detail groups labelled work/progress regions in a desktop grid; below lg their contents retain the original single-column order — CSS placement avoids duplicated forms or fetching.
 - Motion uses the SSR-safe live store in src/lib/motion.ts, the global CSS safety net and direct Recharts isAnimationActive props — device changes disable library/chart motion without changing the normal experience.
+- Action feedback shares SuccessTick and handler-only haptic calls; progress transitions activate after mount — accepted outbox writes retain offline success semantics and accessible announcements without entrance animation.
