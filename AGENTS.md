@@ -10,10 +10,10 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
-- Account creation only via the `registerAccount` server function (public signup is disabled in auth config) — enforces invites.
-- Owner role is granted only when the registering email matches the OWNER_EMAIL server secret (never "first account"); roles live in `user_roles`, checked with `has_role` — prevents takeover.
-- Invites use auth inviteUserByEmail; registerAccount completes a pending invite (no role, never signed in) by setting its password — unifies setup.
-- App data is read/written from the browser client under RLS (`user_id = auth.uid()`); only access management uses the admin client in server functions — preserves privacy.
+- Account creation only via the `registerAccount` server function (public signup is disabled in auth config) — so the invite allowlist can't be bypassed.
+- Owner role is granted only when the registering email matches the OWNER_EMAIL server secret (never "first account"); roles live in `user_roles`, checked with `has_role` — avoids privilege escalation and takeover of a fresh install.
+- Invites use auth inviteUserByEmail; registerAccount completes a pending invite (no role, never signed in) by setting its password — so invite emails and self-setup share one path.
+- App data is read/written from the browser client under RLS (`user_id = auth.uid()`); only access management uses the admin client in server functions — keeps every user's data private, including from the owner.
 - Per-route aggregates come from the `route_stats` SQL function (security invoker, RLS); the camp formula in `src/lib/camp.ts` consumes them, with a per-route manual override — single source of truth, no full-table loads.
 - Screens use per-screen queries and fetchPaged for large lists — avoids truncation.
 - Empty lists share illustrated Empty and existing-flow actions; loading/errors/onboarding win — no misleading empties.
@@ -37,6 +37,6 @@
 - Visual progress uses pure helpers (clamped to displayed camp) and LearningRouteCard; Today uses one activity_strip RPC — no per-card/day requests.
 - Summit celebrations are opened only after explicit locked summit saves; event keys are user/route/timestamp-scoped in localStorage and claimed before opening — refresh never repeats a celebration or writes from render.
 - Today time logging reuses QuickCapture's outbox/lock — no competing write flow.
-- Display names use auth.updateUser, requireOnline and useSubmission; root USER_UPDATED refreshes route context.
+- Display names use auth.updateUser, requireOnline and useSubmission; root USER_UPDATED refreshes route context — no extra auth listener.
 
 - Editable overlays share ResponsiveDialog, latching mode while open and guarding dirty/saving closes; footers live outside scrollable forms — resize preserves input and keyboard space preserves Save.
