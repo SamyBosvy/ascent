@@ -78,3 +78,8 @@
 - [x] AltitudeBar (also LearningRouteCard), Mountain camp markers and seven-day activity fills transition 350ms after mount; reduced motion jumps
 - [x] Nine new feedback/progress tests; all 241 tests and typography passed, build clean; 390px light/dark milestone, route check-in, Log/session capture, both card save actions, review rating and reduced tick checks; temporary route and milestones/cards/sessions/notes/checkins database-confirmed zero, account settings/metadata unchanged; local vibration restored; recorded credits 1035.364648311 → 1058.364648311 (23.00)
 - [ ] Today habit-button end-to-end check blocked by existing account onboarding (kept unchanged); implementation complete, Today Log time verified, no real-device vibration available in Chromium
+
+# Batch 23
+- [x] Shared responsive NativeSelect with preserved API, empty values/optgroups, selection and open-mode latch; SSR native
+- [x] Input-matched desktop styling, 40px checked items, keyboard/labels and disabled options; native touch/narrow fallback; RouteDialog type picker unchanged
+- [x] Ten new tests; 251 tests and typography pass, build clean; 1280px Cards filter and route status checked in both themes with saved/read-back status, keyboard selection and native resize preservation; temporary route and all related tables confirmed empty, account settings/metadata unchanged; recorded credits 1058.364648311 → 1074.064648311 (15.70)
