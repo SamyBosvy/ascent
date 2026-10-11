@@ -37,3 +37,9 @@
 - [x] Add width, resize/input preservation, dirty-confirmation and saving-close tests
 - [x] Read-only signed-in RouteDialog checks; no persistent data or account changes
 - [x] Report: 202 passing tests; recorded credits 657 → 662 (5)
+
+# Batch 16
+- [ ] Shared bottom-nav height, content/safe-area clearance and session/toast placement
+- [ ] Centred Quick capture, all destinations retained, accessible active links
+- [ ] Hide navigation for keyboard and responsive drawers
+- [ ] Regression tests and signed-in Today/route mobile light/dark checks; credits report
