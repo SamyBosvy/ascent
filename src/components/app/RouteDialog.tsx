@@ -5,14 +5,14 @@ import { requireOnline } from "@/lib/sync";
 import { markOnboarding, useOnboarding } from "@/lib/onboarding";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoutes, TYPE_LABEL, type RouteRow, type RouteType } from "@/lib/data";
 import { SPEECH_LANGS, SPEECH_LANG_RE } from "@/lib/cardText";
 import { NativeSelect } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/app/ResponsiveDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +31,7 @@ function wholeError(v: string, min: number, max: number, label: string) {
  * aren't offered (milestones are managed in the list). Remount (key) to reset the fields.
  */
 export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOpenChange: (o: boolean) => void; route?: RouteRow }) {
+  const formId = useId();
   const qc = useQueryClient();
   const { data: existingRoutes } = useRoutes();
   const { data: onboarding } = useOnboarding();
@@ -123,10 +124,8 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
   const err = (k: keyof typeof errors) => (show(k) ? <p className="text-xs text-destructive-strong">{errors[k]}</p> : null);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
-        <DialogHeader><DialogTitle>{editing ? "Edit route" : "New route"}</DialogTitle></DialogHeader>
-        <form onSubmit={save} noValidate className="space-y-4">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={editing ? "Edit route" : "New route"} submitting={busy || submittingSave} className="sm:max-w-md" footer={<Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave}>{editing ? "Save" : "Start climbing"}</Button>}>
+        <form id={formId} onSubmit={save} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="rn">Name</Label>
             <Input id="rn" className="h-12" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Designing Data-Intensive Applications" aria-invalid={!!show("name")} />
@@ -194,9 +193,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
             <Label htmlFor="rtd">Target date (optional)</Label>
             <Input id="rtd" type="date" className="h-12" value={target} onChange={(e) => setTarget(e.target.value)} />
           </div>
-          <Button type="submit" className="h-12 w-full" disabled={busy || submittingSave}>{editing ? "Save" : "Start climbing"}</Button>
         </form>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   );
 }

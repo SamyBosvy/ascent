@@ -1,9 +1,9 @@
 import { useSubmission } from "@/hooks/use-submission";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isLive, useRefresh, useRoutes } from "@/lib/data";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/app/ResponsiveDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import { requireOnline } from "@/lib/sync";
 const LAST_KEY = "ascent:last-route";
 
 export function QuickCapture({ open, onOpenChange, initialKind = 'note', initialRouteId }: { open: boolean; onOpenChange: (o: boolean) => void; initialKind?: 'note' | 'session'; initialRouteId?: string | undefined }) {
+  const formId = useId();
   const navigate = useNavigate();
   const { data: routes_, error: routesError } = useRoutes();
   const data = routes_ ? { routes: routes_ } : undefined;
@@ -60,15 +61,11 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-           <DialogTitle>{kind === 'session' ? 'Log time' : 'Quick capture'}</DialogTitle>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={kind === "session" ? "Log time" : "Quick capture"} submitting={busy || submittingSave} className="sm:max-w-md" footer={routes.length > 0 && !routesError ? <Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave}>Save</Button> : undefined}>
         {routesError ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load routes.</p> : !routes_ ? <InlineSkeleton /> : routes.length === 0 ? (
           <Empty headingLevel={2} illustration="tent" title="No active routes" description="Choose a route before saving notes or study time." primaryAction={<Button onClick={() => { onOpenChange(false); navigate({ to: "/routes" }); }}>Open routes</Button>} />
         ) : (
-          <form onSubmit={save} className="space-y-4">
+          <form id={formId} onSubmit={save} className="space-y-4">
             <Tabs value={kind} onValueChange={(v) => setKind(v as "note" | "session")}>
               <TabsList className="grid h-12 w-full grid-cols-2">
                 <TabsTrigger value="note" className="h-10">Note</TabsTrigger>
@@ -97,10 +94,8 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
                 <Input id="qc-text" value={text} onChange={(e) => setText(e.target.value)} className="h-12" />
               )}
             </div>
-            <Button type="submit" className="h-12 w-full" disabled={busy || submittingSave}>Save</Button>
           </form>
         )}
-      </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   );
 }

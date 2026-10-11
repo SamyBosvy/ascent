@@ -1,9 +1,9 @@
 import { useSubmission } from "@/hooks/use-submission";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isLive, useRefresh, useRoutes, type Card } from "@/lib/data";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/app/ResponsiveDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +29,7 @@ export function CardDialog({
   card?: Card | null;
   onSaved?: (card: Card) => void;
 }) {
+  const formId = useId();
   const { data: routes_ } = useRoutes();
   // Archived routes are hidden, except the one the edited card already belongs to.
   const data = routes_ ? { routes: routes_.filter((r) => isLive(r) || r.id === card?.route_id) } : undefined;
@@ -90,12 +91,11 @@ export function CardDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{card ? "Edit flashcard" : "New flashcard"}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={(e) => save(e)} className="space-y-4">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={card ? "Edit flashcard" : "New flashcard"} submitting={submittingSave} className="sm:max-w-md" footer={<div className="flex gap-2">
+            {!card && <Button disabled={submittingSave} type="button" variant="outline" className="h-12 flex-1" onClick={(e) => front && back && save(e, true)}>Save & add another</Button>}
+            <Button disabled={submittingSave} form={formId} type="submit" className="h-12 flex-1">Save</Button>
+          </div>}>
+        <form id={formId} onSubmit={(e) => save(e)} className="space-y-4">
           {(!fixedRoute || card) && (
             <div className="space-y-2">
               <Label htmlFor="card-route">Route</Label>
@@ -138,12 +138,8 @@ export function CardDialog({
               {isLang && example.trim() && <CardText text={example} className="italic text-muted-foreground" />}
             </div>
           )}
-          <div className="flex gap-2">
-            {!card && <Button disabled={submittingSave} type="button" variant="outline" className="h-12 flex-1" onClick={(e) => front && back && save(e, true)}>Save & add another</Button>}
-            <Button disabled={submittingSave} type="submit" className="h-12 flex-1">Save</Button>
-          </div>
+
         </form>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   );
 }
