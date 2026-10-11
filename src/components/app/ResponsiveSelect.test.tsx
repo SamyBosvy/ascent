@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NativeSelect } from "./fields";
 import { DESKTOP_SELECT_QUERY } from "./ResponsiveSelect";
 
@@ -18,6 +18,7 @@ function picker(change = vi.fn(), value = "") {
   return <><label htmlFor="route">Route</label><NativeSelect id="route" value={value} onChange={change}><option value="">All routes</option><option value="a">Alpine</option><option value="b" disabled>Blocked</option></NativeSelect></>;
 }
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+beforeEach(() => { Object.defineProperty(Element.prototype, "scrollIntoView", { configurable: true, value: vi.fn() }); });
 
 describe("NativeSelect", () => {
   it("renders native on the server even with a desktop preference", () => {
@@ -46,10 +47,10 @@ describe("NativeSelect", () => {
   });
   it("fires native value changes with target.value", () => {
     device(390);
-    const change = vi.fn();
+    const change = vi.fn((event) => event.target.value);
     render(picker(change));
     fireEvent.change(screen.getByLabelText("Route"), { target: { value: "a" } });
-    expect(change.mock.calls[0]?.[0].target.value).toBe("a");
+    expect(change.mock.results[0]?.value).toBe("a");
     expect(screen.getByRole("option", { name: "Blocked" })).toBeDisabled();
   });
   it("fires desktop event-like changes and cannot select disabled options", async () => {
@@ -70,7 +71,7 @@ describe("NativeSelect", () => {
     fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" });
     await screen.findByRole("listbox");
     resize(false);
-    expect(screen.getByRole("combobox").tagName).toBe("BUTTON");
+    expect(screen.getByRole("combobox", { hidden: true }).tagName).toBe("BUTTON");
     fireEvent.keyDown(screen.getByRole("listbox"), { key: "Escape" });
     expect(screen.getByRole("combobox").tagName).toBe("SELECT");
     expect(screen.getByRole("combobox")).toHaveValue("a");
