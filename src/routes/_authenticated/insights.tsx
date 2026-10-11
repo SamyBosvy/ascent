@@ -11,6 +11,7 @@ import { getPrefs } from "@/lib/prefs";
 import { addDays, shortDate, zonedMidnight } from "@/lib/time";
 import { habitConsistency } from "@/lib/camp";
 import { Button } from "@/components/ui/button";
+import { SummitIcon } from "@/components/app/icons";
 import { Empty, SectionTitle } from "@/components/app/fields";
 
 export const Route = createFileRoute("/_authenticated/insights")({
@@ -167,7 +168,7 @@ function Insights() {
           <ul className="surface divide-y">
             {summits.map((r) => (
               <li key={r.id} className="flex justify-between gap-3 p-4 body-text">
-                <span className="font-medium">{r.name}</span>
+                <span className="flex items-center gap-2 font-medium"><SummitIcon className="size-5 shrink-0 text-gold-text" />{r.name}</span>
                 <span className="text-muted-foreground">{format(new Date(r.summited_at!), "MMM d, yyyy")}</span>
               </li>
             ))}

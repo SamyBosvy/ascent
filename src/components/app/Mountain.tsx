@@ -1,3 +1,4 @@
+import { CAMP_ICONS } from "./icons";
 import { CAMPS } from "@/lib/camp";
 import { cn } from "@/lib/utils";
 import { climberPosition, visualScoreForCamp } from '@/lib/visualProgress';
@@ -36,17 +37,18 @@ export function Mountain({ camp, score = 0, className }: { camp: number; score?:
         )}
       </svg>
       <ol className="flex flex-col-reverse justify-center gap-4 py-3 body-text sm:justify-between sm:gap-0">
-        {CAMPS.map((c, i) => (
+        {CAMPS.map((c, i) => { const Icon = CAMP_ICONS[i]; return (
           <li key={c} className={cn(i !== position.current && i !== position.next && 'hidden sm:list-item', i === position.current ? "font-semibold text-foreground" : "text-muted-foreground", i === 4 && camp === 4 && "text-gold-text")}>
-            {c}
+            <span className="inline-flex items-center gap-2">{Icon && <Icon className="size-4 shrink-0" />}{c}</span>
           </li>
-        ))}
+        ); })}
       </ol>
     </div>
   );
 }
 
 export function CampBadge({ camp }: { camp: number }) {
+  const Icon = CAMP_ICONS[camp] ?? CAMP_ICONS[0];
   return (
     <span
       className={cn(
@@ -54,7 +56,7 @@ export function CampBadge({ camp }: { camp: number }) {
         camp === 4 ? "bg-gold/20 text-foreground" : "bg-accent text-accent-foreground",
       )}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full", camp === 4 ? "bg-gold-text" : "bg-primary")} />
+      <Icon className={cn("size-4 shrink-0", camp === 4 && "text-gold-text")} />
       {CAMPS[camp]}
     </span>
   );

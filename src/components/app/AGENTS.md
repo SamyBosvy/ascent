@@ -10,3 +10,5 @@
 - MobileNavigation owns mobile destinations and keyboard/drawer visibility; global bottom-nav dimensions drive shell padding, safe areas and session/toast clearance — fixed controls never cover the last action.
 
 - Typography roles are defined once in styles.css and applied across authenticated screens and shared overlays; meta ink remains explicit — sizing stays consistent without changing status colours.
+
+- Camp and route-type symbols share icons.tsx and exhaustive mappings — one accessible currentColor SVG vocabulary; action/navigation icons stay separate.

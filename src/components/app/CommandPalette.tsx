@@ -10,7 +10,8 @@ import {
   BarChart3, BookOpen, FileText, Layers, Library, Mountain, Pause, Play, Plus, Search, Settings, Sun, Trophy, Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { must, useRoutes } from "@/lib/data";
+import { must, useRoutes, TYPE_LABEL, type RouteType } from "@/lib/data";
+import { ROUTE_TYPE_ICONS } from "./icons";
 import { timer, useTimer } from "@/lib/timer";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -19,7 +20,7 @@ import { CardDialog } from "./CardDialog";
 
 import { prefixTsQuery, safeTerm } from "@/lib/search";
 
-type Hit = { id: string; label: string; sub?: string; routeId?: string; color?: number | null };
+type Hit = { id: string; label: string; sub?: string; routeId?: string; color?: number | null; type?: RouteType };
 
 function useSearch(q: string, archived: boolean) {
   return useQuery({
@@ -30,7 +31,7 @@ function useSearch(q: string, archived: boolean) {
       if (isOffline()) throw new Error("offline");
       const term = safeTerm(q);
       const tsq = prefixTsQuery(q);
-      let r = supabase.from("routes").select("id, name, archived_at, color").is("deleted_at", null).ilike("name", `%${term}%`);
+      let r = supabase.from("routes").select("id, name, type, archived_at, color").is("deleted_at", null).ilike("name", `%${term}%`);
       if (!archived) r = r.is("archived_at", null);
       let n = supabase.from("notes").select("id, title, body, routes!inner(id, name)").is("routes.deleted_at", null);
       if (!archived) n = n.is("routes.archived_at", null);
@@ -43,7 +44,7 @@ function useSearch(q: string, archived: boolean) {
       ]);
       const name = (x: unknown) => (x as { name?: string } | null)?.name ?? "";
       return {
-        routes: (routes as { id: string; name: string; archived_at: string | null; color: number | null }[]).map((x): Hit => ({ id: x.id, color: x.color, label: x.name, ...(x.archived_at ? { sub: "Archived" } : {}) })),
+        routes: (routes as { id: string; name: string; type: RouteType; archived_at: string | null; color: number | null }[]).map((x): Hit => ({ id: x.id, color: x.color, type: x.type, label: x.name, ...(x.archived_at ? { sub: "Archived" } : {}) })),
         notes: (notes as { id: string; title: string; body: string; routes: unknown }[]).map((x): Hit => ({ id: x.id, label: x.title || x.body.split("\n")[0] || "Untitled", sub: name(x.routes) })),
         cards: (cards as { id: string; front: string; route_id: string; routes: unknown }[]).map((x): Hit => ({ id: x.id, label: x.front, sub: name(x.routes), routeId: x.route_id })),
       };
@@ -129,11 +130,11 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
               {searching && !online ? <p role="alert" className="p-4 body-text text-muted-foreground">You’re offline. Search needs a connection.</p> : searching && searchError ? <div role="alert" className="p-4 body-text text-muted-foreground">Couldn’t search.<Button variant="link" className="h-12" onClick={() => void refetch()}>Try again</Button></div> : waiting ? <p role="status" className="p-4 body-text text-muted-foreground">Searching…</p> : nothing && <Empty headingLevel={2} illustration="path" title="No results" description="Try another search for your routes, notes or cards." primaryAction={<Button onClick={() => { setQ(""); setDebounced(""); }}>Clear search</Button>} />}
               {searching && hits && hits.routes.length > 0 && (
                 <Command.Group heading="Routes" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:meta-text [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
-                  {hits.routes.map((h) => (
+                  {hits.routes.map((h) => { const Icon = h.type ? ROUTE_TYPE_ICONS[h.type] : undefined; return (
                     <Command.Item key={h.id} value={`route-${h.id}`} className={item} onSelect={() => run(() => navigate({ to: "/routes/$id", params: { id: h.id } }))}>
-                      <RouteDot route={h} /><span className="truncate">{h.label}</span>{h.sub && <span className="ml-auto meta-text text-muted-foreground">{h.sub}</span>}
+                      <RouteDot route={h} />{Icon && <Icon className="size-4 shrink-0 text-muted-foreground" />}<span className="truncate">{h.label}</span>{h.type && <span className="sr-only">{TYPE_LABEL[h.type]}</span>}{h.sub && <span className="ml-auto meta-text text-muted-foreground">{h.sub}</span>}
                     </Command.Item>
-                  ))}
+                  ); })}
                 </Command.Group>
               )}
               {searching && hits && hits.notes.length > 0 && (
