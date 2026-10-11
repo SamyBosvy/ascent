@@ -17,3 +17,4 @@
 - Motion uses the SSR-safe live store in src/lib/motion.ts, the global CSS safety net and direct Recharts isAnimationActive props — device changes disable library/chart motion without changing the normal experience.
 - Action feedback shares SuccessTick and handler-only haptic calls; progress transitions activate after mount — accepted outbox writes retain offline success semantics and accessible announcements without entrance animation.
 - NativeSelect delegates to ResponsiveSelect: native for SSR/touch/narrow screens, Radix for fine-pointer desktops with mode latched while open and event-like value changes — all callers retain one accessible picker API.
+- Route detail DOM follows mobile reading order with management actions last; desktop grid placement keeps progress sticky without CSS order or display: contents — keyboard and visual order agree on mobile.

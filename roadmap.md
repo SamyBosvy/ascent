@@ -100,3 +100,7 @@
 - [ ] Secure Vault scheduler setup rejected: "Agent access to secrets is not allowed". User must set the relevant Lovable Cloud agent permission to Ask each time, then resume; no job exists. After permission: transfer server-only cron credential to Vault without displaying it, configure */15 * * * * against production POST /api/public/send-habit-reminders, verify job and manually confirm 200/empty counts. Production target still requires publishing.
 - [x] 289 tests and typography pass, build clean; all eight application data tables confirmed empty; no real opt-in exercised (so account timezone/settings and metadata left unchanged)
 - [x] Recorded usage since Batch 24 report: 1096.564648311 → 1105.964648311 (9.40); pause for scheduler permission rather than bypass restriction
+
+# Batch 25
+- [ ] Match route detail DOM/mobile order; desktop grid placement with sticky progress and actions last
+- [ ] DOM-order regression, full tests and typography; 390px/1280px habit check and database cleanup; account unchanged
