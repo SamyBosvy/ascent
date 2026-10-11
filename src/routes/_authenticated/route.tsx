@@ -187,7 +187,7 @@ function Shell() {
             {online ? `Syncing ${pending} change${pending === 1 ? "" : "s"}…` : `Offline — changes will sync${pending ? ` (${pending} waiting)` : ""}`}
           </div>
         )}
-        <main id="main" tabIndex={-1} className="authenticated-main mx-auto w-full max-w-4xl flex-1 px-4 pt-6 md:px-10 md:pt-10">
+        <main id="main" tabIndex={-1} className={`authenticated-main mx-auto w-full max-w-4xl flex-1 px-4 pt-6 md:px-10 md:pt-10 ${/^\/routes\/[^/]+\/?$/.test(location.pathname) ? "lg:max-w-6xl lg:px-6" : ""}`}>
           <Outlet />
         </main>
       </div>
