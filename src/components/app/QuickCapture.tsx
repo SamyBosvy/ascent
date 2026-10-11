@@ -42,7 +42,11 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
   }, [open]);
 
   const { submitting: submittingSave, submit: submitSave } = useSubmission();
-  function save(e: React.FormEvent) { e.preventDefault(); return submitSave(() => saveRequest(e)); }
+  function save(e: React.FormEvent) { e.preventDefault(); return submitSave(async () => {
+    try { await saveRequest(e); }
+    catch (error) { haptic("warning"); toast.error((error as Error).message); }
+    finally { setBusy(false); }
+  }); }
   async function saveRequest(e: React.FormEvent) {
     e.preventDefault();
     if (!routeId) return;

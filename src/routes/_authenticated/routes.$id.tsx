@@ -165,7 +165,7 @@ function RouteDetail() {
     const title = newMs.trim();
     if (!title) return;
     const { error } = await supabase.from("milestones").insert({ route_id: id, title, position: (milestones.at(-1)?.position ?? -1) + 1 });
-    if (error) { toast.error(`Couldn't add the milestone: ${error.message}`); return; }
+    if (error) { haptic("warning"); toast.error(`Couldn't add the milestone: ${error.message}`); return; }
     setNewMs("");
     msRefresh();
   }
