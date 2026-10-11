@@ -67,3 +67,8 @@
 - [x] Restore original large summit, flag and tent illustrations exactly against 83bf9dd; flag-rise runs for 900ms and is disabled under reduced motion
 - [x] Audit larger custom icon uses; only the explicitly allowed Summits shelf uses 32×40px, others use 16–20px
 - [x] Typography check and 229 tests pass; summit/tent/flag harness checks at 390×844 light/dark show no overflow; harness removed, no persistent data or account changes; recorded credits since previous report: 1014.964648311 → 1022.364648311 (7.40)
+
+# Batch 21
+- [ ] Audit animation/transition sources, including library and JS motion
+- [ ] Global CSS reduced-motion net, shared live preference helper, chart gating; preserve normal motion
+- [ ] Helper/chart tests, full suite and typography check; 390px drawer/dialog/toast/Insights verification; no persistent data or account changes; report credits
