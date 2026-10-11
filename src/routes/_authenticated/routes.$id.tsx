@@ -352,7 +352,7 @@ function RouteDetail() {
           {milestones.map((m, i) => (
             <li key={m.id} className="surface flex items-center gap-1 p-1 pl-2">
               <button onClick={() => toggleMs(m, !m.done)} className="tap flex flex-1 items-center gap-3 text-left" aria-pressed={m.done}>
-                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md b${m.done ? "border-primary bg-primary text-primary-foreground" : "border-input"}`}>
+                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${m.done ? "border-primary bg-primary text-primary-foreground" : "border-input"}`}>
                   {m.done && <Check className="h-4 w-4" />}
                 </span>
                 <span className={m.done ? "text-muted-foreground line-through" : ""}>{m.title}</span>
