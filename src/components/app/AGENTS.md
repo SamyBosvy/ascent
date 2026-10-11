@@ -14,3 +14,4 @@
 - Camp and route-type symbols share icons.tsx and exhaustive mappings — one accessible currentColor SVG vocabulary; action/navigation icons stay separate.
 
 - Route detail groups labelled work/progress regions in a desktop grid; below lg their contents retain the original single-column order — CSS placement avoids duplicated forms or fetching.
+- Motion uses the SSR-safe live store in src/lib/motion.ts, the global CSS safety net and MotionChart wrappers — device changes disable library/chart motion without changing the normal experience.
