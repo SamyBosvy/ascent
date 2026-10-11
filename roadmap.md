@@ -64,6 +64,6 @@
 - [x] Temporary book/habit routes and related data cleanup confirmed in database; unchanged account settings/metadata; recorded credits since Batch 18: 1000.264648311 → 1014.964648311 (14.70)
 
 # Batch 20
-- [ ] Restore original large summit, flag and tent illustrations; verify flag-rise and reduced motion
-- [ ] Audit larger custom icon uses; retain small icons and allowed shelf icon
-- [ ] Typography check, full test suite and 390px light/dark harness checks; no persistent data or account changes; report credits
+- [x] Restore original large summit, flag and tent illustrations exactly against 83bf9dd; flag-rise runs for 900ms and is disabled under reduced motion
+- [x] Audit larger custom icon uses; only the explicitly allowed Summits shelf uses 32×40px, others use 16–20px
+- [x] Typography check and 229 tests pass; summit/tent/flag harness checks at 390×844 light/dark show no overflow; harness removed, no persistent data or account changes; recorded credits since previous report: 1014.964648311 → 1022.364648311 (7.40)
