@@ -4,3 +4,6 @@
 - Review has a persistent polite answer region, an explicit reveal button and focus transitions to the rating group and next reveal control — touch and keyboard share the same flow.
 - Insights tables are generated from the same data as their aria-hidden charts — assistive readers receive equivalent values.
 - The ⌘K palette (`CommandPalette`) searches server-side with 5-result limits and excludes archived/deleted routes unless toggled; app shortcuts stay silent while any dialog is open.
+- Empty lists share illustrated Empty and existing-flow actions; loading/errors/onboarding win — no misleading empties.
+- Today time logging reuses QuickCapture's outbox/lock — no competing write flow.
+- Editable overlays share ResponsiveDialog, latching mode while open and guarding dirty/saving closes; footers live outside scrollable forms — resize preserves input and keyboard space preserves Save.
