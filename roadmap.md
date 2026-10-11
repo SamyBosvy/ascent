@@ -102,5 +102,5 @@
 - [x] Recorded usage since Batch 24 report: 1096.564648311 → 1105.964648311 (9.40); pause for scheduler permission rather than bypass restriction
 
 # Batch 25
-- [ ] Match route detail DOM/mobile order; desktop grid placement with sticky progress and actions last
-- [ ] DOM-order regression, full tests and typography; 390px/1280px habit check and database cleanup; account unchanged
+- [x] Match route detail DOM/mobile order; desktop grid placement with sticky progress and actions last
+- [x] DOM-order regression, 293 tests and typography pass; build clean; 390px/1280px habit checks in light/dark pass without overflow; temporary routes removed; settings/metadata unchanged
