@@ -211,6 +211,71 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          failure_count: number
+          id: string
+          last_success_at: string | null
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          failure_count?: number
+          id?: string
+          last_success_at?: string | null
+          p256dh: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          failure_count?: number
+          id?: string
+          last_success_at?: string | null
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reminder_log: {
+        Row: {
+          local_date: string
+          route_id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          local_date: string
+          route_id: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          local_date?: string
+          route_id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_log_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           card_id: string
@@ -266,6 +331,8 @@ export type Database = {
           habit_target: number | null
           id: string
           name: string
+          reminder_enabled: boolean
+          reminder_time: string
           speech_lang: string | null
           status: Database["public"]["Enums"]["route_status"]
           summited_at: string | null
@@ -287,6 +354,8 @@ export type Database = {
           habit_target?: number | null
           id?: string
           name: string
+          reminder_enabled?: boolean
+          reminder_time?: string
           speech_lang?: string | null
           status?: Database["public"]["Enums"]["route_status"]
           summited_at?: string | null
@@ -308,6 +377,8 @@ export type Database = {
           habit_target?: number | null
           id?: string
           name?: string
+          reminder_enabled?: boolean
+          reminder_time?: string
           speech_lang?: string | null
           status?: Database["public"]["Enums"]["route_status"]
           summited_at?: string | null
@@ -487,6 +558,15 @@ export type Database = {
           route_id: string
           session_count: number
         }[]
+      }
+      save_push_subscription: {
+        Args: {
+          _auth: string
+          _endpoint: string
+          _p256dh: string
+          _user_agent?: string
+        }
+        Returns: undefined
       }
       swap_milestones: { Args: { _a: string; _b: string }; Returns: undefined }
       undo_review: {

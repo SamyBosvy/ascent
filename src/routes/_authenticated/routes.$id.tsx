@@ -31,6 +31,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { SummitOverlay } from "@/components/app/SummitOverlay";
 import { PacingLine } from "@/components/app/Pacing";
 import { HabitHeatmap, StreakLine } from "@/components/app/Habit";
+import { HabitReminderSettings } from "@/components/app/HabitReminderSettings";
 import { z } from "zod";
 import { CardDialog } from "@/components/app/CardDialog";
 import { Empty, NativeSelect, SectionTitle } from "@/components/app/fields";
@@ -337,6 +338,7 @@ function RouteDetail() {
         <section aria-labelledby="route-checkins-heading" className="order-2 min-w-0">
           <div id="route-checkins-heading"><SectionTitle>Check-ins</SectionTitle></div>
           {!history ? <InlineSkeleton /> : !history.get(id)?.length ? <Empty illustration="calendar" title="No check-ins yet" description="Your habit practice will appear here." primaryAction={<Button disabled={checkinBusy} onClick={() => void checkIn(false)}>Check in</Button>} /> : <HabitHeatmap dates={history.get(id)} today={localDate()} />}
+          <div className="mt-4"><HabitReminderSettings route={route} /></div>
         </section>
       )}
 

@@ -92,6 +92,13 @@
       "when": 1791426282920,
       "tag": "0012_activity_strip",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791684302945,
+      "tag": "0013_habit_push_reminders",
+      "breakpoints": true
     }
   ]
 }

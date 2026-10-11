@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/app/ResponsiveDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { HabitReminderFields } from "./HabitReminderFields";
 import { Textarea } from "@/components/ui/textarea";
 
 import { ROUTE_TYPE_ICONS } from "./icons";
@@ -49,6 +50,8 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
   const [pages, setPages] = useState(route?.total_pages ? String(route.total_pages) : "");
   const [freq, setFreq] = useState(route?.habit_frequency ?? "daily");
   const [times, setTimes] = useState(route?.habit_target ? String(route.habit_target) : "3");
+  const [reminderEnabled, setReminderEnabled] = useState(route?.reminder_enabled ?? false);
+  const [reminderTime, setReminderTime] = useState(route?.reminder_time?.slice(0,5) ?? "19:00");
   const [lang, setLang] = useState(route?.speech_lang ?? "");
   const [pickedColour, setPickedColour] = useState<number | null>(route ? routeColour(route) : null);
   const colour = pickedColour ?? leastUsedColour(existingRoutes ?? []);
@@ -61,6 +64,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
     pages: type === "book" ? wholeError(pages, 1, LIMITS.pages, "Total pages") : null,
     times: type === "habit" && freq === "x_per_week" ? (times.trim() === "" ? "Enter times per week." : wholeError(times, 1, LIMITS.times, "Times per week")) : null,
     lang: type === "language" && lang.trim() && !SPEECH_LANG_RE.test(lang.trim()) ? "Use a language code like es-ES or ja-JP." : null,
+    reminder: type === "habit" && reminderEnabled && !/^([01]\d|2[0-3]):[0-5]\d$/.test(reminderTime) ? "Choose a valid reminder time." : null,
   };
   const valid = !Object.values(errors).some(Boolean);
   const show = (k: keyof typeof errors) => (tried || k !== "name") && errors[k];
@@ -85,6 +89,8 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
       target_date: target || null,
       total_pages: total,
       habit_frequency: type === "habit" ? freq : null,
+      reminder_enabled: type === "habit" && reminderEnabled,
+      reminder_time: reminderTime || "19:00",
       habit_target: type === "habit" && freq === "x_per_week" ? parseInt(times, 10) : null,
       speech_lang: type === "language" && lang.trim() ? lang.trim() : null,
     };
@@ -128,7 +134,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
   const err = (k: keyof typeof errors) => (show(k) ? <p className="meta-text text-destructive-strong">{errors[k]}</p> : null);
 
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={editing ? "Edit route" : "New route"} submitting={busy || submittingSave} className="sm:max-w-md" footer={<Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave}>{editing ? "Save" : "Start climbing"}</Button>}>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={editing ? "Edit route" : "New route"} dirty={reminderEnabled !== (route?.reminder_enabled ?? false) || reminderTime !== (route?.reminder_time?.slice(0,5) ?? "19:00")} submitting={busy || submittingSave} className="sm:max-w-md" footer={<Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave}>{editing ? "Save" : "Start climbing"}</Button>}>
         <form id={formId} onSubmit={save} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="rn">Name</Label>
@@ -190,6 +196,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
               {err("lang")}
             </div>
           )}
+          {type === "habit" && <><HabitReminderFields enabled={reminderEnabled} time={reminderTime} onEnabled={setReminderEnabled} onTime={setReminderTime} disabled={busy || submittingSave} />{err("reminder")}</>}
           <div className="space-y-2">
             <Label htmlFor="rd">Description (optional)</Label>
             <Textarea id="rd" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />

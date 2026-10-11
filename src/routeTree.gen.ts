@@ -24,6 +24,7 @@ import { Route as AuthenticatedRoutesIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedRoutesIdRouteImport } from './routes/_authenticated/routes.$id'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedSettingsAccessRouteImport } from './routes/_authenticated/settings.access'
+import { Route as ApiPublicSendHabitRemindersRouteImport } from './routes/api/public/send-habit-reminders'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -102,6 +103,12 @@ const AuthenticatedSettingsAccessRoute =
     path: '/settings/access',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicSendHabitRemindersRoute =
+  ApiPublicSendHabitRemindersRouteImport.update({
+    id: '/api/public/send-habit-reminders',
+    path: '/api/public/send-habit-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/notes/new': typeof AuthenticatedNotesNewRoute
   '/routes/$id': typeof AuthenticatedRoutesIdRoute
   '/settings/access': typeof AuthenticatedSettingsAccessRoute
+  '/api/public/send-habit-reminders': typeof ApiPublicSendHabitRemindersRoute
   '/notes/': typeof AuthenticatedNotesIndexRoute
   '/routes/': typeof AuthenticatedRoutesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -131,6 +139,7 @@ export interface FileRoutesByTo {
   '/notes/new': typeof AuthenticatedNotesNewRoute
   '/routes/$id': typeof AuthenticatedRoutesIdRoute
   '/settings/access': typeof AuthenticatedSettingsAccessRoute
+  '/api/public/send-habit-reminders': typeof ApiPublicSendHabitRemindersRoute
   '/notes': typeof AuthenticatedNotesIndexRoute
   '/routes': typeof AuthenticatedRoutesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/_authenticated/notes/new': typeof AuthenticatedNotesNewRoute
   '/_authenticated/routes/$id': typeof AuthenticatedRoutesIdRoute
   '/_authenticated/settings/access': typeof AuthenticatedSettingsAccessRoute
+  '/api/public/send-habit-reminders': typeof ApiPublicSendHabitRemindersRoute
   '/_authenticated/notes/': typeof AuthenticatedNotesIndexRoute
   '/_authenticated/routes/': typeof AuthenticatedRoutesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/notes/new'
     | '/routes/$id'
     | '/settings/access'
+    | '/api/public/send-habit-reminders'
     | '/notes/'
     | '/routes/'
     | '/settings/'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/notes/new'
     | '/routes/$id'
     | '/settings/access'
+    | '/api/public/send-habit-reminders'
     | '/notes'
     | '/routes'
     | '/settings'
@@ -200,6 +212,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notes/new'
     | '/_authenticated/routes/$id'
     | '/_authenticated/settings/access'
+    | '/api/public/send-habit-reminders'
     | '/_authenticated/notes/'
     | '/_authenticated/routes/'
     | '/_authenticated/settings/'
@@ -209,6 +222,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicSendHabitRemindersRoute: typeof ApiPublicSendHabitRemindersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -318,6 +332,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccessRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/send-habit-reminders': {
+      id: '/api/public/send-habit-reminders'
+      path: '/api/public/send-habit-reminders'
+      fullPath: '/api/public/send-habit-reminders'
+      preLoaderRoute: typeof ApiPublicSendHabitRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -358,6 +379,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicSendHabitRemindersRoute: ApiPublicSendHabitRemindersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
