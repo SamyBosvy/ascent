@@ -390,6 +390,24 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduler_tokens: {
+        Row: {
+          created_at: string
+          name: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          token?: string
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           id: string
