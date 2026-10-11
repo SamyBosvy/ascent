@@ -2,9 +2,11 @@ import { CAMP_ICONS } from "./icons";
 import { CAMPS } from "@/lib/camp";
 import { cn } from "@/lib/utils";
 import { climberPosition, visualScoreForCamp } from '@/lib/visualProgress';
+import { useProgressFeedback } from './ProgressFeedback';
 
 /** Continuous climber constrained to the displayed camp, including manual overrides. */
 export function Mountain({ camp, score = 0, className }: { camp: number; score?: number; className?: string }) {
+  const feedback = useProgressFeedback();
   const visualScore = visualScoreForCamp(score, camp);
   const position = climberPosition(visualScore);
   const H = 320;
@@ -23,7 +25,7 @@ export function Mountain({ camp, score = 0, className }: { camp: number; score?:
           strokeDasharray="4 5"
         />
         {xs.map((x, i) => (
-          <circle key={i} cx={x} cy={ys[i]} r={i === 4 ? 7 : 5} className={i <= camp ? (i === 4 ? "fill-gold-text" : "fill-primary") : "fill-muted-foreground"} />
+          <circle key={i} cx={x} cy={ys[i]} r={i === 4 ? 7 : 5} className={cn(feedback, i <= camp ? (i === 4 ? "fill-gold-text" : "fill-primary") : "fill-muted-foreground")} />
         ))}
         <g className="mountain-climber" style={{ transform: `translate(${position.x}px, ${position.y}px)` }}>
           <circle r="10" className={camp === 4 ? "fill-gold" : "fill-primary"} opacity="0.25" />
@@ -63,10 +65,11 @@ export function CampBadge({ camp }: { camp: number }) {
 }
 
 export function AltitudeBar({ camp }: { camp: number }) {
+  const feedback = useProgressFeedback();
   return (
     <div className="flex gap-1" aria-hidden>
       {CAMPS.map((_, i) => (
-        <div key={i} className={cn("h-1.5 flex-1 rounded-full", i <= camp ? (camp === 4 ? "bg-gold-text" : "bg-primary") : "bg-muted")} />
+        <div key={i} className={cn("h-1.5 flex-1 rounded-full", feedback, i <= camp ? (camp === 4 ? "bg-gold-text" : "bg-primary") : "bg-muted")} />
       ))}
     </div>
   );

@@ -14,6 +14,8 @@ import { InlineSkeleton } from "./ScreenSkeleton";
 import { Empty, NativeSelect } from "./fields";
 import { logSession } from "@/lib/sessions";
 import { requireOnline } from "@/lib/sync";
+import { haptic } from "@/lib/feedback";
+import { successFeedback } from "./SuccessTick";
 
 const LAST_KEY = "ascent:last-route";
 
@@ -40,11 +42,15 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
   }, [open]);
 
   const { submitting: submittingSave, submit: submitSave } = useSubmission();
-  function save(e: React.FormEvent) { e.preventDefault(); return submitSave(() => saveRequest(e)); }
+  function save(e: React.FormEvent) { e.preventDefault(); return submitSave(async () => {
+    try { await saveRequest(e); }
+    catch (error) { haptic("warning"); toast.error((error as Error).message); }
+    finally { setBusy(false); }
+  }); }
   async function saveRequest(e: React.FormEvent) {
     e.preventDefault();
     if (!routeId) return;
-    if (kind === "note" && !requireOnline("Saving a note")) return;
+    if (kind === "note" && !requireOnline("Saving a note")) { haptic("warning"); return; }
     setBusy(true);
     localStorage.setItem(LAST_KEY, routeId);
     let error: { message: string } | null = null;
@@ -54,8 +60,9 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
       try { await logSession({ route_id: routeId, minutes: Math.max(1, parseInt(minutes) || 0), note: text || null }); } catch (e) { error = e as Error; }
     }
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success(kind === "note" ? "Note saved." : "Session logged. Keep climbing.");
+    if (error) { haptic("warning"); toast.error(error.message); return; }
+    if (kind === "session") successFeedback("Session logged. Keep climbing.");
+    else toast.success("Note saved.");
     refresh();
     onOpenChange(false);
   }

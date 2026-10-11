@@ -12,6 +12,8 @@ import { NativeSelect } from "./fields";
 import { CardText } from "./CardText";
 import { Checkbox } from "@/components/ui/checkbox";
 import { hasCloze } from "@/lib/cardText";
+import { haptic } from "@/lib/feedback";
+import { successFeedback } from "./SuccessTick";
 
 export function CardDialog({
   open,
@@ -57,19 +59,19 @@ export function CardDialog({
   const isLang = route?.type === "language";
 
   const { submitting: submittingSave, submit: submitSave } = useSubmission();
-  function save(e: React.FormEvent, again = false) { e.preventDefault(); return submitSave(() => saveRequest(e, again)); }
+  function save(e: React.FormEvent, again = false) { e.preventDefault(); return submitSave(async () => { try { await saveRequest(e, again); } catch (error) { haptic("warning"); toast.error((error as Error).message); } }); }
   async function saveRequest(e: React.FormEvent, again = false) {
     e.preventDefault();
     if (!front.trim() || !back.trim() || !routeId) return;
     if (card) {
       const patch = { front: front.trim(), back: back.trim(), example: isLang && example ? example : null, pronunciation: isLang && pron ? pron : null };
       const { error } = await supabase.from("cards").update(patch).eq("id", card.id);
-      if (error) { toast.error(error.message); return; }
+      if (error) { haptic("warning"); toast.error(error.message); return; }
       if (routeId !== card.route_id) {
         const { error: mErr } = await supabase.rpc("move_cards", { _ids: [card.id], _route: routeId });
-        if (mErr) { toast.error(`Saved, but couldn't move it: ${mErr.message}`); }
+        if (mErr) { haptic("warning"); toast.error(`Saved, but couldn't move it: ${mErr.message}`); }
       }
-      toast.success("Card updated.");
+      successFeedback("Card updated.");
       onSaved?.({ ...card, ...patch, route_id: routeId });
       refresh();
       onOpenChange(false);
@@ -79,8 +81,8 @@ export function CardDialog({
     const rows = [{ ...base, front: front.trim(), back: back.trim() }];
     if (reverse && !hasCloze(front)) rows.push({ ...base, front: back.trim(), back: front.trim(), pronunciation: null });
     const { error } = await supabase.from("cards").insert(rows);
-    if (error) { toast.error(error.message); return; }
-    toast.success(reverse ? "Card and reverse card added." : "Card added.");
+    if (error) { haptic("warning"); toast.error(error.message); return; }
+    successFeedback(reverse ? "Card and reverse card added." : "Card added.");
     refresh();
     if (again) {
       setFront("");

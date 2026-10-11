@@ -438,6 +438,14 @@
 }
 
 /* App-wide net, including library overlays, toasts and pseudo-elements. */
+@keyframes success-tick { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.success-tick { stroke-dasharray: 1; stroke-dashoffset: 0; animation: success-tick 250ms ease-out; }
+.progress-feedback { transition: width 350ms ease-out, background-color 350ms ease-out, fill 350ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .success-tick { animation: none !important; }
+  .progress-feedback { transition: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto !important; }
   *, *::before, *::after {
