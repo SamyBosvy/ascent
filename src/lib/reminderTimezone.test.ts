@@ -11,7 +11,7 @@ import { ensureReminderTimezone } from "./reminderTimezone";
 beforeEach(() => {
   vi.restoreAllMocks(); vi.clearAllMocks();
   const real = Intl.DateTimeFormat;
-  vi.spyOn(Intl, "DateTimeFormat").mockImplementation(((...args: Parameters<typeof Intl.DateTimeFormat>) => {
+  vi.spyOn(Intl, "DateTimeFormat").mockImplementation((function (...args: Parameters<typeof Intl.DateTimeFormat>) {
     const formatter = new real(...args);
     if (!args.length) vi.spyOn(formatter, "resolvedOptions").mockReturnValue({ ...formatter.resolvedOptions(), timeZone: "Australia/Sydney" });
     return formatter;
@@ -36,7 +36,7 @@ it("creates a missing settings row with defaults without overwriting concurrent 
 });
 it("ignores invalid device timezones without any database access", async () => {
   vi.restoreAllMocks(); const real = Intl.DateTimeFormat;
-  vi.spyOn(Intl, "DateTimeFormat").mockImplementation(((...args: Parameters<typeof Intl.DateTimeFormat>) => {
+  vi.spyOn(Intl, "DateTimeFormat").mockImplementation((function (...args: Parameters<typeof Intl.DateTimeFormat>) {
     const formatter = new real(...args);
     if (!args.length) vi.spyOn(formatter, "resolvedOptions").mockReturnValue({ ...formatter.resolvedOptions(), timeZone: "Invalid/Zone" });
     return formatter;
