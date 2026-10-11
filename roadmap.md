@@ -62,3 +62,8 @@
 - [x] Accessible labelled sections and route-only width; no fetching/behaviour changes
 - [x] All tests (229 passing), typography check, 1280×900 and 390×844 both-theme checks; no overflow, sticky sidebar and reachable actions verified
 - [x] Temporary book/habit routes and related data cleanup confirmed in database; unchanged account settings/metadata; recorded credits since Batch 18: 1000.264648311 → 1014.964648311 (14.70)
+
+# Batch 20
+- [x] Restore original large summit, flag and tent illustrations exactly against 83bf9dd; flag-rise runs for 900ms and is disabled under reduced motion
+- [x] Audit larger custom icon uses; only the explicitly allowed Summits shelf uses 32×40px, others use 16–20px
+- [x] Typography check and 229 tests pass; summit/tent/flag harness checks at 390×844 light/dark show no overflow; harness removed, no persistent data or account changes; recorded credits since previous report: 1014.964648311 → 1022.364648311 (7.40)
