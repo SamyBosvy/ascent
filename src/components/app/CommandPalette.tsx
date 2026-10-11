@@ -88,7 +88,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
     { to: "/settings", label: "Settings", icon: Settings },
   ] as const;
   const match = (s: string) => !q.trim() || s.toLowerCase().includes(q.trim().toLowerCase());
-  const item = "flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-3 text-sm aria-selected:bg-accent aria-selected:text-accent-foreground";
+  const item = "flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-3 body-text aria-selected:bg-accent aria-selected:text-accent-foreground";
   const mine = t && current && t.routeId === current.id;
 
   const actions: { key: string; label: string; icon: typeof Plus; onSelect: () => void }[] = [
@@ -121,41 +121,41 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
               <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               <Command.Input value={q} onValueChange={setQ} placeholder="Search or type a command…" className="h-14 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground" />
             </div>
-            <label className="flex items-center justify-end gap-2 border-b px-3 py-2 text-xs text-muted-foreground">
+            <label className="flex items-center justify-end gap-2 border-b px-3 py-2 meta-text text-muted-foreground">
               <Switch checked={archived} onCheckedChange={setArchived} aria-label="Show archived" />
               Show archived
             </label>
             <Command.List className="max-h-[60vh] overflow-y-auto p-2">
-              {searching && !online ? <p role="alert" className="p-4 text-sm text-muted-foreground">You’re offline. Search needs a connection.</p> : searching && searchError ? <div role="alert" className="p-4 text-sm text-muted-foreground">Couldn’t search.<Button variant="link" className="h-12" onClick={() => void refetch()}>Try again</Button></div> : waiting ? <p role="status" className="p-4 text-sm text-muted-foreground">Searching…</p> : nothing && <Empty headingLevel={2} illustration="path" title="No results" description="Try another search for your routes, notes or cards." primaryAction={<Button onClick={() => { setQ(""); setDebounced(""); }}>Clear search</Button>} />}
+              {searching && !online ? <p role="alert" className="p-4 body-text text-muted-foreground">You’re offline. Search needs a connection.</p> : searching && searchError ? <div role="alert" className="p-4 body-text text-muted-foreground">Couldn’t search.<Button variant="link" className="h-12" onClick={() => void refetch()}>Try again</Button></div> : waiting ? <p role="status" className="p-4 body-text text-muted-foreground">Searching…</p> : nothing && <Empty headingLevel={2} illustration="path" title="No results" description="Try another search for your routes, notes or cards." primaryAction={<Button onClick={() => { setQ(""); setDebounced(""); }}>Clear search</Button>} />}
               {searching && hits && hits.routes.length > 0 && (
-                <Command.Group heading="Routes" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
+                <Command.Group heading="Routes" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:meta-text [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
                   {hits.routes.map((h) => (
                     <Command.Item key={h.id} value={`route-${h.id}`} className={item} onSelect={() => run(() => navigate({ to: "/routes/$id", params: { id: h.id } }))}>
-                      <RouteDot route={h} /><span className="truncate">{h.label}</span>{h.sub && <span className="ml-auto text-xs text-muted-foreground">{h.sub}</span>}
+                      <RouteDot route={h} /><span className="truncate">{h.label}</span>{h.sub && <span className="ml-auto meta-text text-muted-foreground">{h.sub}</span>}
                     </Command.Item>
                   ))}
                 </Command.Group>
               )}
               {searching && hits && hits.notes.length > 0 && (
-                <Command.Group heading="Notes" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
+                <Command.Group heading="Notes" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:meta-text [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
                   {hits.notes.map((h) => (
                     <Command.Item key={h.id} value={`note-${h.id}`} className={item} onSelect={() => run(() => navigate({ to: "/notes/$id", params: { id: h.id } }))}>
-                      <FileText className="h-4 w-4 shrink-0" aria-hidden /><span className="truncate">{h.label}</span><span className="ml-auto shrink-0 text-xs text-muted-foreground">{h.sub}</span>
+                      <FileText className="h-4 w-4 shrink-0" aria-hidden /><span className="truncate">{h.label}</span><span className="ml-auto shrink-0 meta-text text-muted-foreground">{h.sub}</span>
                     </Command.Item>
                   ))}
                 </Command.Group>
               )}
               {searching && hits && hits.cards.length > 0 && (
-                <Command.Group heading="Cards" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
+                <Command.Group heading="Cards" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:meta-text [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
                   {hits.cards.map((h) => (
                     <Command.Item key={h.id} value={`card-${h.id}`} className={item} onSelect={() => run(() => navigate({ to: "/cards", search: { route: h.routeId, q: safeTerm(h.label).slice(0, 80) } }))}>
-                      <Library className="h-4 w-4 shrink-0" aria-hidden /><span className="truncate">{h.label}</span><span className="ml-auto shrink-0 text-xs text-muted-foreground">{h.sub}</span>
+                      <Library className="h-4 w-4 shrink-0" aria-hidden /><span className="truncate">{h.label}</span><span className="ml-auto shrink-0 meta-text text-muted-foreground">{h.sub}</span>
                     </Command.Item>
                   ))}
                 </Command.Group>
               )}
               {shownActions.length > 0 && (
-                <Command.Group heading="Actions" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
+                <Command.Group heading="Actions" className="mb-2 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:meta-text [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
                   {shownActions.map((a) => (
                     <Command.Item key={a.key} value={a.key} className={item} onSelect={a.onSelect}>
                       <a.icon className="h-4 w-4 shrink-0" aria-hidden />{a.label}
@@ -164,7 +164,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
                 </Command.Group>
               )}
               {shownPages.length > 0 && (
-                <Command.Group heading="Go to" className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
+                <Command.Group heading="Go to" className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:meta-text [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
                   {shownPages.map((p) => (
                     <Command.Item key={p.to} value={`go-${p.to}`} className={item} onSelect={() => go(p.to)}>
                       <p.icon className="h-4 w-4 shrink-0" aria-hidden />Go to {p.label}

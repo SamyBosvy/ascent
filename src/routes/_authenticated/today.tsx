@@ -71,8 +71,8 @@ function Today() {
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3"><div>
-        <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", ...(settings ? { timeZone: settings.timezone } : {}) })}</p>
-        <h1 className="mt-1 text-3xl font-semibold">{greeting}{name ? `, ${name}` : ''}.</h1>
+        <p className="meta-text text-muted-foreground">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", ...(settings ? { timeZone: settings.timezone } : {}) })}</p>
+        <h1 className="mt-1 page-title">{greeting}{name ? `, ${name}` : ''}.</h1>
       </div><Button variant="outline" className="h-12" disabled={!routes.some(r => r.status === 'active' || r.status === 'paused')} onClick={() => setLogOpen(true)}><Play className="size-4" />Log time</Button></div>
       <ActivityStrip />
       <QuickCapture open={logOpen} onOpenChange={setLogOpen} initialKind="session" initialRouteId={routes.filter(r => r.status === 'active').length === 1 ? routes.find(r => r.status === 'active')?.id : undefined} />
@@ -85,11 +85,11 @@ function Today() {
       {cont && <ContinueCard route={cont.route} agg={stats.get(cont.route.id)} timerBusy={!!running} onCheckin={() => toggle(cont.route.id, false)} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {due === 0 ? (totalCards === 0 ? <Empty headingLevel={2} illustration="cards" title="No cards yet" description="Flashcards you add will be scheduled here." primaryAction={<Button onClick={() => setCardOpen(true)}>New card</Button>} /> : <div className="surface flex flex-col justify-center gap-2 p-5"><h2 className="font-display text-base font-semibold">Nothing due</h2><p className="text-sm text-muted-foreground">{nextDueLabel(nextDue)}</p><Link to="/review" className="inline-flex min-h-12 items-center text-sm text-primary-strong underline underline-offset-4">Open review</Link></div>) : <div className="surface flex flex-col justify-between gap-4 p-5">
+        {due === 0 ? (totalCards === 0 ? <Empty headingLevel={2} illustration="cards" title="No cards yet" description="Flashcards you add will be scheduled here." primaryAction={<Button onClick={() => setCardOpen(true)}>New card</Button>} /> : <div className="surface flex flex-col justify-center gap-2 p-5"><h2 className="card-title">Nothing due</h2><p className="meta-text text-muted-foreground">{nextDueLabel(nextDue)}</p><Link to="/review" className="inline-flex min-h-12 items-center body-text text-primary-strong underline underline-offset-4">Open review</Link></div>) : <div className="surface flex flex-col justify-between gap-4 p-5">
           <div>
-            <p className="text-sm text-muted-foreground">Flashcards due</p>
-            <p className="mt-1 font-display text-4xl font-semibold">{due}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{due ? `${due} card${due > 1 ? "s" : ""} due. Keep climbing.` : "Nothing due. Clear skies."}</p>
+            <p className="meta-text text-muted-foreground">Flashcards due</p>
+            <p className="mt-1 stat-text">{due}</p>
+            <p className="mt-1 meta-text text-muted-foreground">{due ? `${due} card${due > 1 ? "s" : ""} due. Keep climbing.` : "Nothing due. Clear skies."}</p>
             {goal != null && reviewsToday != null && (
               <div className="mt-3 space-y-1">
                 <div
@@ -99,7 +99,7 @@ function Today() {
                 >
                   <div className="h-full rounded-full bg-primary transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (reviewsToday / goal) * 100)}%` }} />
                 </div>
-                <p className="text-xs text-muted-foreground">{reviewsToday >= goal ? `Daily goal reached: ${reviewsToday}/${goal}.` : `${reviewsToday}/${goal} reviews toward today's goal.`}</p>
+                <p className="meta-text text-muted-foreground">{reviewsToday >= goal ? `Daily goal reached: ${reviewsToday}/${goal}.` : `${reviewsToday}/${goal} reviews toward today's goal.`}</p>
               </div>
             )}
           </div>
@@ -112,9 +112,9 @@ function Today() {
           )}
         </div>}
         <div className="surface p-5">
-          <p className="text-sm text-muted-foreground">Time logged this week</p>
-          <p className="mt-1 font-display text-4xl font-semibold">{minutesLabel(weekMinutes)}</p>
-          <p className="mt-1 text-sm text-muted-foreground">Since {settings?.week_start === 0 ? "Sunday" : "Monday"}.</p>
+          <p className="meta-text text-muted-foreground">Time logged this week</p>
+          <p className="mt-1 stat-text">{minutesLabel(weekMinutes)}</p>
+          <p className="mt-1 meta-text text-muted-foreground">Since {settings?.week_start === 0 ? "Sunday" : "Monday"}.</p>
         </div>
       </div>
 
@@ -130,8 +130,8 @@ function Today() {
               return (
                 <li key={h.id} className="surface flex items-center gap-3 p-3 pl-4">
                   <Link to="/routes/$id" params={{ id: h.id }} className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 font-medium"><RouteDot route={h} /><span className="truncate">{h.name}</span></p>
-                    <p className="text-xs text-muted-foreground">{Math.round(habitConsistency(h, stats.get(h.id)) * 100)}% over the last 30 days</p>
+                    <p className="flex items-center gap-2 card-title"><RouteDot route={h} /><span className="truncate">{h.name}</span></p>
+                    <p className="meta-text text-muted-foreground">{Math.round(habitConsistency(h, stats.get(h.id)) * 100)}% over the last 30 days</p>
                     <StreakLine route={h} dates={history?.get(h.id)} today={today} />
                   </Link>
                   {checkedToday ? (
@@ -143,7 +143,7 @@ function Today() {
                       <Check className="h-4 w-4" /> Check in
                     </Button>
                   ) : (
-                    <span className="flex h-12 items-center gap-1 px-3 text-sm text-primary-strong"><Check className="h-4 w-4" /> Done</span>
+                    <span className="flex h-12 items-center gap-1 px-3 body-text text-primary-strong"><Check className="h-4 w-4" /> Done</span>
                   )}
                 </li>
               );
@@ -153,7 +153,7 @@ function Today() {
       </section>
 
       <section>
-        <SectionTitle action={<Link to="/routes" className="text-sm text-primary-strong">All routes</Link>}>Active routes</SectionTitle>
+        <SectionTitle action={<Link to="/routes" className="body-text text-primary-strong">All routes</Link>}>Active routes</SectionTitle>
         {active.length === 0 ? (
           <Empty illustration="tent" title="No active routes" description="Your current learning routes will appear here." primaryAction={<Button onClick={() => setRouteOpen(true)}>Create route</Button>} />
         ) : (
@@ -195,7 +195,7 @@ function ContinueCard({ route, agg, timerBusy, onCheckin }: { route: RouteRow; a
     action = <Button asChild className="h-12"><Link to="/routes/$id" params={{ id: route.id }} search={{ focus: "page" }}><BookOpen className="h-4 w-4" /> Update page</Link></Button>;
   } else if (route.type === "habit") {
     action = agg?.checked_today
-      ? <span className="flex h-12 items-center gap-1 text-sm text-primary-strong"><Check className="h-4 w-4" /> Checked in today</span>
+      ? <span className="flex h-12 items-center gap-1 body-text text-primary-strong"><Check className="h-4 w-4" /> Checked in today</span>
       : <Button className="h-12" onClick={onCheckin}><Check className="h-4 w-4" /> Check in</Button>;
   } else if (route.type === "language" || cards > 0) {
     action = <Button asChild className="h-12"><Link to="/review" search={{ route: route.id }}><Layers className="h-4 w-4" /> Start review</Link></Button>;
@@ -207,8 +207,8 @@ function ContinueCard({ route, agg, timerBusy, onCheckin }: { route: RouteRow; a
   return (
     <section aria-labelledby="continue-title" className="surface flex flex-wrap items-center justify-between gap-3 p-5">
       <div className="min-w-0">
-        <p id="continue-title" className="text-sm text-muted-foreground">Continue where you left off</p>
-        <Link to="/routes/$id" params={{ id: route.id }} className="mt-1 flex items-center gap-2 font-display text-xl font-semibold hover:underline"><RouteDot route={route} /><span className="truncate">{route.name}</span></Link>
+        <p id="continue-title" className="body-text text-muted-foreground">Continue where you left off</p>
+        <Link to="/routes/$id" params={{ id: route.id }} className="mt-1 flex items-center gap-2 card-title hover:underline"><RouteDot route={route} /><span className="truncate">{route.name}</span></Link>
         <PacingLine route={route} agg={agg} className="mt-1" />
       </div>
       {action}

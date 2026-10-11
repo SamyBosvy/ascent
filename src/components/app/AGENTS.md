@@ -8,3 +8,5 @@
 - Today time logging reuses QuickCapture's outbox/lock — no competing write flow.
 - Editable overlays share ResponsiveDialog, latching mode while open and guarding dirty/saving closes; footers live outside scrollable forms — resize preserves input and keyboard space preserves Save.
 - MobileNavigation owns mobile destinations and keyboard/drawer visibility; global bottom-nav dimensions drive shell padding, safe areas and session/toast clearance — fixed controls never cover the last action.
+
+- Typography roles are defined once in styles.css and applied across authenticated screens and shared overlays; meta ink remains explicit — sizing stays consistent without changing status colours.

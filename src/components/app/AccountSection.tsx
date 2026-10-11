@@ -172,11 +172,11 @@ export function AccountSection({ email: initialEmail }: { email: string }) {
               disabled={submittingName} aria-invalid={!!nameErr} aria-describedby={nameErr ? 'display-name-error' : undefined}
               onChange={(e) => setDisplayName(e.target.value)} className="h-12" />
           </div>
-          {nameErr && <p id="display-name-error" className="rounded-lg bg-muted p-3 text-sm" role="alert">{nameErr}</p>}
+          {nameErr && <p id="display-name-error" className="rounded-lg bg-muted p-3 body-text" role="alert">{nameErr}</p>}
           <Button type="submit" className="h-12 w-full" disabled={submittingName}>{submittingName ? 'Saving…' : 'Save display name'}</Button>
         </form>
         <form onSubmit={changePassword} className="surface space-y-4 p-4">
-          <h3 className="font-medium">Change password</h3>
+          <h3 className="card-title">Change password</h3>
           <div className="space-y-2">
             <Label htmlFor="cur-pw">Current password</Label>
             <PasswordInput id="cur-pw" value={cur} onChange={setCur} show={showPw} onToggle={() => setShowPw((s) => !s)} autoComplete="current-password" />
@@ -189,13 +189,13 @@ export function AccountSection({ email: initialEmail }: { email: string }) {
             <Label htmlFor="conf-pw">Confirm new password</Label>
             <PasswordInput id="conf-pw" value={conf} onChange={setConf} show={showPw} autoComplete="new-password" />
           </div>
-          {pwErr && <p className="rounded-lg bg-muted p-3 text-sm" role="alert">{pwErr}</p>}
+          {pwErr && <p className="rounded-lg bg-muted p-3 body-text" role="alert">{pwErr}</p>}
           <Button type="submit" className="h-12 w-full" disabled={pwBusy || submittingPassword}>{pwBusy ? "Saving…" : "Update password"}</Button>
         </form>
 
         <form onSubmit={changeEmail} className="surface space-y-4 p-4">
-          <h3 className="font-medium">Change email</h3>
-          <p className="text-sm text-muted-foreground">Current email: <span className="text-foreground">{email}</span></p>
+          <h3 className="card-title">Change email</h3>
+          <p className="body-text text-muted-foreground">Current email: <span className="text-foreground">{email}</span></p>
           <div className="space-y-2">
             <Label htmlFor="new-email">New email</Label>
             <Input id="new-email" type="email" autoComplete="email" required maxLength={255} value={newEmail}
@@ -205,8 +205,8 @@ export function AccountSection({ email: initialEmail }: { email: string }) {
             <Label htmlFor="em-pw">Current password</Label>
             <PasswordInput id="em-pw" value={emPw} onChange={setEmPw} show={showEm} onToggle={() => setShowEm((s) => !s)} autoComplete="current-password" />
           </div>
-          {emErr && <p className="rounded-lg bg-muted p-3 text-sm" role="alert">{emErr}</p>}
-          {emMsg && <p className="rounded-lg bg-muted p-3 text-sm" role="status">{emMsg}</p>}
+          {emErr && <p className="rounded-lg bg-muted p-3 body-text" role="alert">{emErr}</p>}
+          {emMsg && <p className="rounded-lg bg-muted p-3 body-text" role="status">{emMsg}</p>}
           <Button type="submit" className="h-12 w-full" disabled={emBusy || submittingEmail}>{emBusy ? "Sending…" : "Change email"}</Button>
         </form>
       </div>

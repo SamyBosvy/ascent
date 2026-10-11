@@ -19,8 +19,8 @@ function Summits() {
   const list = routes.filter((r) => r.summited_at).sort((a, b) => b.summited_at!.localeCompare(a.summited_at!));
   return (
     <div className="space-y-6">
-      <Link to="/routes" className="text-sm text-muted-foreground">← Routes</Link>
-      <h1 className="text-3xl font-semibold">Summits</h1>
+      <Link to="/routes" className="body-text text-muted-foreground">← Routes</Link>
+      <h1 className="page-title">Summits</h1>
       {list.length === 0 ? (
         <Empty headingLevel={2} illustration="flag" title="No summits yet" description="Routes you finish will appear here." primaryAction={<Button asChild><Link to="/routes">Open routes</Link></Button>} />
       ) : (
@@ -36,12 +36,12 @@ function Summits() {
                     <line x1="20" y1="6" x2="20" y2="-4" className="stroke-foreground" strokeWidth="1.5" />
                     <path d="M20 -4 L30 -1 L20 2 Z" className="fill-gold" />
                   </svg>
-                  <p className="font-display text-lg font-semibold">{r.name}</p>
-                  <p className="text-xs text-muted-foreground">{TYPE_LABEL[r.type]}</p>
-                  <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                    <div><dt className="text-xs text-muted-foreground">Started</dt><dd>{format(new Date(r.created_at), "MMM d, yy")}</dd></div>
-                    <div><dt className="text-xs text-muted-foreground">Summited</dt><dd>{format(new Date(r.summited_at!), "MMM d, yy")}</dd></div>
-                    <div><dt className="text-xs text-muted-foreground">Hours</dt><dd>{minutesLabel(mins)}</dd></div>
+                  <p className="card-title">{r.name}</p>
+                  <p className="meta-text text-muted-foreground">{TYPE_LABEL[r.type]}</p>
+                  <dl className="mt-4 grid grid-cols-3 gap-2 body-text">
+                    <div><dt className="meta-text text-muted-foreground">Started</dt><dd>{format(new Date(r.created_at), "MMM d, yy")}</dd></div>
+                    <div><dt className="meta-text text-muted-foreground">Summited</dt><dd>{format(new Date(r.summited_at!), "MMM d, yy")}</dd></div>
+                    <div><dt className="meta-text text-muted-foreground">Hours</dt><dd className="stat-text">{minutesLabel(mins)}</dd></div>
                   </dl>
                 </Link>
               </li>

@@ -241,21 +241,21 @@ function RouteDetail() {
       )}
       {route.archived_at && (
         <div className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center" role="status">
-          <p className="flex-1 text-sm">This route is archived. It's hidden from Today, Routes and Review, and all its data is kept.</p>
+          <p className="flex-1 body-text">This route is archived. It's hidden from Today, Routes and Review, and all its data is kept.</p>
           <Button variant="outline" className="h-12" onClick={() => setArchived(false)}><ArchiveRestore className="h-4 w-4" /> Restore</Button>
         </div>
       )}
       <div>
-        <Link to="/routes" className="text-sm text-muted-foreground">← Routes</Link>
+        <Link to="/routes" className="body-text text-muted-foreground">← Routes</Link>
         <div className="mt-2 flex items-start justify-between gap-3">
-          <h1 tabIndex={-1} className="flex min-w-0 items-center gap-2 text-3xl font-semibold"><RouteDot route={route} /><span className="break-words">{route.name}</span></h1>
+          <h1 tabIndex={-1} className="flex min-w-0 items-center gap-2 page-title"><RouteDot route={route} /><span className="break-words">{route.name}</span></h1>
           <Button variant="outline" className="h-12 shrink-0" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4" /> Edit route</Button>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 body-text text-muted-foreground">
           {TYPE_LABEL[route.type]}
           {route.target_date && ` · target ${format(new Date(`${route.target_date}T12:00:00`), "MMM d, yyyy")}`}
         </p>
-        <PacingLine route={route} agg={agg} className="mt-1 text-sm" />
+        <PacingLine route={route} agg={agg} className="mt-1 body-text" />
         {route.description && <p className="mt-3 max-w-prose text-muted-foreground">{route.description}</p>}
       </div>
 
@@ -271,7 +271,7 @@ function RouteDetail() {
             <Stat label="Retention" value={stats.retention == null ? "—" : `${Math.round(stats.retention * 100)}%`} />
           </div>
           <div className="surface grid gap-3 p-4 sm:grid-cols-2">
-            <label htmlFor="route-status" className="space-y-1 text-sm">
+            <label htmlFor="route-status" className="space-y-1 label-text">
               <span className="text-muted-foreground">Status</span>
               <NativeSelect id="route-status" value={route.status} onChange={(e) => {
                 const status = e.target.value as RouteStatus;
@@ -281,7 +281,7 @@ function RouteDetail() {
                 {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </NativeSelect>
             </label>
-            <label htmlFor="route-camp" className="space-y-1 text-sm">
+            <label htmlFor="route-camp" className="space-y-1 label-text">
               <span className="text-muted-foreground">Camp</span>
               <NativeSelect id="route-camp" value={route.camp_override ?? "auto"} onChange={(e) => update({ camp_override: e.target.value === "auto" ? null : parseInt(e.target.value) })}>
                 <option value="auto">Automatic ({CAMPS[stats.calculated]})</option>
@@ -295,8 +295,8 @@ function RouteDetail() {
           {route.type === "habit" && (
             <div className="surface flex items-center justify-between gap-3 p-4">
               <div>
-                <p className="font-medium">{Math.round(habitConsistency(route, agg) * 100)}% consistency</p>
-                <p className="text-xs text-muted-foreground">Last 30 days · {route.habit_frequency === "x_per_week" ? `${route.habit_target}× per week` : route.habit_frequency}</p>
+                <p className="card-title">{Math.round(habitConsistency(route, agg) * 100)}% consistency</p>
+                <p className="meta-text text-muted-foreground">Last 30 days · {route.habit_frequency === "x_per_week" ? `${route.habit_target}× per week` : route.habit_frequency}</p>
                 <StreakLine route={route} dates={history?.get(id)} today={localDate()} className="mt-1" />
               </div>
               {agg?.checked_today ? (
@@ -308,7 +308,7 @@ function RouteDetail() {
                   <Check className="h-4 w-4" /> Check in
                 </Button>
               ) : (
-                <span className="text-sm text-primary-strong">Done for now</span>
+                <span className="body-text text-primary-strong">Done for now</span>
               )}
             </div>
           )}
@@ -359,7 +359,7 @@ function RouteDetail() {
           Flashcards
         </SectionTitle>
         {stats.cards === 0 ? <Empty illustration="cards" title="No cards yet" description="Save questions and answers for this route." primaryAction={<Button onClick={() => setCardOpen(true)}>New card</Button>} secondaryLink={<Button variant="link" onClick={() => setImportOpen(true)}>Import CSV</Button>} /> : <div className="surface flex flex-wrap items-center gap-2 p-4">
-          <p className="mr-auto text-sm">{stats.cards} cards · {due} due</p>
+          <p className="mr-auto body-text">{stats.cards} cards · {due} due</p>
           <Button variant="outline" className="h-12" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4" /> Import CSV</Button>
           <Button asChild variant="outline" className="h-12">
             <Link to="/cards" search={{ route: id }}>Browse cards</Link>
@@ -422,8 +422,8 @@ function CampsInfo() {
       <PopoverTrigger asChild>
         <Button variant="ghost" className="absolute right-2 top-2 h-12 w-12" aria-label="How camps work"><Info className="h-4 w-4" /></Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 space-y-2 text-sm">
-        <p className="font-display font-semibold">How camps work</p>
+      <PopoverContent className="w-80 space-y-2 body-text">
+        <p className="card-title">How camps work</p>
         <p className="text-muted-foreground">Your camp comes from a score made of:</p>
         <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
           <li><span className="text-foreground">Progress, 50%</span> — milestones done, or pages read. For habits: consistency.</li>
@@ -450,7 +450,7 @@ function BookPages({ current, total, onSave }: { current: number; total: number;
   return (
     <div className="surface space-y-2 p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Label htmlFor="book-current-page" className="text-sm text-muted-foreground">Page</Label>
+        <Label htmlFor="book-current-page" className="body-text text-muted-foreground">Page</Label>
         <Button variant="outline" className="h-12 w-12" aria-label="Previous page" disabled={current <= 0} onClick={() => commit(current - 1)}><Minus className="h-4 w-4" /></Button>
         <Input
           id="book-current-page"
@@ -467,7 +467,7 @@ function BookPages({ current, total, onSave }: { current: number; total: number;
         <Button variant="outline" className="h-12 w-12" aria-label="Next page" disabled={current >= total} onClick={() => commit(current + 1)}><Plus className="h-4 w-4" /></Button>
         <Button variant="outline" className="h-12" disabled={current >= total} onClick={() => commit(current + 10)}>+10</Button>
       </div>
-      <p className="text-sm text-muted-foreground">Page {shown} of {total} · {Math.round((shown / total) * 100)}%</p>
+      <p className="body-text text-muted-foreground">Page {shown} of {total} · {Math.round((shown / total) * 100)}%</p>
     </div>
   );
 }
@@ -475,8 +475,8 @@ function BookPages({ current, total, onSave }: { current: number; total: number;
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="surface p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 font-display text-xl font-semibold">{value}</p>
+      <p className="meta-text text-muted-foreground">{label}</p>
+      <p className="mt-1 stat-text">{value}</p>
     </div>
   );
 }
@@ -579,7 +579,7 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
       <SectionTitle>Log a session</SectionTitle>
       <div className="surface space-y-4 p-4">
         <div className="flex items-center gap-3">
-          <p className="mr-auto font-display text-4xl font-semibold tabular-nums">{clockLabel(shown)}</p>
+          <p className="mr-auto stat-text tabular-nums">{clockLabel(shown)}</p>
           {running ? (
             <Button variant="outline" className="h-12 w-12" aria-label="Pause" onClick={() => timer.pause()}><Pause className="h-5 w-5" /></Button>
           ) : (
@@ -624,14 +624,14 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
             <Input aria-label="Session note (optional)" className="h-12 min-w-40 flex-1" placeholder="One-line note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
             <Button type="submit" variant="outline" className="h-12" disabled={submittingSession || !manual || !!manualErr}>Log</Button>
           </div>
-          {manualErr && <p className="text-xs text-destructive-strong">{manualErr}</p>}
+          {manualErr && <p className="meta-text text-destructive-strong">{manualErr}</p>}
         </form>
       </div>
 
       <div className="mt-4">
-        <p className="mb-1 text-sm text-muted-foreground">Total on this route: <span className="font-medium text-foreground">{minutesLabel(totalMinutes)}</span></p>
-        {listError ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load sessions.</p> : !list ? <InlineSkeleton /> : rows.length === 0 && <Empty illustration="calendar" title="No sessions yet" description="Your logged study time will appear here." primaryAction={<Button onClick={() => document.getElementById("session-minutes")?.focus()}>Log time</Button>} />}
-        <ul className="space-y-1 text-sm">
+        <p className="mb-1 body-text text-muted-foreground">Total on this route: <span className="font-medium text-foreground">{minutesLabel(totalMinutes)}</span></p>
+        {listError ? <p role="alert" className="body-text text-muted-foreground">Couldn’t load sessions.</p> : !list ? <InlineSkeleton /> : rows.length === 0 && <Empty illustration="calendar" title="No sessions yet" description="Your logged study time will appear here." primaryAction={<Button onClick={() => document.getElementById("session-minutes")?.focus()}>Log time</Button>} />}
+        <ul className="space-y-1 body-text">
           {rows.map((s) => (
             <li key={s.id} className="flex items-center justify-between gap-3 border-b py-1 last:border-0">
               <span className="truncate text-muted-foreground">{format(new Date(s.logged_at), "EEE MMM d, HH:mm")}{s.note && ` · ${s.note}`}</span>
@@ -706,12 +706,12 @@ function EditSessionDialog({ session, onClose, onSaved }: { session: Session | n
           <div className="space-y-2">
             <Label htmlFor="sm">Minutes</Label>
             <Input id="sm" className="h-12" type="number" inputMode="numeric" min={1} max={MAX_MIN} value={minutes} onChange={(e) => setMinutes(e.target.value)} aria-invalid={!!errs.minutes} />
-            {errs.minutes && <p className="text-xs text-destructive-strong">{errs.minutes}</p>}
+            {errs.minutes && <p className="meta-text text-destructive-strong">{errs.minutes}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="sw">Date and time</Label>
             <Input id="sw" className="h-12" type="datetime-local" max={maxWhen} value={when} onChange={(e) => setWhen(e.target.value)} aria-invalid={!!errs.when} />
-            {errs.when && <p className="text-xs text-destructive-strong">{errs.when}</p>}
+            {errs.when && <p className="meta-text text-destructive-strong">{errs.when}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="sn">Note (optional)</Label>
@@ -728,5 +728,5 @@ function RouteNotes({ routeId }: { routeId: string }) {
     if (error) throw new Error(error.message);
     return count ?? 0;
   } });
-  return <section><SectionTitle>Notes</SectionTitle>{error ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load notes.</p> : count == null ? <InlineSkeleton lines={2} /> : count === 0 ? <Empty illustration="notebook" title="No notes yet" description="Capture what you learn along this route." primaryAction={<Button asChild><Link to="/notes/new" search={{ route: routeId }}>New note</Link></Button>} /> : <Button asChild variant="outline" className="h-12"><Link to="/notes" search={{ route: routeId }}>Open notes ({count})</Link></Button>}</section>;
+  return <section><SectionTitle>Notes</SectionTitle>{error ? <p role="alert" className="body-text text-muted-foreground">Couldn’t load notes.</p> : count == null ? <InlineSkeleton lines={2} /> : count === 0 ? <Empty illustration="notebook" title="No notes yet" description="Capture what you learn along this route." primaryAction={<Button asChild><Link to="/notes/new" search={{ route: routeId }}>New note</Link></Button>} /> : <Button asChild variant="outline" className="h-12"><Link to="/notes" search={{ route: routeId }}>Open notes ({count})</Link></Button>}</section>;
 }

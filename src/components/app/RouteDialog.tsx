@@ -121,7 +121,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
     navigate({ to: "/routes/$id", params: { id: created.id } });
   }
 
-  const err = (k: keyof typeof errors) => (show(k) ? <p className="text-xs text-destructive-strong">{errors[k]}</p> : null);
+  const err = (k: keyof typeof errors) => (show(k) ? <p className="meta-text text-destructive-strong">{errors[k]}</p> : null);
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={editing ? "Edit route" : "New route"} submitting={busy || submittingSave} className="sm:max-w-md" footer={<Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave}>{editing ? "Save" : "Start climbing"}</Button>}>

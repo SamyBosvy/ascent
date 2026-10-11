@@ -41,7 +41,7 @@ function RoutesPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold">Routes</h1>
+        <h1 className="page-title">Routes</h1>
         <div className="flex gap-2">
           <Button asChild variant="outline" className="h-12">
             <Link to="/summits"><Trophy className="h-4 w-4 text-gold-text" /> Summits</Link>
@@ -55,7 +55,7 @@ function RoutesPage() {
         if (!list.length) return null;
         return (
           <section key={status}>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{STATUS_LABEL[status]}</h2>
+            <h2 className="mb-3 section-title text-muted-foreground">{STATUS_LABEL[status]}</h2>
             <ul className="grid gap-3 sm:grid-cols-2">
               {list.map((r) => {
                 return (
@@ -70,7 +70,7 @@ function RoutesPage() {
       })}
       {routes.length > 0 && (
         <section>
-          <Button variant="ghost" className="h-12 px-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground" onClick={() => setShowArchived((v) => !v)} aria-expanded={showArchived}>
+          <Button variant="ghost" className="h-12 px-2 section-title text-muted-foreground" onClick={() => setShowArchived((v) => !v)} aria-expanded={showArchived}>
             Archived ({archived.length}) {showArchived ? "▴" : "▾"}
           </Button>
           {showArchived && (
@@ -78,8 +78,8 @@ function RoutesPage() {
               {archived.map((r) => (
                 <li key={r.id} className="surface flex items-center gap-3 p-3 pl-4">
                   <Link to="/routes/$id" params={{ id: r.id }} className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 font-medium"><RouteDot route={r} /><span className="truncate">{r.name}</span></p>
-                    <p className="text-xs text-muted-foreground">{TYPE_LABEL[r.type]}</p>
+                    <p className="flex items-center gap-2 card-title"><RouteDot route={r} /><span className="truncate">{r.name}</span></p>
+                    <p className="meta-text text-muted-foreground">{TYPE_LABEL[r.type]}</p>
                   </Link>
                   <Button variant="outline" className="h-12" onClick={() => restore(r.id)}><ArchiveRestore className="h-4 w-4" /> Restore</Button>
                 </li>

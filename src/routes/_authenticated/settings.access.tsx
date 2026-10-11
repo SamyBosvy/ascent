@@ -65,9 +65,9 @@ function Access() {
   return (
     <div className="space-y-10">
       <div>
-        <Link to="/settings" className="text-sm text-muted-foreground">← Settings</Link>
-        <h1 className="mt-2 text-3xl font-semibold">Access</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Only emails on this list can create an account.</p>
+        <Link to="/settings" className="body-text text-muted-foreground">← Settings</Link>
+        <h1 className="mt-2 page-title">Access</h1>
+        <p className="mt-1 body-text text-muted-foreground">Only emails on this list can create an account.</p>
       </div>
 
       <section>
@@ -85,8 +85,8 @@ function Access() {
             {data.allowlist.map((a) => (
               <li key={a.id} className="flex items-center gap-3 p-2 pl-4">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm">{a.email}</p>
-                  <p className="text-xs text-muted-foreground">{memberEmails.has(a.email) ? "Joined" : "Invited, not joined yet"}</p>
+                  <p className="truncate body-text">{a.email}</p>
+                  <p className="meta-text text-muted-foreground">{memberEmails.has(a.email) ? "Joined" : "Invited, not joined yet"}</p>
                 </div>
                 {a.email !== user.email?.toLowerCase() && (
                   <Button variant="ghost" className="h-12 w-12" aria-label="Remove from allowlist" onClick={async () => { try { await remove({ data: { id: a.id } }); toast.success("Removed from allowlist."); } catch (err) { toast.error(err instanceof Error ? err.message : "Could not remove"); } reload(); }}>
@@ -97,7 +97,7 @@ function Access() {
             ))}
           </ul>
         )}
-        <p className="mt-2 text-xs text-muted-foreground">Removing an email stops new sign-ups. To end an existing member's access, revoke them below.</p>
+        <p className="mt-2 meta-text text-muted-foreground">Removing an email stops new sign-ups. To end an existing member's access, revoke them below.</p>
       </section>
 
       <section>
@@ -107,8 +107,8 @@ function Access() {
             {members.map((m) => (
               <li key={m.id} className="flex items-center gap-3 p-2 pl-4">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm">{m.email}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="truncate body-text">{m.email}</p>
+                  <p className="meta-text text-muted-foreground">
                     Joined {format(new Date(m.created_at), "MMM d, yyyy")}{m.revoked && " · access revoked"}
                   </p>
                 </div>
@@ -117,7 +117,7 @@ function Access() {
             ))}
           </ul>
         )}
-        <p className="mt-2 text-xs text-muted-foreground">To restore a revoked member, add their email to the allowlist again.</p>
+        <p className="mt-2 meta-text text-muted-foreground">To restore a revoked member, add their email to the allowlist again.</p>
       </section>
     </div>
   );
@@ -135,7 +135,7 @@ function RevokeButton({ email, onConfirm }: { email: string; onConfirm: (deleteD
           <AlertDialogTitle>Revoke access for {email}?</AlertDialogTitle>
           <AlertDialogDescription>They'll be signed out and can no longer log in. Their data is kept unless you choose to delete it.</AlertDialogDescription>
         </AlertDialogHeader>
-        <label htmlFor="revoke-delete-data" className="flex min-h-12 items-center gap-3 text-sm">
+        <label htmlFor="revoke-delete-data" className="flex min-h-12 items-center gap-3 label-text">
           <Checkbox id="revoke-delete-data" checked={del} onCheckedChange={(v) => setDel(v === true)} />
           Revoke and delete data (permanent)
         </label>

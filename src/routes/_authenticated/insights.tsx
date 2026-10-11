@@ -61,7 +61,7 @@ function Insights() {
   if (sessionCount < 3 && rows.reviewCount < 10) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-semibold">Insights</h1>
+        <h1 className="page-title">Insights</h1>
         <Empty headingLevel={2} illustration="chart" title="Not enough activity yet" description="Log 3 sessions or do 10 reviews to see your progress." primaryAction={<Button asChild><Link to="/today">Back to Today</Link></Button>} />
       </div>
     );
@@ -95,7 +95,7 @@ function Insights() {
 
   return (
     <div className="space-y-10">
-      <h1 className="text-3xl font-semibold">Insights</h1>
+      <h1 className="page-title">Insights</h1>
       <section>
         <SectionTitle>Hours per route, by week</SectionTitle>
         <div role="group" aria-label="Hours spent per route each week, over the last eight weeks" className={routeIds.length ? "surface h-72 p-3" : ""}>
@@ -153,7 +153,7 @@ function Insights() {
               const pct = Math.round(habitConsistency(h, stats.get(h.id)) * 100);
               return (
                 <li key={h.id} className="surface p-4">
-                  <div className="mb-2 flex justify-between text-sm"><span className="font-medium">{h.name}</span><span>{pct}%</span></div>
+                  <div className="mb-2 flex justify-between body-text"><span className="font-medium">{h.name}</span><span>{pct}%</span></div>
                   <div className="h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
                 </li>
               );
@@ -166,7 +166,7 @@ function Insights() {
         {summits.length ? (
           <ul className="surface divide-y">
             {summits.map((r) => (
-              <li key={r.id} className="flex justify-between gap-3 p-4 text-sm">
+              <li key={r.id} className="flex justify-between gap-3 p-4 body-text">
                 <span className="font-medium">{r.name}</span>
                 <span className="text-muted-foreground">{format(new Date(r.summited_at!), "MMM d, yyyy")}</span>
               </li>

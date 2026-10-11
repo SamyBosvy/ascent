@@ -91,13 +91,13 @@ export function ImportBackup() {
               <div>
                 <Label htmlFor="backup-file">Backup file (.json)</Label>
                 <input id="backup-file" type="file" accept="application/json,.json" disabled={submitting} onChange={(e) => void pick(e.target.files?.[0])}
-                  className="mt-2 block w-full text-sm file:mr-3 file:h-11 file:rounded-lg file:border-0 file:bg-secondary file:px-4 file:font-medium file:text-secondary-foreground" />
-                {file && fileError && <p role="alert" className="mt-2 text-sm text-destructive-strong">{fileError}</p>}
+                  className="mt-2 block w-full body-text file:mr-3 file:h-11 file:rounded-lg file:border-0 file:bg-secondary file:px-4 file:font-medium file:text-secondary-foreground" />
+                {file && fileError && <p role="alert" className="mt-2 body-text text-destructive-strong">{fileError}</p>}
               </div>
 
               {plan && backup && (
                 <>
-                  <div className="surface p-4 text-sm">
+                  <div className="surface p-4 body-text">
                     <p className="mb-2 font-medium">Exported {new Date(backup.exportedAt).toLocaleString()}. Will import:</p>
                     <ul className="grid grid-cols-2 gap-1">
                       {TABLES.map((t) => <li key={t}>{plan.toImport[t].toLocaleString()} {NAMES[t].toLowerCase()}</li>)}
@@ -111,7 +111,7 @@ export function ImportBackup() {
 
                   {plan.duplicates > 0 && (
                     <fieldset className="space-y-2">
-                      <legend className="text-sm font-medium">{plan.duplicates} route{plan.duplicates === 1 ? "" : "s"} already exist here with the same name and type.</legend>
+                      <legend className="body-text font-medium">{plan.duplicates} route{plan.duplicates === 1 ? "" : "s"} already exist here with the same name and type.</legend>
                       <RadioGroup value={mode} onValueChange={(v) => setMode(v as "skip" | "copy")} disabled={submitting}>
                         <div className="flex min-h-12 items-center gap-3">
                           <RadioGroupItem id="dup-skip" value="skip" />
@@ -132,7 +132,7 @@ export function ImportBackup() {
           )}
 
           {result && (
-            <div className="space-y-3 text-sm" role="status">
+            <div className="space-y-3 body-text" role="status">
               {result.error && <p className="text-destructive-strong">{result.error}</p>}
               <table className="w-full text-left">
                 <thead><tr className="text-muted-foreground"><th className="py-1 font-medium">Table</th><th className="font-medium">Imported</th><th className="font-medium">Skipped</th><th className="font-medium">Invalid</th></tr></thead>

@@ -38,3 +38,5 @@
 - Display names use auth.updateUser, requireOnline and useSubmission; root USER_UPDATED refreshes route context — no extra auth listener.
 
 - Shared component rules live in `src/components/app/AGENTS.md`; read them before changing components or their callers.
+
+- Shared type roles live in styles.css.
