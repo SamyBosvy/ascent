@@ -101,6 +101,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
         const offline = typeof navigator !== "undefined" && navigator.onLine === false;
         toast.error(offline ? "You're offline. Your note is kept on this device and will save when you're back online." : error?.message ?? "Couldn't save the note.", { id: "note-save-error" });
       }
+      persistDraft();
       scheduleRetry();
       return;
     }
@@ -123,11 +124,17 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
   }
   function edit() {
     dirty.current = true;
-    persistDraft();
     setStatus(failing.current ? "retrying" : "pending");
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => void flush(), 700);
   }
+
+  // Persist after render: latest.current already holds this render's values, so the
+  // stored draft is never one keystroke behind.
+  useEffect(() => {
+    if (dirty.current) persistDraft();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, body, routeId, tags]);
 
   // Restore an unsaved local draft that is newer than the server copy.
   useEffect(() => {
