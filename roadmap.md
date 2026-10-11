@@ -62,3 +62,8 @@
 - [x] Accessible labelled sections and route-only width; no fetching/behaviour changes
 - [x] All tests (229 passing), typography check, 1280×900 and 390×844 both-theme checks; no overflow, sticky sidebar and reachable actions verified
 - [x] Temporary book/habit routes and related data cleanup confirmed in database; unchanged account settings/metadata; recorded credits since Batch 18: 1000.264648311 → 1014.964648311 (14.70)
+
+# Batch 20
+- [ ] Restore original large summit, flag and tent illustrations; verify flag-rise and reduced motion
+- [ ] Audit larger custom icon uses; retain small icons and allowed shelf icon
+- [ ] Typography check, full test suite and 390px light/dark harness checks; no persistent data or account changes; report credits

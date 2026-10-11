@@ -6,7 +6,6 @@ import { useSubmission } from '@/hooks/use-submission';
 import { type RouteRow, type RouteAgg, minutesLabel } from '@/lib/data';
 import { dateInZone, daysBetween, shortDate } from '@/lib/time';
 import { getPrefs } from '@/lib/prefs';
-import { SummitIcon } from "./icons";
 import { RouteDot } from './RouteDot';
 
 export function SummitOverlay({ route, agg, onDone, returnFocus }: { route: RouteRow; agg?: RouteAgg | undefined; onDone: () => void; returnFocus: HTMLElement | null }) {
@@ -25,7 +24,7 @@ export function SummitOverlay({ route, agg, onDone, returnFocus }: { route: Rout
     catch { toast.error('Couldn’t copy the summary. Please try again.'); }
   }); }
   return <Dialog open onOpenChange={open => { if (!open) onDone(); }}><DialogContent className="summit-dialog max-h-[90dvh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-lg [&>button]:size-12 [&>button]:right-1 [&>button]:top-1" onCloseAutoFocus={event => { event.preventDefault(); if (returnFocus?.isConnected) returnFocus.focus(); else document.querySelector<HTMLElement>('#main h1')?.focus(); }}>
-    <SummitIcon className="mx-auto h-44 w-52 text-gold-text" />
+    <svg viewBox="0 0 260 220" className="mx-auto h-44 w-52" aria-hidden><path d="M10 210 L130 70 L250 210 Z" className="fill-ridge" /><path d="M130 70 L108 120 L122 112 L130 128 L140 110 L154 120 Z" className="fill-background" /><g data-summit-flag><line x1="130" y1="72" x2="130" y2="12" className="stroke-foreground" strokeWidth="3" /><path d="M131 14 L172 24 L131 36 Z" className="fill-gold" /></g></svg>
     <p className="text-center body-text font-semibold text-gold-text">Summit reached</p>
     <DialogTitle className="flex items-center justify-center gap-2 text-center section-title"><RouteDot route={route} /><span className="min-w-0 break-words">{route.name}</span></DialogTitle>
     <DialogDescription className="text-center">{days} day{days === 1 ? '' : 's'} taken · {shortDate(day)}</DialogDescription>
