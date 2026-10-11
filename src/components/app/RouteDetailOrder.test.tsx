@@ -28,14 +28,16 @@ it('places work headings before route management in the rendered DOM', () => {
   render(createElement(Route.options.component as ComponentType));
   const elements = [
     screen.getByRole('region', { name: 'Route progress and management' }),
-    screen.getByRole('heading', { name: 'Milestones', exact: true }),
+    screen.getByRole('heading', { name: 'Milestones' }),
     screen.getByRole('heading', { name: 'Log a session' }),
     screen.getByRole('heading', { name: 'Flashcards' }),
-    screen.getByRole('heading', { name: 'Notes', exact: true }),
+    screen.getByRole('heading', { name: 'Notes' }),
     screen.getByRole('button', { name: 'Archive route' }),
     screen.getByRole('button', { name: 'Delete route' }),
   ];
   elements.slice(1).forEach((element, index) => {
-    expect(elements[index].compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const previous = elements[index];
+    if (!previous) throw new Error('Missing preceding section');
+    expect(previous.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
