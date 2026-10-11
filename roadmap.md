@@ -86,7 +86,10 @@
 
 # Batch 24
 - [x] Private subscriptions, habit-only reminder settings, daily reminder log and owner-scoped subscription upsert migration
-- [ ] Secure VAPID keys/public key delivery
-- [ ] Idempotent eligible sender, subscription failure handling and 15-minute schedule
-- [ ] Push/click worker, permission/preferences and habit reminder controls
-- [ ] Unit tests/full suite/typography, cleanup, preview limits and credits report
+- [x] Secure server-only seed-derived VAPID pair and public-only key delivery; subject derives from existing OWNER_EMAIL (not separate persisted key/subject secrets)
+- [x] Eligible secret-authenticated sender, atomic daily claims, provider-restricted URLs and 404/410/five-failure handling; at-most-once attempts (claim precedes delivery)
+- [ ] 15-minute production schedule: blocked because the backend tool denies access to scheduler secrets; no job or scheduler migration applied. Requires a permitted secure server-to-scheduler credential setup, then publish. 96 checks/day, up to 15-minute delay; recurring Cloud cost.
+- [x] Push/click handlers imported by existing generated worker, explicit-tap permission/preferences and habit reminder controls; preview refusal preserved
+- [x] 284 tests and typography pass; build clean; signed-in settings refusal, public-key availability, unauthenticated sender 401 and temporary habit save/reload verified; temporary route and all eight data tables confirmed empty; account settings/metadata untouched
+- [ ] Published-device permission/subscription/delivery/click test and real sender failure-path integration: blocked by unpublished app and unscheduled job; sender failure logic covered with mocked subscriptions (not a real fake-subscription request)
+- [x] Recorded credits since Batch 23: 1074.064648311 → 1096.564648311 (22.50); report partial completion and exact blockers

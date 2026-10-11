@@ -64,6 +64,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
     pages: type === "book" ? wholeError(pages, 1, LIMITS.pages, "Total pages") : null,
     times: type === "habit" && freq === "x_per_week" ? (times.trim() === "" ? "Enter times per week." : wholeError(times, 1, LIMITS.times, "Times per week")) : null,
     lang: type === "language" && lang.trim() && !SPEECH_LANG_RE.test(lang.trim()) ? "Use a language code like es-ES or ja-JP." : null,
+    reminder: type === "habit" && reminderEnabled && !/^([01]\d|2[0-3]):[0-5]\d$/.test(reminderTime) ? "Choose a valid reminder time." : null,
   };
   const valid = !Object.values(errors).some(Boolean);
   const show = (k: keyof typeof errors) => (tried || k !== "name") && errors[k];
@@ -195,7 +196,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
               {err("lang")}
             </div>
           )}
-          {type === "habit" && <HabitReminderFields enabled={reminderEnabled} time={reminderTime} onEnabled={setReminderEnabled} onTime={setReminderTime} disabled={busy || submittingSave} />}
+          {type === "habit" && <><HabitReminderFields enabled={reminderEnabled} time={reminderTime} onEnabled={setReminderEnabled} onTime={setReminderTime} disabled={busy || submittingSave} />{err("reminder")}</>}
           <div className="space-y-2">
             <Label htmlFor="rd">Description (optional)</Label>
             <Textarea id="rd" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
