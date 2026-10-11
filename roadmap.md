@@ -24,3 +24,9 @@
 - [ ] Shared accessible illustrated Empty and existing-flow actions across all locations
 - [x] Loading/error precedence and onboarding priority (14b: errors only block without data)
 - [ ] Component/screen tests, both-theme checks, report and credits
+
+# Batch 15
+- [ ] Shared drawer, safe close and keyboard-aware footer
+- [ ] Convert all six requested dialogs
+- [ ] Wrapper regression tests and full suite
+- [ ] Signed-in mobile light/dark checks, report and credits
