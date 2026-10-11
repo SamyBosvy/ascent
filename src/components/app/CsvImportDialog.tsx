@@ -155,7 +155,7 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
     ) : undefined}>
       <form id={formId} onSubmit={(e) => { e.preventDefault(); if (canImport) void run(); }}>
         <input aria-label="Flashcards file" ref={fileRef} type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" className="hidden" onChange={(e) => e.target.files?.[0] && pick(e.target.files[0])} />
-        <Button variant="outline" className="h-12" onClick={() => fileRef.current?.click()} disabled={progress != null || submitting}>
+        <Button type="button" variant="outline" className="h-12" onClick={() => fileRef.current?.click()} disabled={progress != null || submitting}>
           {fileName ? `${fileName} · choose another` : "Choose file"}
         </Button>
 
