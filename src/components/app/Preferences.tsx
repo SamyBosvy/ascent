@@ -4,12 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserSettings } from "@/lib/data";
-import { setPrefs, type Theme } from "@/lib/prefs";
+import { setPrefs, setVibrationEnabled, vibrationEnabled, type Theme } from "@/lib/prefs";
 import { browserTimeZone, isValidTimeZone, type WeekStart } from "@/lib/time";
 import { NativeSelect, SectionTitle } from "./fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 function allZones(): string[] {
   try {
@@ -30,6 +31,8 @@ export function Preferences() {
   const [tz, setTz] = useState("");
   const [goal, setGoal] = useState("");
   const [npd, setNpd] = useState("");
+  const [vibration, setVibration] = useState(true);
+  useEffect(() => { setVibration(vibrationEnabled()); }, []);
   useEffect(() => {
     if (!s) return;
     setTheme(s.theme); setWeek(s.week_start); setTz(s.timezone);
@@ -63,6 +66,10 @@ export function Preferences() {
     <section>
       <SectionTitle>Preferences</SectionTitle>
       <form onSubmit={save} className="surface grid gap-4 p-4 sm:grid-cols-2">
+        <div className="flex min-h-12 items-center justify-between gap-3 sm:col-span-2">
+          <Label htmlFor="pref-vibration" className="flex min-h-12 flex-1 items-center">Vibration feedback</Label>
+          <div className="flex min-h-12 min-w-12 items-center justify-center"><Switch id="pref-vibration" checked={vibration} onCheckedChange={(enabled) => { setVibration(enabled); setVibrationEnabled(enabled); }} /></div>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="pref-theme">Theme</Label>
           <NativeSelect id="pref-theme" value={theme} onChange={(e) => setTheme(e.target.value as Theme)}>

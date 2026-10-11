@@ -6,6 +6,16 @@ export type Prefs = { tz: string; weekStart: WeekStart; theme: Theme };
 /** localStorage cache of the user's preferences; the database row is the source of truth. */
 export const PREFS_KEY = "ascent-prefs";
 export const THEME_KEY = "ascent-theme";
+const VIBRATION_KEY = "ascent-vibration";
+
+/** Device-only preference: account preference refreshes never overwrite it. */
+export function vibrationEnabled() {
+  if (typeof window === "undefined") return true;
+  try { return localStorage.getItem(VIBRATION_KEY) !== "off"; } catch { return true; }
+}
+export function setVibrationEnabled(enabled: boolean) {
+  try { localStorage.setItem(VIBRATION_KEY, enabled ? "on" : "off"); } catch { /* private mode */ }
+}
 
 let cur: Prefs | null = null;
 

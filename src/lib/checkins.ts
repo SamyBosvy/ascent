@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import { localDate, type RouteAgg } from "./data";
 import { queryClientForSync, queueWrite } from "./sync";
+import { haptic } from "./feedback";
 
 /** Optimistically mark today's check-in in the cached route stats and check-in history. */
 function applyLocal(routeId: string, day: string, checked: boolean) {
@@ -36,14 +37,18 @@ export async function toggleCheckin(routeId: string, checkedToday: boolean, _ref
     if (!checkedToday) {
       await set(routeId, today, true);
       toast.success("Checked in.");
-      return;
+      haptic("success");
+      return true;
     }
     await set(routeId, today, false);
     toast("Check-in removed", {
       duration: 8000,
       action: { label: "Undo", onClick: () => void set(routeId, today, true) },
     });
+    return true;
   } catch (e) {
+    haptic("warning");
     toast.error(`Couldn't save the check-in: ${(e as Error).message}`);
+    return false;
   }
 }

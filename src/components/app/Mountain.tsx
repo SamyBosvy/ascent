@@ -2,6 +2,7 @@ import { CAMP_ICONS } from "./icons";
 import { CAMPS } from "@/lib/camp";
 import { cn } from "@/lib/utils";
 import { climberPosition, visualScoreForCamp } from '@/lib/visualProgress';
+import { useProgressFeedback } from './ProgressFeedback';
 
 /** Continuous climber constrained to the displayed camp, including manual overrides. */
 export function Mountain({ camp, score = 0, className }: { camp: number; score?: number; className?: string }) {
@@ -63,10 +64,11 @@ export function CampBadge({ camp }: { camp: number }) {
 }
 
 export function AltitudeBar({ camp }: { camp: number }) {
+  const feedback = useProgressFeedback();
   return (
     <div className="flex gap-1" aria-hidden>
       {CAMPS.map((_, i) => (
-        <div key={i} className={cn("h-1.5 flex-1 rounded-full", i <= camp ? (camp === 4 ? "bg-gold-text" : "bg-primary") : "bg-muted")} />
+        <div key={i} className={cn("h-1.5 flex-1 rounded-full", feedback, i <= camp ? (camp === 4 ? "bg-gold-text" : "bg-primary") : "bg-muted")} />
       ))}
     </div>
   );
