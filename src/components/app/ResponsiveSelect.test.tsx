@@ -45,6 +45,13 @@ describe("NativeSelect", () => {
     render(<NativeSelect aria-label="Frequency" disabled value="daily"><option value="daily">Daily</option></NativeSelect>);
     expect(screen.getByRole("combobox", { name: "Frequency" })).toBeDisabled();
   });
+  it("preserves optgroup labels and their disabled options", async () => {
+    device();
+    render(<NativeSelect aria-label="Route"><option value="">All</option><optgroup label="Archived" disabled><option value="old">Old route</option></optgroup></NativeSelect>);
+    fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" });
+    expect(await screen.findByRole("group", { name: "Archived" })).toBeVisible();
+    expect(screen.getByRole("option", { name: "Old route" })).toHaveAttribute("aria-disabled", "true");
+  });
   it("fires native value changes with target.value", () => {
     device(390);
     const change = vi.fn((event) => event.target.value);
