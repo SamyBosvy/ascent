@@ -17,7 +17,7 @@ export function NativeSelect({ className, ...props }: SelectHTMLAttributes<HTMLS
 export function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="mb-3 flex items-center justify-between gap-2">
-      <h2 className="text-lg font-semibold">{children}</h2>
+      <h2 className="section-title">{children}</h2>
       {action}
     </div>
   );
@@ -50,8 +50,8 @@ export function Empty({ illustration, title, description, primaryAction, seconda
   const Heading = headingLevel === 2 ? "h2" : "h3";
   return <div className="flex flex-col items-center gap-3 px-4 py-6 text-center">
     <EmptyIllustration variant={illustration} />
-    <div className="max-w-sm space-y-1"><Heading className="font-display text-base font-semibold text-foreground">{title}</Heading><p className="text-sm text-muted-foreground">{description}</p></div>
+    <div className="max-w-sm space-y-1"><Heading className="card-title text-foreground">{title}</Heading><p className="body-text text-muted-foreground">{description}</p></div>
     {cloneElement(primaryAction, { className: cn(primaryAction.props.className, "min-h-12 max-w-full whitespace-normal") })}
-    {secondaryLink && cloneElement(secondaryLink, { className: cn(secondaryLink.props.className, "inline-flex min-h-12 items-center text-sm text-primary-strong underline underline-offset-4") })}
+    {secondaryLink && cloneElement(secondaryLink, { className: cn(secondaryLink.props.className, "inline-flex min-h-12 items-center body-text text-primary-strong underline underline-offset-4") })}
   </div>;
 }

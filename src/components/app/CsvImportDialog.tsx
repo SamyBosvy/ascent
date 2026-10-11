@@ -162,7 +162,7 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
         {rows && (
           <div className="space-y-4">
             <div className="overflow-x-auto rounded-md border">
-              <table className="w-full text-sm">
+              <table className="w-full body-text">
                 <thead>
                   <tr>
                     {map.map((f, i) => (
@@ -171,7 +171,7 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
                         <NativeSelect id={`csv-column-${i}`} disabled={submitting} value={f} onChange={(e) => setMap((m) => m.map((x, j) => (j === i ? (e.target.value as Field) : x === e.target.value && e.target.value !== "ignore" ? "ignore" : x)))}>
                           {FIELDS.map((x) => <option key={x} value={x}>{LABEL[x]}</option>)}
                         </NativeSelect>
-                        {hasHeader && <Label htmlFor={`csv-column-${i}`} className="mt-1 block truncate text-xs text-muted-foreground">{rows[0]?.[i]}</Label>}
+                        {hasHeader && <Label htmlFor={`csv-column-${i}`} className="mt-1 block truncate meta-text text-muted-foreground">{rows[0]?.[i]}</Label>}
                       </th>
                     ))}
                   </tr>
@@ -187,18 +187,18 @@ export function CsvImportDialog({ open, onOpenChange, routeId }: { open: boolean
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-muted-foreground">Showing {Math.min(10, body.length)} of {body.length} rows.</p>
+            <p className="meta-text text-muted-foreground">Showing {Math.min(10, body.length)} of {body.length} rows.</p>
             <div className="flex flex-col gap-1 sm:flex-row sm:gap-6">
-              <label htmlFor="csv-header" className="flex min-h-12 items-center gap-3 text-sm">
+              <label htmlFor="csv-header" className="flex min-h-12 items-center gap-3 label-text">
                 <Checkbox id="csv-header" disabled={submitting} checked={hasHeader} onCheckedChange={(v) => setHasHeader(!!v)} /> First row is a header
               </label>
-              <label htmlFor="csv-duplicates" className="flex min-h-12 items-center gap-3 text-sm">
+              <label htmlFor="csv-duplicates" className="flex min-h-12 items-center gap-3 label-text">
                 <Checkbox id="csv-duplicates" disabled={submitting} checked={skipDupes} onCheckedChange={(v) => setSkipDupes(!!v)} /> Skip duplicates (same front on this route)
               </label>
             </div>
-            {(col("front") < 0 || col("back") < 0) && <p className="text-sm text-destructive-strong">Pick a Front and a Back column.</p>}
+            {(col("front") < 0 || col("back") < 0) && <p className="body-text text-destructive-strong">Pick a Front and a Back column.</p>}
             {progress != null && <Progress value={progress} aria-label="Import progress" />}
-            {summary && <p className="rounded-md bg-muted p-3 text-sm" role="status">{summary}</p>}
+            {summary && <p className="rounded-md bg-muted p-3 body-text" role="status">{summary}</p>}
           </div>
         )}
       </form>

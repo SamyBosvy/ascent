@@ -124,16 +124,16 @@ export function CardDialog({
               </div>
             </>
           )}
-          <p className="text-xs text-muted-foreground">Markdown works: **bold**, *italics*, lists, `code`. Cloze: {"{{c1::answer}}"} or {"{{c1::answer::hint}}"} in the front.</p>
+          <p className="meta-text text-muted-foreground">Markdown works: **bold**, *italics*, lists, `code`. Cloze: {"{{c1::answer}}"} or {"{{c1::answer::hint}}"} in the front.</p>
           {!card && (
-            <label htmlFor="card-reverse" className="flex min-h-12 items-center gap-3 text-sm">
+            <label htmlFor="card-reverse" className="flex min-h-12 items-center gap-3 label-text">
               <Checkbox id="card-reverse" checked={reverse} disabled={hasCloze(front)} onCheckedChange={(v) => setReverse(!!v)} /> Also create reverse card
             </label>
           )}
           {(front.trim() || back.trim()) && (
-            <div className="space-y-2 rounded-md border border-dashed p-3 text-sm">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Preview</p>
-              {front.trim() && <CardText text={front} revealed={false} className="font-medium" />}
+            <div className="space-y-2 rounded-md border border-dashed p-3 body-text">
+              <p className="meta-text text-muted-foreground">Preview</p>
+              {front.trim() && <CardText text={front} revealed={false} className="card-title" />}
               {back.trim() && <CardText text={back} className="border-t pt-2" />}
               {isLang && example.trim() && <CardText text={example} className="italic text-muted-foreground" />}
             </div>

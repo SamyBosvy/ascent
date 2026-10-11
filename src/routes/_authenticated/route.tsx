@@ -142,8 +142,8 @@ function Shell() {
           <img src="/icon-192.png" alt="" className="h-9 w-9 rounded-xl" />
           <span className="font-display text-xl font-semibold">Ascent</span>
         </Link>
-        <button onClick={() => setPalette(true)} className="tap mb-4 flex items-center gap-3 rounded-xl border border-input px-3 text-sm text-muted-foreground hover:bg-sidebar-accent" aria-keyshortcuts="Meta+K Control+K">
-          <Search className="h-4 w-4" /> <span className="flex-1 text-left">Search</span> <kbd className="text-xs">⌘K</kbd>
+        <button onClick={() => setPalette(true)} className="tap mb-4 flex items-center gap-3 rounded-xl border border-input px-3 body-text text-muted-foreground hover:bg-sidebar-accent" aria-keyshortcuts="Meta+K Control+K">
+          <Search className="h-4 w-4" /> <span className="flex-1 text-left">Search</span> <kbd className="meta-text">⌘K</kbd>
         </button>
         <nav className="flex flex-1 flex-col gap-1">
           {NAV.map(({ to, label, icon: Icon }) => (
@@ -182,7 +182,7 @@ function Shell() {
           </div>
         </header>
         {(!online || pending > 0) && (
-          <div role="status" className="flex items-center justify-center gap-2 border-b bg-muted px-4 py-2 text-sm text-muted-foreground">
+          <div role="status" className="flex items-center justify-center gap-2 border-b bg-muted px-4 py-2 body-text text-muted-foreground">
             <CloudOff className="h-4 w-4" aria-hidden />
             {online ? `Syncing ${pending} change${pending === 1 ? "" : "s"}…` : `Offline — changes will sync${pending ? ` (${pending} waiting)` : ""}`}
           </div>

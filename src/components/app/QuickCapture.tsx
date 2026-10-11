@@ -62,7 +62,7 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={kind === "session" ? "Log time" : "Quick capture"} submitting={busy || submittingSave} className="sm:max-w-md" footer={routes.length > 0 && !routesError ? <Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave}>Save</Button> : undefined}>
-        {routesError ? <p role="alert" className="text-sm text-muted-foreground">Couldn’t load routes.</p> : !routes_ ? <InlineSkeleton /> : routes.length === 0 ? (
+        {routesError ? <p role="alert" className="body-text text-muted-foreground">Couldn’t load routes.</p> : !routes_ ? <InlineSkeleton /> : routes.length === 0 ? (
           <Empty headingLevel={2} illustration="tent" title="No active routes" description="Choose a route before saving notes or study time." primaryAction={<Button onClick={() => { onOpenChange(false); navigate({ to: "/routes" }); }}>Open routes</Button>} />
         ) : (
           <form id={formId} onSubmit={save} className="space-y-4">

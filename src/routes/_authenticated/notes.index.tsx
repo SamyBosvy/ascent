@@ -61,7 +61,7 @@ function Notes() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold">Notes</h1>
+        <h1 className="page-title">Notes</h1>
         <Button className="h-12" onClick={create}><Plus className="h-4 w-4" /> New note</Button>
       </div>
       <div className="grid gap-2 sm:grid-cols-[1fr_16rem]">
@@ -80,8 +80,8 @@ function Notes() {
             const on = t.tag === tag;
             return (
               <Link key={t.tag} to="/notes" search={{ route, tag: on ? undefined : t.tag }} aria-current={on ? "true" : undefined}
-                className={`inline-flex min-h-12 items-center rounded-full border px-3 text-sm ${on ? "border-primary bg-primary text-primary-foreground" : "border-input text-foreground hover:bg-accent"}`}>
-                #{t.tag} <span className={`ml-1 text-xs ${on ? "" : "text-muted-foreground"}`}>{t.uses}</span>
+                className={`inline-flex min-h-12 items-center rounded-full border px-3 body-text ${on ? "border-primary bg-primary text-primary-foreground" : "border-input text-foreground hover:bg-accent"}`}>
+                #{t.tag} <span className={`ml-1 meta-text ${on ? "" : "text-muted-foreground"}`}>{t.uses}</span>
               </Link>
             );
           })}
@@ -94,10 +94,10 @@ function Notes() {
           {list.map((n) => (
             <li key={n.id}>
               <Link to="/notes/$id" params={{ id: n.id }} className="surface block p-4 hover:border-primary/50">
-                <p className="truncate font-medium">{n.title || n.body.split("\n")[0] || "Untitled"}</p>
-                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{n.body.replace(/[#*_`>]/g, "")}</p>
-                {n.tags.length > 0 && <p className="mt-2 flex flex-wrap gap-1">{n.tags.map((t) => <span key={t} className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">#{t}</span>)}</p>}
-                <p className="mt-2 text-xs text-muted-foreground">{routeName(n.route_id)} · {formatDistanceToNow(new Date(n.updated_at), { addSuffix: true })}</p>
+                <p className="truncate card-title">{n.title || n.body.split("\n")[0] || "Untitled"}</p>
+                <p className="mt-1 line-clamp-2 body-text text-muted-foreground">{n.body.replace(/[#*_`>]/g, "")}</p>
+                {n.tags.length > 0 && <p className="mt-2 flex flex-wrap gap-1">{n.tags.map((t) => <span key={t} className="rounded-full bg-secondary px-2 py-0.5 meta-text text-secondary-foreground">#{t}</span>)}</p>}
+                <p className="mt-2 meta-text text-muted-foreground">{routeName(n.route_id)} · {formatDistanceToNow(new Date(n.updated_at), { addSuffix: true })}</p>
               </Link>
             </li>
           ))}

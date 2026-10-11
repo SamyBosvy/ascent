@@ -118,7 +118,7 @@ function CardsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold">Cards</h1>
+        <h1 className="page-title">Cards</h1>
         <Button asChild variant="outline" className="h-12"><Link to="/review" search={search.route ? { route: search.route } : {}}>Review</Link></Button>
       </div>
       <div className="grid gap-2 sm:grid-cols-[1fr_12rem]">
@@ -153,7 +153,7 @@ function CardsPage() {
 
       {cards.length > 0 && (
         <div className="surface flex flex-wrap items-center gap-2 p-2 pl-4">
-          <label className="mr-auto flex min-h-12 items-center gap-3 text-sm">
+          <label className="mr-auto flex min-h-12 items-center gap-3 label-text">
             <Checkbox checked={allSelected} onCheckedChange={(v) => setSelected(v ? new Set(cards.map((c) => c.id)) : new Set())} aria-label="Select all" />
             {selected.size ? `${selected.size} selected` : `${cards.length} card${cards.length === 1 ? "" : "s"}`}
           </label>
@@ -180,9 +180,9 @@ function CardsPage() {
                   <Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggle(c.id)} aria-label={`Select ${c.front}`} />
                 </div>
                 <button className="min-w-0 flex-1 py-2 text-left" onClick={() => setEditing(c)}>
-                  <CardText text={c.front} className="card-clamp font-medium" />
-                  <CardText text={c.back} className="card-clamp text-sm text-muted-foreground" />
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <CardText text={c.front} className="card-clamp card-title" />
+                  <CardText text={c.back} className="card-clamp body-text text-muted-foreground" />
+                  <div className="mt-1 flex flex-wrap items-center gap-2 meta-text text-muted-foreground">
                     <Badge variant={BADGE[st].variant}>{BADGE[st].label}</Badge>
                     <span className="inline-flex items-center gap-1.5"><RouteDot route={routes.find((r) => r.id === c.route_id) ?? { id: c.route_id }} />{routeName(c.route_id)}</span>
                     <span>· due {format(new Date(c.due_at), "MMM d")}</span>

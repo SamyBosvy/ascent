@@ -44,3 +44,9 @@
 - [x] Hide navigation for keyboard and responsive drawers
 - [x] Four regression tests; full suite 206 passing; signed-in Today light/dark checks at 390×844 and capture drawer verified
 - [ ] Existing route-page bottom visual check: blocked because the signed-in account has no routes; no persistent test data created
+
+# Batch 17
+- [x] Read-only typography audit and named scale
+- [x] Apply type roles across authenticated screens, overlays and empty states
+- [ ] Minimum-size check, full tests and signed-in Today/Settings 390px light/dark checks
+- [ ] Report scale, per-screen changes, test count and recorded credits

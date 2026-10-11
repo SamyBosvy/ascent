@@ -85,16 +85,16 @@ function Settings() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-3xl font-semibold">Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{user.email} · {role === "owner" ? "Owner" : "Member"}</p>
+        <h1 className="page-title">Settings</h1>
+        <p className="mt-1 body-text text-muted-foreground">{user.email} · {role === "owner" ? "Owner" : "Member"}</p>
       </div>
 
       {role === "owner" && (
         <Link to="/settings/access" className="surface tap flex items-center gap-3 p-4 hover:border-primary/50">
           <Users className="h-5 w-5 text-primary-strong" />
           <div className="flex-1">
-            <p className="font-medium">Access</p>
-            <p className="text-sm text-muted-foreground">Invite people, see who's joined, revoke access.</p>
+            <p className="card-title">Access</p>
+            <p className="body-text text-muted-foreground">Invite people, see who's joined, revoke access.</p>
           </div>
         </Link>
       )}
@@ -105,7 +105,7 @@ function Settings() {
 
       <section>
         <SectionTitle>Privacy</SectionTitle>
-        <div className="surface flex gap-3 p-4 text-sm leading-relaxed">
+        <div className="surface flex gap-3 p-4 body-text leading-relaxed">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary-strong" />
           <p>
             Your routes, notes, cards and sessions are private to you. The owner of this Ascent only manages who has access and can see members' email and sign-up date, never anyone's content. Nothing is shared, sold or used for anything else, and there are no analytics or trackers.
@@ -115,7 +115,7 @@ function Settings() {
 
       <section>
         <SectionTitle>Sync</SectionTitle>
-        <div className="surface flex items-center gap-3 p-4 text-sm">
+        <div className="surface flex items-center gap-3 p-4 body-text">
           <RefreshCw className="h-5 w-5 shrink-0 text-primary-strong" aria-hidden />
           <p className="flex-1" role="status">
             {pending === 0 ? "Everything is saved." : `${pending} change${pending === 1 ? "" : "s"} waiting to sync.`}

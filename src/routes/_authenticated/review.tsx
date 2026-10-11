@@ -302,7 +302,7 @@ function Review() {
     if (!card) {
       return (
         <div className="mx-auto max-w-md space-y-4 pt-10 text-center">
-          <h1 className="text-3xl font-semibold">Review complete.</h1>
+          <h1 className="page-title">Review complete.</h1>
           <p className="text-muted-foreground">{done} card{done === 1 ? "" : "s"} {mode === "cram" ? "crammed" : "reviewed"}. Steady progress.</p>
           <div className="flex justify-center gap-2">
             {undoButton}
@@ -315,7 +315,7 @@ function Review() {
     const lang = cardRoute?.type === "language" ? cardRoute : null;
     return (
       <div className="mx-auto max-w-xl space-y-5">
-        <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center justify-between gap-2 body-text text-muted-foreground">
           <span className="flex min-w-0 items-center gap-2"><RouteDot route={cardRoute ?? { id: card.route_id }} /><span className="truncate">{mode === "cram" ? "Cram · " : mode === "ahead" ? "Ahead · " : ""}{routeName(card.route_id)}</span></span>
           <div className="flex items-center gap-1">
             <span className="mr-2 whitespace-nowrap">{queue.length} left</span>
@@ -340,13 +340,13 @@ function Review() {
         <div role="progressbar" aria-label="Session progress" aria-valuemin={0} aria-valuemax={done + queue.length} aria-valuenow={done} aria-valuetext={`${done} done, ${queue.length} remaining`} className="h-1.5 overflow-hidden rounded-full bg-muted">
           <div className="h-full bg-primary" style={{ width: `${100 * done / (done + queue.length)}%` }} />
         </div>
-        {mode === "cram" && <p className="text-center text-xs text-muted-foreground">Cram mode: ratings aren't saved and don't change your schedule.</p>}
+        {mode === "cram" && <p className="text-center meta-text text-muted-foreground">Cram mode: ratings aren't saved and don't change your schedule.</p>}
         <div onClick={() => { if (!suppressClick.current) reveal(); }} onTouchStart={touchStart} onTouchMove={touchMove} onTouchEnd={touchEnd} onTouchCancel={() => { touch.current = null; setDrag(0); }} style={{ transform: reducedMotion ? undefined : `translateX(${drag}px)`, touchAction: 'pan-y' }} className="surface flex min-h-72 w-full flex-col items-center justify-center gap-4 p-8 text-center shadow-sm">
           <div className="flex items-start justify-center gap-1">
-            <CardText text={card.front} revealed={flipped} className="font-display text-2xl font-semibold" />
+            <CardText text={card.front} revealed={flipped} className="page-title" />
             {lang && <SpeakButton text={card.front} lang={lang.speech_lang} revealed={flipped} />}
           </div>
-          {card.pronunciation && <p className="text-sm text-muted-foreground">/{card.pronunciation}/</p>}
+          {card.pronunciation && <p className="body-text text-muted-foreground">/{card.pronunciation}/</p>}
           <div aria-live="polite" aria-atomic="true" className="w-full">
           {flipped ? (
             <div className="review-reveal w-full space-y-3 border-t pt-4">
@@ -354,10 +354,10 @@ function Review() {
                 <CardText text={card.back} className="text-lg" />
                 {lang && <SpeakButton text={card.back} lang={lang.speech_lang} />}
               </div>
-              {card.example && <CardText text={card.example} className="text-sm italic text-muted-foreground" />}
+              {card.example && <CardText text={card.example} className="body-text italic text-muted-foreground" />}
             </div>
           ) : (
-            <span className="text-sm text-muted-foreground">Tap to reveal</span>
+            <span className="body-text text-muted-foreground">Tap to reveal</span>
           )}
           </div>
         </div>
@@ -368,7 +368,7 @@ function Review() {
                 <Button variant={r === 2 ? "default" : "outline"} className="h-14 w-full" disabled={busy} onClick={() => rate(card, r)} aria-describedby={mode !== 'cram' ? `interval-${r}` : undefined}>
                   {label} <kbd className="kbd-hint">{r + 1}</kbd>
                 </Button>
-                {mode !== 'cram' && previews && <p id={`interval-${r}`} className="text-xs text-muted-foreground" data-due-at={previews[r].due_at}>{intervalLabel(previews[r])}</p>}
+                {mode !== 'cram' && previews && <p id={`interval-${r}`} className="meta-text text-muted-foreground" data-due-at={previews[r].due_at}>{intervalLabel(previews[r])}</p>}
               </div>
             ))}
           </div>
@@ -377,7 +377,7 @@ function Review() {
         )}
         <div className="flex items-center justify-between gap-2">
           {undoButton}
-          <button className="tap px-3 text-sm text-muted-foreground" onClick={() => { setQueue(null); setUndoStack([]); refresh(); }}>End session</button>
+          <button className="tap px-3 body-text text-muted-foreground" onClick={() => { setQueue(null); setUndoStack([]); refresh(); }}>End session</button>
         </div>
         {editDialog}
       </div>
@@ -387,7 +387,7 @@ function Review() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <div><h1 className="text-3xl font-semibold">Review</h1>{route && <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><RouteDot route={routes.find((r) => r.id === route) ?? { id: route }} />{routeName(route)}</p>}</div>
+        <div><h1 className="page-title">Review</h1>{route && <p className="mt-1 flex items-center gap-2 body-text text-muted-foreground"><RouteDot route={routes.find((r) => r.id === route) ?? { id: route }} />{routeName(route)}</p>}</div>
         <div className="flex gap-2">
           <Button asChild variant="outline" className="h-12">
             <Link to="/cards" search={route ? { route } : {}}>Cards</Link>
@@ -400,9 +400,9 @@ function Review() {
         {routes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
       </NativeSelect>
       {totalCards === 0 ? <Empty headingLevel={2} illustration="cards" title="No cards yet" description="Flashcards you add will be scheduled for review here." primaryAction={<Button onClick={() => setNewOpen(true)}>New card</Button>} secondaryLink={route ? <Link to="/routes/$id" params={{ id: route }}>Import CSV</Link> : <Link to="/routes">Open routes</Link>} /> : startCount === 0 ? <Empty headingLevel={2} illustration="cards" title="Nothing due right now" description={nextDueLabel(nextDue)} primaryAction={<Button asChild><Link to="/today">Back to Today</Link></Button>} /> : <div className="surface space-y-4 p-6 text-center">
-        <p className="font-display text-5xl font-semibold">{startCount}</p>
+        <p className="stat-text">{startCount}</p>
         <p className="text-muted-foreground">{startCount ? `${startCount} card${startCount > 1 ? "s" : ""} due. Keep climbing.` : "Nothing due right now."}</p>
-        <p className="text-sm text-muted-foreground">{newLeft} new card{newLeft === 1 ? "" : "s"} left today</p>
+        <p className="body-text text-muted-foreground">{newLeft} new card{newLeft === 1 ? "" : "s"} left today</p>
         {startCount ? (
           <Button className="h-12 w-full sm:w-auto sm:px-10" onClick={() => begin("review", [...orderQueue(dueReviews), ...newCards])}>Start review</Button>
         ) : (
@@ -414,8 +414,8 @@ function Review() {
           {startCount < 10 && (
             <div className="surface space-y-3 p-5">
               <div>
-                <p className="font-medium">Review ahead</p>
-                <p className="text-sm text-muted-foreground">Get ahead on cards coming due soon, earliest first.</p>
+                <p className="card-title">Review ahead</p>
+                <p className="body-text text-muted-foreground">Get ahead on cards coming due soon, earliest first.</p>
               </div>
               <NativeSelect value={aheadDays} onChange={(e) => setAheadDays(e.target.value)} aria-label="Review ahead window">
                 <option value="1">Next 1 day</option>
@@ -427,8 +427,8 @@ function Review() {
           )}
           <div className="surface space-y-3 p-5">
             <div>
-              <p className="font-medium">Cram</p>
-              <p className="text-sm text-muted-foreground">All of a route's cards, shuffled. Nothing is saved; your schedule stays the same.</p>
+              <p className="card-title">Cram</p>
+              <p className="body-text text-muted-foreground">All of a route's cards, shuffled. Nothing is saved; your schedule stays the same.</p>
             </div>
             <NativeSelect value={cramRoute || route || ""} onChange={(e) => setCramRoute(e.target.value)} aria-label="Cram route">
               <option value="" disabled>Choose a route</option>

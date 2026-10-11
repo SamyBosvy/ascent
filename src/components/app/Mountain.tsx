@@ -35,7 +35,7 @@ export function Mountain({ camp, score = 0, className }: { camp: number; score?:
           </g>
         )}
       </svg>
-      <ol className="flex flex-col-reverse justify-center gap-4 py-3 text-sm sm:justify-between sm:gap-0">
+      <ol className="flex flex-col-reverse justify-center gap-4 py-3 body-text sm:justify-between sm:gap-0">
         {CAMPS.map((c, i) => (
           <li key={c} className={cn(i !== position.current && i !== position.next && 'hidden sm:list-item', i === position.current ? "font-semibold text-foreground" : "text-muted-foreground", i === 4 && camp === 4 && "text-gold-text")}>
             {c}
@@ -50,7 +50,7 @@ export function CampBadge({ camp }: { camp: number }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 meta-text font-medium",
         camp === 4 ? "bg-gold/20 text-foreground" : "bg-accent text-accent-foreground",
       )}
     >

@@ -189,24 +189,24 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <Link to="/notes" className="text-sm text-muted-foreground">← Notes</Link>
-        <span className="text-xs text-muted-foreground">{label}</span>
+        <Link to="/notes" className="body-text text-muted-foreground">← Notes</Link>
+        <span className="meta-text text-muted-foreground">{label}</span>
       </div>
       {needsRoute && (
         <div className="surface space-y-2 border-primary/60 p-4">
-          <p className="text-sm font-medium">Which route does this note belong to?</p>
+          <p className="body-text font-medium">Which route does this note belong to?</p>
           <NativeSelect aria-label="Note route" value="" onChange={(e) => { setRouteId(e.target.value); if (title.trim() || body.trim()) edit(); }}>
             <option value="" disabled>Choose a route…</option>
             {pickable.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </NativeSelect>
         </div>
       )}
-      <Input aria-label="Note title" value={title} onChange={(e) => { setTitle(e.target.value); edit(); }} placeholder="Title" className="h-14 border-0 px-0 font-display text-2xl font-semibold shadow-none focus-visible:ring-0" />
+      <Input aria-label="Note title" value={title} onChange={(e) => { setTitle(e.target.value); edit(); }} placeholder="Title" className="h-14 border-0 px-0 page-title shadow-none focus-visible:ring-0" />
       <div className="space-y-1">
         <label htmlFor="note-tags" className="sr-only">Tags</label>
         <div className="flex flex-wrap items-center gap-2">
           {tags.map((t) => (
-            <span key={t} className="inline-flex min-h-9 items-center gap-1 rounded-full bg-secondary pl-3 text-sm text-secondary-foreground">
+            <span key={t} className="inline-flex min-h-9 items-center gap-1 rounded-full bg-secondary pl-3 body-text text-secondary-foreground">
               #{t}
               <button type="button" onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`} className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-accent"><X className="h-3.5 w-3.5" /></button>
             </span>
@@ -222,7 +222,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
               onBlur={() => { if (tagInput.trim()) commitTags(tagInput); }} />
           )}
         </div>
-        <p id="note-tags-help" className={`text-xs ${tagError ? "text-destructive-strong" : "sr-only"}`} aria-live="polite">{tagError || "Up to 10 tags, 30 characters each."}</p>
+        <p id="note-tags-help" className={`meta-text ${tagError ? "text-destructive-strong" : "sr-only"}`} aria-live="polite">{tagError || "Up to 10 tags, 30 characters each."}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {!needsRoute && (
@@ -254,7 +254,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
           onChange={(e) => { setBody(e.target.value); edit(); }}
           onSelect={captureTextarea}
           placeholder="Write in markdown…"
-          className="min-h-[55vh] w-full resize-y rounded-xl border border-input bg-card p-4 font-mono text-[15px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-h-[55vh] w-full resize-y rounded-xl border border-input bg-card p-4 body-text text-base leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       ) : (
         <article className="prose-note surface min-h-[55vh] p-5">
@@ -269,7 +269,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
           </Button>
         </div>
       )}
-      <p className="text-xs text-muted-foreground">Select text in the note (write or preview), then tap "Make card" to turn it into a flashcard.</p>
+      <p className="meta-text text-muted-foreground">Select text in the note (write or preview), then tap "Make card" to turn it into a flashcard.</p>
       <Button variant="ghost" className="h-12 text-destructive-strong" onClick={() => setConfirmDelete(true)}>
         <Trash2 className="h-4 w-4" /> Delete note
       </Button>
