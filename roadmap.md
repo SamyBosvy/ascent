@@ -74,6 +74,7 @@
 - [x] Helper and actual Insights chart tests; 232 tests and typography pass; 390px drawer/dialog/toast/populated chart harness and signed-in Insights checked with reduced motion (zero slow running animations); harness removed, no persistent data/settings/metadata changes; recorded credits since last report 1022.364648311 → 1035.364648311 (13.00)
 
 # Batch 22
-- [ ] Shared haptics and local Preferences toggle; success ticks and warning feedback on requested actions; light review rating feedback
-- [ ] Progress changes transition after mount, jump under reduced motion
-- [ ] Feedback/progress tests, full suite and typography; 390px light/dark flow checks, cleanup and credits report
+- [x] Shared short haptics (support/reduced-motion/local opt-out guards), default-on device Preferences toggle, inline milestone/habit ticks and session/card toast ticks, warning save feedback, light review rating feedback; append-only architecture rules
+- [x] AltitudeBar (also LearningRouteCard), Mountain camp markers and seven-day activity fills transition 350ms after mount; reduced motion jumps
+- [x] Nine new feedback/progress tests; all 241 tests and typography passed, build clean; 390px light/dark milestone, route check-in, Log/session capture, both card save actions, review rating and reduced tick checks; temporary route and milestones/cards/sessions/notes/checkins database-confirmed zero, account settings/metadata unchanged; local vibration restored; recorded credits 1035.364648311 → 1058.364648311 (23.00)
+- [ ] Today habit-button end-to-end check blocked by existing account onboarding (kept unchanged); implementation complete, Today Log time verified, no real-device vibration available in Chromium
