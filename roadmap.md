@@ -72,3 +72,8 @@
 - [x] Audit animation/transition sources, including library and JS motion: custom flags/glow/reveal/pulse, climber, tw-animate overlays, vaul, sonner, skeletons, hover/expand, Recharts; no smooth-scroll/element.animate/rAF calls in app code
 - [x] Global CSS reduced-motion net, SSR-safe shared live preference helper, all Insights bars/lines/tooltips gated; Review shares helper; existing targeted rules retained and normal motion preserved
 - [x] Helper and actual Insights chart tests; 232 tests and typography pass; 390px drawer/dialog/toast/populated chart harness and signed-in Insights checked with reduced motion (zero slow running animations); harness removed, no persistent data/settings/metadata changes; recorded credits since last report 1022.364648311 → 1035.364648311 (13.00)
+
+# Batch 22
+- [ ] Shared haptics and local Preferences toggle; success ticks and warning feedback on requested actions; light review rating feedback
+- [ ] Progress changes transition after mount, jump under reduced motion
+- [ ] Feedback/progress tests, full suite and typography; 390px light/dark flow checks, cleanup and credits report
