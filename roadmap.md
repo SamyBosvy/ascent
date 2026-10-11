@@ -48,5 +48,5 @@
 # Batch 17
 - [x] Read-only typography audit and named scale
 - [x] Apply type roles across authenticated screens, overlays and empty states
-- [ ] Minimum-size check, full tests and signed-in Today/Settings 390px light/dark checks
-- [ ] Report scale, per-screen changes, test count and recorded credits
+- [x] Minimum-size lint passed; 206 tests passed; signed-in Today/Settings 390×844 light/dark checks passed (no overflow or undersized text); build clean
+- [x] Report scale, per-screen changes, test count and recorded credits; no persistent data or account changes
