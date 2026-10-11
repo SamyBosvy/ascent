@@ -83,3 +83,10 @@
 - [x] Shared responsive NativeSelect with preserved API, empty values/optgroups, selection and open-mode latch; SSR native
 - [x] Input-matched desktop styling, 40px checked items, keyboard/labels and disabled options; native touch/narrow fallback; RouteDialog type picker unchanged
 - [x] Ten new tests; 251 tests and typography pass, build clean; 1280px Cards filter and route status checked in both themes with saved/read-back status, keyboard selection and native resize preservation; temporary route and all related tables confirmed empty, account settings/metadata unchanged; recorded credits 1058.364648311 → 1074.064648311 (15.70)
+
+# Batch 24
+- [x] Private subscriptions, habit-only reminder settings, daily reminder log and owner-scoped subscription upsert migration
+- [ ] Secure VAPID keys/public key delivery
+- [ ] Idempotent eligible sender, subscription failure handling and 15-minute schedule
+- [ ] Push/click worker, permission/preferences and habit reminder controls
+- [ ] Unit tests/full suite/typography, cleanup, preview limits and credits report
