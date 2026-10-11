@@ -26,7 +26,14 @@
 - [ ] Component/screen tests, both-theme checks, report and credits
 
 # Batch 15
-- [ ] Shared drawer, safe close and keyboard-aware footer
-- [ ] Convert all six requested dialogs
-- [ ] Wrapper regression tests and full suite
-- [ ] Signed-in mobile light/dark checks, report and credits
+- [x] Shared drawer, safe close and keyboard-aware footer
+- [x] Convert all six requested dialogs
+- [x] Wrapper regression tests and full suite (15b: 202 passing)
+- [ ] Signed-in mobile light/dark checks, report and credits (15b: RouteDialog passed 390×844 in both themes and reduced keyboard area; CardDialog/QuickCapture visual checks remain from batch 15)
+
+# Batch 15b
+- [x] Restore five exact architecture rationale clauses; preserve wording in future batches
+- [x] Complete CSV, session edit and Move dialogs with pinned footers and submission locks
+- [x] Add width, resize/input preservation, dirty-confirmation and saving-close tests
+- [x] Read-only signed-in RouteDialog checks; no persistent data or account changes
+- [x] Report: 202 passing tests; recorded credits 657 → 662 (5)
