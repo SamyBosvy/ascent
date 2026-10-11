@@ -12,3 +12,5 @@
 - Typography roles are defined once in styles.css and applied across authenticated screens and shared overlays; meta ink remains explicit — sizing stays consistent without changing status colours.
 
 - Camp and route-type symbols share icons.tsx and exhaustive mappings — one accessible currentColor SVG vocabulary; action/navigation icons stay separate.
+
+- Route detail groups labelled work/progress regions in a desktop grid; below lg their contents retain the original single-column order — CSS placement avoids duplicated forms or fetching.

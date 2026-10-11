@@ -56,3 +56,9 @@
 - [x] Replace camp/summit/type symbols only; retain accessible labels and contrast (muted icons 6.00:1 light / 5.87:1 dark on cards)
 - [x] Icon tests (23), typography minimum check and full suite (229 passing); build clean
 - [x] Routes empty list and unsaved RouteDialog at 390×844 light/dark: no overflow, six icon options, 48px targets, selection/discard works; no data/settings/metadata changes; recorded credits 992.564648311 → 1000.264648311 (7.70)
+
+# Batch 19
+- [x] Route-only desktop work/progress columns with sticky scrolling sidebar and unchanged mobile order
+- [x] Accessible labelled sections and route-only width; no fetching/behaviour changes
+- [x] All tests (229 passing), typography check, 1280×900 and 390×844 both-theme checks; no overflow, sticky sidebar and reachable actions verified
+- [x] Temporary book/habit routes and related data cleanup confirmed in database; unchanged account settings/metadata; recorded credits since Batch 18: 1000.264648311 → 1014.964648311 (14.70)

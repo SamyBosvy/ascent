@@ -257,22 +257,24 @@ function RouteDetail() {
           <TypeIcon className="size-4 shrink-0" />{TYPE_LABEL[route.type]}
           {route.target_date && ` · target ${format(new Date(`${route.target_date}T12:00:00`), "MMM d, yyyy")}`}
         </p>
-        <PacingLine route={route} agg={agg} className="mt-1 body-text" />
+        <PacingLine route={route} agg={agg} className="mt-1 body-text lg:hidden" />
         {route.description && <p className="mt-3 max-w-prose text-muted-foreground">{route.description}</p>}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-[auto_1fr]">
+      <div className="flex min-w-0 flex-col gap-10 lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start lg:gap-6">
+        <section aria-label="Route progress and management" className="contents lg:sticky lg:top-6 lg:order-2 lg:block lg:max-h-[calc(100dvh-3rem)] lg:min-w-0 lg:space-y-6 lg:overflow-y-auto lg:overscroll-contain lg:pr-1 lg:pb-1" tabIndex={0}>
+      <div className="order-1 grid min-w-0 gap-6 md:grid-cols-[auto_1fr] lg:grid-cols-1">
         <div className="surface relative p-5">
           <Mountain camp={stats.camp} score={stats.score} />
           <CampsInfo />
         </div>
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-3">
+        <div className="min-w-0 space-y-4">
+          <div className="grid grid-cols-3 gap-3 lg:grid-cols-1">
             <Stat label="Time" value={minutesLabel(stats.minutes)} />
             <Stat label="Milestones" value={stats.total ? `${stats.done}/${stats.total}` : "—"} />
             <Stat label="Retention" value={stats.retention == null ? "—" : `${Math.round(stats.retention * 100)}%`} />
           </div>
-          <div className="surface grid gap-3 p-4 sm:grid-cols-2">
+          <div className="surface grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-1">
             <label htmlFor="route-status" className="space-y-1 label-text">
               <span className="text-muted-foreground">Status</span>
               <NativeSelect id="route-status" value={route.status} onChange={(e) => {
@@ -295,7 +297,7 @@ function RouteDetail() {
             <BookPages current={route.current_page ?? 0} total={route.total_pages} onSave={savePages} />
           ) : null}
           {route.type === "habit" && (
-            <div className="surface flex items-center justify-between gap-3 p-4">
+            <div className="surface flex items-center justify-between gap-3 p-4 lg:flex-wrap">
               <div>
                 <p className="card-title">{Math.round(habitConsistency(route, agg) * 100)}% consistency</p>
                 <p className="meta-text text-muted-foreground">Last 30 days · {route.habit_frequency === "x_per_week" ? `${route.habit_target}× per week` : route.habit_frequency}</p>
@@ -317,14 +319,44 @@ function RouteDetail() {
         </div>
       </div>
 
+<div className="hidden lg:block"><PacingLine route={route} agg={agg} className="body-text" /></div>
       {route.type === "habit" && (
-        <section>
-          <SectionTitle>Check-ins</SectionTitle>
+        <section aria-labelledby="route-checkins-heading" className="order-2 min-w-0">
+          <div id="route-checkins-heading"><SectionTitle>Check-ins</SectionTitle></div>
           {!history ? <InlineSkeleton /> : !history.get(id)?.length ? <Empty illustration="calendar" title="No check-ins yet" description="Your habit practice will appear here." primaryAction={<Button disabled={checkinBusy} onClick={() => void submitCheckin(() => toggleCheckin(id, false, refresh))}>Check in</Button>} /> : <HabitHeatmap dates={history.get(id)} today={localDate()} />}
         </section>
       )}
 
-      <section>
+      <div className="order-7 flex flex-wrap gap-2">
+      {route.archived_at ? (
+        <Button variant="outline" className="h-12" onClick={() => setArchived(false)}><ArchiveRestore className="h-4 w-4" /> Restore route</Button>
+      ) : (
+        <Button variant="outline" className="h-12" onClick={() => setArchived(true)}><Archive className="h-4 w-4" /> Archive route</Button>
+      )}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="ghost" className="h-12 text-destructive-strong">Delete route</Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this route?</AlertDialogTitle>
+            <AlertDialogDescription>Milestones, sessions, notes and flashcards for "{route.name}" will be deleted. You'll have 10 seconds to undo. To keep them, archive the route instead.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void deleteRoute()}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      </div>
+
+        </section>
+        <section aria-label="Route work" className="contents lg:order-1 lg:block lg:min-w-0 lg:space-y-10">
+      <section className="order-3 min-w-0">
         <SectionTitle>{route.type === "habit" ? "Steps" : "Milestones"}</SectionTitle>
         {milestones.length === 0 && <Empty illustration="path" title="No milestones yet" description="Break this route into small steps." primaryAction={<Button onClick={() => document.getElementById("new-milestone")?.focus()}>Add milestone</Button>} />}
         <ul className="space-y-2">
@@ -348,9 +380,12 @@ function RouteDetail() {
         </form>
       </section>
 
+<div className="order-4 min-w-0">
       <SessionsSection routeId={id} routeName={route.name} totalMinutes={stats.minutes} />
 
-      <section>
+      </div>
+
+      <section className="order-5 min-w-0">
         <SectionTitle
           action={
             <Button asChild variant="outline" className="h-12">
@@ -377,33 +412,12 @@ function RouteDetail() {
         </div>}
       </section>
 
+<div className="order-6 min-w-0">
       <RouteNotes routeId={id} />
 
-      <div className="flex flex-wrap gap-2">
-      {route.archived_at ? (
-        <Button variant="outline" className="h-12" onClick={() => setArchived(false)}><ArchiveRestore className="h-4 w-4" /> Restore route</Button>
-      ) : (
-        <Button variant="outline" className="h-12" onClick={() => setArchived(true)}><Archive className="h-4 w-4" /> Archive route</Button>
-      )}
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button variant="ghost" className="h-12 text-destructive-strong">Delete route</Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this route?</AlertDialogTitle>
-            <AlertDialogDescription>Milestones, sessions, notes and flashcards for "{route.name}" will be deleted. You'll have 10 seconds to undo. To keep them, archive the route instead.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => void deleteRoute()}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      </div>
+
+        </section>
       </div>
 
       <CardDialog open={cardOpen} onOpenChange={setCardOpen} routeId={id} />
