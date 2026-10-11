@@ -133,7 +133,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
   const err = (k: keyof typeof errors) => (show(k) ? <p className="meta-text text-destructive-strong">{errors[k]}</p> : null);
 
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={editing ? "Edit route" : "New route"} submitting={busy || submittingSave} className="sm:max-w-md" footer={<Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave}>{editing ? "Save" : "Start climbing"}</Button>}>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={editing ? "Edit route" : "New route"} dirty={reminderEnabled !== (route?.reminder_enabled ?? false) || reminderTime !== (route?.reminder_time?.slice(0,5) ?? "19:00")} submitting={busy || submittingSave} className="sm:max-w-md" footer={<Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave}>{editing ? "Save" : "Start climbing"}</Button>}>
         <form id={formId} onSubmit={save} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="rn">Name</Label>

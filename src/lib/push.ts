@@ -29,7 +29,8 @@ function decodeKey(value: string) {
 }
 /** Invoked only by the Enable button: no permission prompt during status reads. */
 export async function enablePush() {
-  if (await pushState() === "host-unavailable") throw new Error("Notifications are unavailable on this host.");
+  // Keep permission request in the original tap's task (Safari requires user activation).
+  if (serviceWorkerRefused() || !("Notification" in window) || !("PushManager" in window)) throw new Error("Notifications are unavailable on this host.");
   const permission = await Notification.requestPermission();
   if (permission !== "granted") return pushState();
   const registration = await navigator.serviceWorker.getRegistration("/");

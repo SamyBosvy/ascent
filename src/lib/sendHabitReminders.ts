@@ -2,7 +2,7 @@ import { buildPushPayload, type VapidKeys } from "@block65/webcrypto-web-push";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { reminderEligible, reminderPayload, dateInZone, validPushEndpoint } from "./habitReminders";
-import { addDays, weekStartOf, zonedMidnight } from "./time";
+import { weekStartOf } from "./time";
 
 async function allRows<T>(query: (a: number, b: number) => PromiseLike<{ data: T[] | null; error: unknown }>) {
   const rows: T[] = [];
