@@ -1,4 +1,5 @@
 import { blockingError } from "@/lib/queryState";
+import { usePrefersReducedMotion } from "@/lib/motion";
 import { RouteDot } from "@/components/app/RouteDot";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
