@@ -69,6 +69,6 @@
 - [x] Typography check and 229 tests pass; summit/tent/flag harness checks at 390×844 light/dark show no overflow; harness removed, no persistent data or account changes; recorded credits since previous report: 1014.964648311 → 1022.364648311 (7.40)
 
 # Batch 21
-- [ ] Audit animation/transition sources, including library and JS motion
-- [ ] Global CSS reduced-motion net, shared live preference helper, chart gating; preserve normal motion
-- [ ] Helper/chart tests, full suite and typography check; 390px drawer/dialog/toast/Insights verification; no persistent data or account changes; report credits
+- [x] Audit animation/transition sources, including library and JS motion: custom flags/glow/reveal/pulse, climber, tw-animate overlays, vaul, sonner, skeletons, hover/expand, Recharts; no smooth-scroll/element.animate/rAF calls in app code
+- [x] Global CSS reduced-motion net, SSR-safe shared live preference helper, all Insights bars/lines/tooltips gated; Review shares helper; existing targeted rules retained and normal motion preserved
+- [x] Helper and actual Insights chart tests; 232 tests and typography pass; 390px drawer/dialog/toast/populated chart harness and signed-in Insights checked with reduced motion (zero slow running animations); harness removed, no persistent data/settings/metadata changes; recorded credits since last report 1022.364648311 → 1035.364648311 (13.00)
