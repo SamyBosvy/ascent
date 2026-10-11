@@ -3,8 +3,8 @@ import { routeColourToken } from "@/lib/routeColours";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { BarChart, CartesianGrid, Legend, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
-import { MotionBar as Bar, MotionLine as Line, MotionTooltip as Tooltip } from "@/components/app/MotionChart";
+import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { usePrefersReducedMotion } from "@/lib/motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPaged, useRouteStats, useRoutes, weekStartDate } from "@/lib/data";
@@ -53,6 +53,7 @@ function useInsightRows() {
 }
 
 function Insights() {
+  const reduced = usePrefersReducedMotion();
   const { data: routes, error: routesError } = useRoutes();
   const { data: stats, error: statsError } = useRouteStats();
   const { data: rows, error: rowsError } = useInsightRows();
@@ -113,9 +114,9 @@ function Insights() {
                 <CartesianGrid stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="week" {...axis} />
                 <YAxis {...axis} width={30} />
-                <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12 }} />
+                <Tooltip isAnimationActive={!reduced} contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12 }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                {routeIds.map((rid) => <Bar key={rid} dataKey={rid} name={name(rid)} stackId="a" fill={routeColourToken(routes.find((r) => r.id === rid) ?? { id: rid })} />)}
+                {routeIds.map((rid) => <Bar isAnimationActive={!reduced} key={rid} dataKey={rid} name={name(rid)} stackId="a" fill={routeColourToken(routes.find((r) => r.id === rid) ?? { id: rid })} />)}
               </BarChart>
             </ResponsiveContainer>
             </div>
@@ -139,8 +140,8 @@ function Insights() {
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis dataKey="week" {...axis} />
               <YAxis {...axis} width={36} domain={[0, 100]} unit="%" />
-              <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12 }} />
-              <Line type="monotone" dataKey="retention" stroke="var(--chart-1)" strokeWidth={2.5} connectNulls dot={{ r: 3 }} />
+              <Tooltip isAnimationActive={!reduced} contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12 }} />
+              <Line isAnimationActive={!reduced} type="monotone" dataKey="retention" stroke="var(--chart-1)" strokeWidth={2.5} connectNulls dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
           </div>
