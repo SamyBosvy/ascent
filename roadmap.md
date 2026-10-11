@@ -67,3 +67,8 @@
 - [x] Restore original large summit, flag and tent illustrations exactly against 83bf9dd; flag-rise runs for 900ms and is disabled under reduced motion
 - [x] Audit larger custom icon uses; only the explicitly allowed Summits shelf uses 32×40px, others use 16–20px
 - [x] Typography check and 229 tests pass; summit/tent/flag harness checks at 390×844 light/dark show no overflow; harness removed, no persistent data or account changes; recorded credits since previous report: 1014.964648311 → 1022.364648311 (7.40)
+
+# Batch 21
+- [x] Audit animation/transition sources, including library and JS motion: custom flags/glow/reveal/pulse, climber, tw-animate overlays, vaul, sonner, skeletons, hover/expand, Recharts; no smooth-scroll/element.animate/rAF calls in app code
+- [x] Global CSS reduced-motion net, SSR-safe shared live preference helper, all Insights bars/lines/tooltips gated; Review shares helper; existing targeted rules retained and normal motion preserved
+- [x] Helper and actual Insights chart tests; 232 tests and typography pass; 390px drawer/dialog/toast/populated chart harness and signed-in Insights checked with reduced motion (zero slow running animations); harness removed, no persistent data/settings/metadata changes; recorded credits since last report 1022.364648311 → 1035.364648311 (13.00)

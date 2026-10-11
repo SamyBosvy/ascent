@@ -1,4 +1,5 @@
 import { blockingError } from "@/lib/queryState";
+import { usePrefersReducedMotion } from "@/lib/motion";
 import { RouteDot } from "@/components/app/RouteDot";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -116,13 +117,7 @@ function Review() {
   const touch = useRef<{ x: number; y: number; horizontal: boolean; vertical: boolean } | null>(null);
   const [drag, setDrag] = useState(0);
   const suppressClick = useRef(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReducedMotion(media.matches);
-    update(); media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
+  const reducedMotion = usePrefersReducedMotion();
   function touchStart(e: React.TouchEvent<HTMLDivElement>) {
     if (!flipped || busy || (e.target as HTMLElement).closest('button,a')) return;
     const t = e.touches[0];

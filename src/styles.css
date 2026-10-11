@@ -436,3 +436,16 @@
   .authenticated-main { padding-bottom: 3rem; }
   .mobile-bottom-nav, .mobile-session { display: none; }
 }
+
+/* App-wide net, including library overlays, toasts and pseudo-elements. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
