@@ -50,3 +50,9 @@
 - [x] Apply type roles across authenticated screens, overlays and empty states
 - [x] Minimum-size lint passed; 206 tests passed; signed-in Today/Settings 390×844 light/dark checks passed (no overflow or undersized text); build clean
 - [x] Report scale, per-screen changes, test count and recorded credits; no persistent data or account changes
+
+# Batch 18
+- [ ] Shared custom camp and route-type SVG set with exhaustive mapping
+- [ ] Replace camp/summit/type symbols only; retain accessible labels and contrast
+- [ ] Icon tests, typography minimum check and full suite
+- [ ] Routes and unsaved RouteDialog at 390×844 light/dark; report and credits
