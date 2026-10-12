@@ -50,6 +50,7 @@ export async function setCardsState(
     await patchCards(ids, patch);
   } catch (e) {
     toast.error(`Couldn't update: ${(e as Error).message}`);
+    refresh();
     return false;
   }
   refresh();
