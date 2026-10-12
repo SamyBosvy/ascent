@@ -9,9 +9,29 @@ export function tomorrow() {
 
 type Patch = { suspended_at?: string | null; buried_until?: string | null };
 
+export function chunk<T>(items: T[], size = 100): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
 export async function patchCards(ids: string[], patch: Patch) {
-  const { error } = await supabase.from("cards").update(patch).in("id", ids);
-  if (error) throw new Error(error.message);
+  let done = 0;
+  for (const part of chunk(ids)) {
+    const { error } = await supabase.from("cards").update(patch).in("id", part);
+    if (error) throw new Error(`Updated ${done} of ${ids.length} cards, then failed: ${error.message}`);
+    done += part.length;
+  }
+}
+
+export async function deleteCards(ids: string[]): Promise<number> {
+  let done = 0;
+  for (const part of chunk(ids)) {
+    const { error } = await supabase.from("cards").delete().in("id", part);
+    if (error) throw new Error(`Deleted ${done} of ${ids.length} cards, then failed: ${error.message}`);
+    done += part.length;
+  }
+  return done;
 }
 
 /**
