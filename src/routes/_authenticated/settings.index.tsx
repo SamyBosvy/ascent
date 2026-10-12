@@ -158,8 +158,11 @@ function Settings() {
       <section>
         <SectionTitle>Your data</SectionTitle>
         <div className="space-y-2">
-          <Button variant="outline" className="h-12 w-full justify-start" onClick={exportData}>
-            <Download className="h-4 w-4" /> Export all my data (JSON + flashcards CSV)
+          <Button variant="outline" className="h-12 w-full justify-start" disabled={exportingJson} onClick={exportJson}>
+            <Download className="h-4 w-4" /> {exportingJson ? "Exporting…" : "Export all my data (JSON)"}
+          </Button>
+          <Button variant="outline" className="h-12 w-full justify-start" disabled={exportingCsv} onClick={exportCsv}>
+            <Download className="h-4 w-4" /> {exportingCsv ? "Exporting…" : "Export flashcards (CSV)"}
           </Button>
           <ImportBackup />
           <AlertDialog
