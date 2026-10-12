@@ -43,6 +43,8 @@ function Settings() {
   const { data: newPerDay } = useNewPerDay();
   const pending = usePendingCount();
   const online = useOnline();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const { submitting: deleting, submit: submitDelete } = useSubmission();
 
   async function signOut() {
     await qc.cancelQueries();
@@ -71,15 +73,17 @@ function Settings() {
 
   async function deleteAccount() {
     if (!requireOnline("Deleting your account")) return;
-    try {
-      await deleteMyAccount();
-      await qc.cancelQueries();
-      qc.clear();
-      await supabase.auth.signOut();
-      navigate({ to: "/", replace: true });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not delete account");
-    }
+    await submitDelete(async () => {
+      try {
+        await deleteMyAccount();
+        await qc.cancelQueries();
+        qc.clear();
+        await supabase.auth.signOut();
+        navigate({ to: "/", replace: true });
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Could not delete account");
+      }
+    });
   }
 
   if (newPerDay == null) return <ScreenSkeleton screen="settings" />;
