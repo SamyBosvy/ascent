@@ -11,7 +11,7 @@ import { MoreHorizontal, Search } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cardState, fetchPaged, isLive, localDate, useRefresh, useRoutes, type Card, type CardState } from "@/lib/data";
-import { deleteCardWithUndo, setCardsState } from "@/lib/cardActions";
+import { deleteCardWithUndo, deleteCards, setCardsState } from "@/lib/cardActions";
 import { CardDialog } from "@/components/app/CardDialog";
 import { CardText } from "@/components/app/CardText";
 import { Empty, NativeSelect } from "@/components/app/fields";
@@ -92,6 +92,7 @@ function CardsPage() {
   const [moving, setMoving] = useState<string[] | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [bulkDelete, setBulkDelete] = useState(false);
+  const { submitting: deleting, submit: submitDelete } = useSubmission();
   useEffect(() => setSelected(new Set()), [search.route, state, sort, term]);
 
   { const e = blockingError([routesError, routes], [cardsError, cards]); if (e) throw e; }
@@ -108,11 +109,16 @@ function CardsPage() {
     if (await setCardsState(ids, action, refresh)) setSelected(new Set());
   }
   async function doBulkDelete() {
-    const { error } = await supabase.from("cards").delete().in("id", ids);
-    if (error) { toast.error(`Couldn't delete: ${error.message}`); return; }
-    toast.success(`${ids.length} card${ids.length === 1 ? "" : "s"} deleted.`);
-    setSelected(new Set());
-    refresh();
+    await submitDelete(async () => {
+      try {
+        const n = await deleteCards(ids);
+        toast.success(`${n} card${n === 1 ? "" : "s"} deleted.`);
+      } catch (e) {
+        toast.error((e as Error).message);
+      }
+      setSelected(new Set());
+      refresh();
+    });
   }
 
   return (
@@ -221,7 +227,7 @@ function CardsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void doBulkDelete()}>Delete</AlertDialogAction>
+            <AlertDialogAction disabled={deleting} onClick={(e) => { e.preventDefault(); void doBulkDelete().then(() => setBulkDelete(false)); }}>{deleting ? "Deleting…" : "Delete"}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
