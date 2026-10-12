@@ -46,13 +46,31 @@ const LABEL: Record<OutboxItem["kind"], string> = {
 };
 
 let qc: QueryClient | null = null;
+let deferDepth = 0;
+let refreshPending = false;
+/** Hold back app-wide refreshes (e.g. during a review session); the returned end() runs one if any were requested. */
+export function deferSyncRefresh(): () => void {
+  deferDepth++;
+  let ended = false;
+  return () => {
+    if (ended) return;
+    ended = true;
+    deferDepth--;
+    if (deferDepth === 0 && refreshPending) { refreshPending = false; void qc?.invalidateQueries(); }
+  };
+}
+export function requestRefresh() {
+  if (deferDepth > 0) refreshPending = true;
+  else void qc?.invalidateQueries();
+}
+export function __setSyncQueryClientForTests(c: QueryClient | null) { qc = c; deferDepth = 0; refreshPending = false; }
 /** Wire the outbox to the database and the query cache. Called once by the signed-in shell. */
 export async function startSync(queryClient: QueryClient, userId: string) {
   qc = queryClient;
   configureOutbox({
     sender: send,
     onDropped: (item, reason) => toast.error(`Couldn't sync ${LABEL[item.kind]} — ${reason || "it could not be applied"}.`),
-    onSynced: () => void queryClient.invalidateQueries(),
+    onSynced: () => requestRefresh(),
   });
   setOutboxUser(userId);
   await migrateLegacyReviewQueue();

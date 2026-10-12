@@ -12,6 +12,7 @@ import { fetchPaged, localDate, useNewPerDay, useNewReviewedToday, useRefresh, u
 import { setCardsState } from "@/lib/cardActions";
 import { MoreHorizontal, Moon, PauseCircle, Pencil, Undo2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { deferSyncRefresh, requestRefresh } from "@/lib/sync";
 import { saveReview, undoReview, type PendingReview } from "@/lib/reviewQueue";
 import { type Rating } from "@/lib/srs";
 import { Empty, NativeSelect } from "@/components/app/fields";
@@ -104,6 +105,9 @@ function Review() {
   const showAnswerRef = useRef<HTMLButtonElement>(null);
   const ratingsRef = useRef<HTMLDivElement>(null);
   const focusReview = useRef(false);
+  const sessionActive = queue !== null;
+  // Hold back sync-triggered app-wide refreshes during a session; one refresh runs when it ends.
+  useEffect(() => { if (!sessionActive) return; return deferSyncRefresh(); }, [sessionActive]);
   useEffect(() => {
     if (!focusReview.current || !card) return;
     if (flipped) ratingsRef.current?.focus();
@@ -169,7 +173,6 @@ function Review() {
     const pending: PendingReview = { id: crypto.randomUUID(), card_id: c.id, rating: r, ...next, reviewed_at: reviewedAt };
     const signal = { cancelled: false };
     const promise = saveReview(pending, signal).then((ok) => {
-      if (ok) refresh();
       if (!ok && !signal.cancelled) toast("Offline for now. Your rating is saved on this device and will sync automatically.", { id: "review-pending" });
       return ok;
     });
@@ -195,7 +198,7 @@ function Review() {
   }
 
   async function hide(c: Card, action: "suspend" | "bury") {
-    const ok = await setCardsState([c.id], action, refresh, () => {
+    const ok = await setCardsState([c.id], action, requestRefresh, () => {
       setQueue((q) => (q ? [c, ...q.filter((x) => x.id !== c.id)] : q));
       setFlipped(false);
     });
