@@ -5,7 +5,7 @@ import { requireOnline } from "@/lib/sync";
 import { markOnboarding, useOnboarding } from "@/lib/onboarding";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoutes, TYPE_LABEL, type RouteRow, type RouteType } from "@/lib/data";
@@ -55,6 +55,41 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
   const [reminderTime, setReminderTime] = useState(route?.reminder_time?.slice(0,5) ?? "19:00");
   const [lang, setLang] = useState(route?.speech_lang ?? "");
   const [pickedColour, setPickedColour] = useState<number | null>(route ? routeColour(route) : null);
+  // The values the form opened with, captured once so closing can ask before discarding typed input.
+  const initialRef = useRef<{
+    name: string; type: RouteType; description: string; target: string; chapters: string; pages: string;
+    freq: string; times: string; reminderEnabled: boolean; reminderTime: string; lang: string; colour: number | null;
+  } | null>(null);
+  if (initialRef.current === null) {
+    initialRef.current = {
+      name: route?.name ?? "",
+      type: route?.type ?? "book",
+      description: route?.description ?? "",
+      target: route?.target_date ?? "",
+      chapters: "",
+      pages: route?.total_pages ? String(route.total_pages) : "",
+      freq: route?.habit_frequency ?? "daily",
+      times: route?.habit_target ? String(route.habit_target) : "3",
+      reminderEnabled: route?.reminder_enabled ?? false,
+      reminderTime: route?.reminder_time?.slice(0, 5) ?? "19:00",
+      lang: route?.speech_lang ?? "",
+      colour: route ? routeColour(route) : null,
+    };
+  }
+  const initial = initialRef.current;
+  const dirty =
+    name.trim() !== initial.name.trim() ||
+    type !== initial.type ||
+    description.trim() !== initial.description.trim() ||
+    target !== initial.target ||
+    chapters.trim() !== initial.chapters.trim() ||
+    pages.trim() !== initial.pages.trim() ||
+    freq !== initial.freq ||
+    times.trim() !== initial.times.trim() ||
+    reminderEnabled !== initial.reminderEnabled ||
+    reminderTime !== initial.reminderTime ||
+    lang.trim() !== initial.lang.trim() ||
+    pickedColour !== initial.colour;
   const colour = pickedColour ?? leastUsedColour(existingRoutes ?? []);
   const [busy, setBusy] = useState(false);
   const [tried, setTried] = useState(false);
@@ -136,7 +171,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
   const err = (k: keyof typeof errors) => (show(k) ? <p className="meta-text text-destructive-strong">{errors[k]}</p> : null);
 
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={editing ? "Edit route" : "New route"} dirty={reminderEnabled !== (route?.reminder_enabled ?? false) || reminderTime !== (route?.reminder_time?.slice(0,5) ?? "19:00")} submitting={busy || submittingSave} className="sm:max-w-md" footer={<Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave}>{editing ? "Save" : "Start climbing"}</Button>}>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={editing ? "Edit route" : "New route"} dirty={dirty} submitting={busy || submittingSave} className="sm:max-w-md" footer={<Button form={formId} type="submit" className="h-12 w-full" disabled={busy || submittingSave}>{editing ? "Save" : "Start climbing"}</Button>}>
         <form id={formId} onSubmit={save} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="rn">Name</Label>
