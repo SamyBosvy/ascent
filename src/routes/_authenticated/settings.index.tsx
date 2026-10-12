@@ -138,7 +138,12 @@ function Settings() {
             <Download className="h-4 w-4" /> Export all my data (JSON + flashcards CSV)
           </Button>
           <ImportBackup />
-          <AlertDialog>
+          <AlertDialog
+            open={deleteOpen}
+            onOpenChange={(o) => {
+              if (o || !deleting) setDeleteOpen(o);
+            }}
+          >
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="h-12 w-full justify-start text-destructive-strong">
                 <Trash2 className="h-4 w-4" /> Delete my account and all data
@@ -150,8 +155,17 @@ function Settings() {
                 <AlertDialogDescription>All your routes, notes, flashcards, sessions and check-ins are erased and cannot be recovered. Consider exporting first.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={deleteAccount} className="bg-destructive text-destructive-foreground">Delete everything</AlertDialogAction>
+                <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void deleteAccount();
+                  }}
+                  disabled={deleting}
+                  className="bg-destructive text-destructive-foreground"
+                >
+                  {deleting ? "Deleting…" : "Delete everything"}
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
