@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import { requireOnline, syncNow, useOnline, usePendingCount } from "@/lib/sync";
 import { ImportBackup } from "@/components/app/ImportBackup";
 import { AccountSection } from "@/components/app/AccountSection";
 import { Preferences } from "@/components/app/Preferences";
+import { useSubmission } from "@/hooks/use-submission";
 import { SectionTitle } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import {
