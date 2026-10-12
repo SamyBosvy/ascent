@@ -57,22 +57,42 @@ function Settings() {
     navigate({ to: "/", replace: true });
   }
 
-  async function exportData() {
+  async function exportJson() {
     if (!requireOnline("Exporting")) return;
-    // Export needs everything; page through each table so nothing is cut at 1,000 rows.
-    const page = <K extends "routes" | "milestones" | "sessions" | "cards" | "reviews" | "checkins" | "notes">(t: K) =>
-      fetchPaged((a, b) => supabase.from(t).select("*").order("id").range(a, b));
-    const [routes, milestones, sessions, cards, reviews, checkins, notes] = await Promise.all([
-      page("routes"), page("milestones"), page("sessions"), page("cards"), page("reviews"), page("checkins"), page("notes"),
-    ]);
-    const all = { routes, milestones, sessions, cards, reviews, checkins } as {
-      routes: { id: string; name: string }[]; cards: { front: string; back: string; example: string | null; pronunciation: string | null; route_id: string }[];
-      [k: string]: unknown[];
-    };
-    const stamp = new Date().toISOString().slice(0, 10);
-    download(`ascent-export-${stamp}.json`, JSON.stringify({ version: BACKUP_VERSION, exported_at: new Date().toISOString(), email: user.email, ...all, notes }, null, 2), "application/json");
-    const rows = ["front,back,example,pronunciation,route", ...all.cards.map((c) => [c.front, c.back, c.example, c.pronunciation, all.routes.find((r) => r.id === c.route_id)?.name ?? ""].map(csvCell).join(","))];
-    download(`ascent-flashcards-${stamp}.csv`, rows.join("\n"), "text/csv");
+    await submitJson(async () => {
+      try {
+        // Export needs everything; page through each table so nothing is cut at 1,000 rows.
+        const page = <K extends "routes" | "milestones" | "sessions" | "cards" | "reviews" | "checkins" | "notes">(t: K) =>
+          fetchPaged((a, b) => supabase.from(t).select("*").order("id").range(a, b));
+        const [routes, milestones, sessions, cards, reviews, checkins, notes] = await Promise.all([
+          page("routes"), page("milestones"), page("sessions"), page("cards"), page("reviews"), page("checkins"), page("notes"),
+        ]);
+        const all = { routes, milestones, sessions, cards, reviews, checkins };
+        const stamp = new Date().toISOString().slice(0, 10);
+        download(`ascent-export-${stamp}.json`, JSON.stringify({ version: BACKUP_VERSION, exported_at: new Date().toISOString(), email: user.email, ...all, notes }, null, 2), "application/json");
+        toast.success("Export downloaded.");
+      } catch (e) {
+        toast.error(`Couldn't export: ${e instanceof Error ? e.message : "Unknown error"}`);
+      }
+    });
+  }
+
+  async function exportCsv() {
+    if (!requireOnline("Exporting")) return;
+    await submitCsv(async () => {
+      try {
+        const [routes, cards] = await Promise.all([
+          fetchPaged((a, b) => supabase.from("routes").select("*").order("id").range(a, b)),
+          fetchPaged((a, b) => supabase.from("cards").select("*").order("id").range(a, b)),
+        ]);
+        const stamp = new Date().toISOString().slice(0, 10);
+        const rows = ["front,back,example,pronunciation,route", ...cards.map((c) => [c.front, c.back, c.example, c.pronunciation, routes.find((r) => r.id === c.route_id)?.name ?? ""].map(csvCell).join(","))];
+        download(`ascent-flashcards-${stamp}.csv`, rows.join("\n"), "text/csv");
+        toast.success("Export downloaded.");
+      } catch (e) {
+        toast.error(`Couldn't export: ${e instanceof Error ? e.message : "Unknown error"}`);
+      }
+    });
   }
 
   async function deleteAccount() {
