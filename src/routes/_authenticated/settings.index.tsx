@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import { requireOnline, syncNow, useOnline, usePendingCount } from "@/lib/sync";
 import { ImportBackup } from "@/components/app/ImportBackup";
 import { AccountSection } from "@/components/app/AccountSection";
 import { Preferences } from "@/components/app/Preferences";
+import { useSubmission } from "@/hooks/use-submission";
 import { SectionTitle } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +43,8 @@ function Settings() {
   const { data: newPerDay } = useNewPerDay();
   const pending = usePendingCount();
   const online = useOnline();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const { submitting: deleting, submit: submitDelete } = useSubmission();
 
   async function signOut() {
     await qc.cancelQueries();
@@ -69,15 +73,17 @@ function Settings() {
 
   async function deleteAccount() {
     if (!requireOnline("Deleting your account")) return;
-    try {
-      await deleteMyAccount();
-      await qc.cancelQueries();
-      qc.clear();
-      await supabase.auth.signOut();
-      navigate({ to: "/", replace: true });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not delete account");
-    }
+    await submitDelete(async () => {
+      try {
+        await deleteMyAccount();
+        await qc.cancelQueries();
+        qc.clear();
+        await supabase.auth.signOut();
+        navigate({ to: "/", replace: true });
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Could not delete account");
+      }
+    });
   }
 
   if (newPerDay == null) return <ScreenSkeleton screen="settings" />;
@@ -132,7 +138,12 @@ function Settings() {
             <Download className="h-4 w-4" /> Export all my data (JSON + flashcards CSV)
           </Button>
           <ImportBackup />
-          <AlertDialog>
+          <AlertDialog
+            open={deleteOpen}
+            onOpenChange={(o) => {
+              if (o || !deleting) setDeleteOpen(o);
+            }}
+          >
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="h-12 w-full justify-start text-destructive-strong">
                 <Trash2 className="h-4 w-4" /> Delete my account and all data
@@ -144,8 +155,17 @@ function Settings() {
                 <AlertDialogDescription>All your routes, notes, flashcards, sessions and check-ins are erased and cannot be recovered. Consider exporting first.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={deleteAccount} className="bg-destructive text-destructive-foreground">Delete everything</AlertDialogAction>
+                <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void deleteAccount();
+                  }}
+                  disabled={deleting}
+                  className="bg-destructive text-destructive-foreground"
+                >
+                  {deleting ? "Deleting…" : "Delete everything"}
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

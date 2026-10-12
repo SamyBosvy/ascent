@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const INVITE_ONLY = "Ascent is invite-only. Ask the owner for an invitation.";
 const norm = (e: string) => e.trim().toLowerCase();
-const USER_TABLES = ["checkins", "reviews", "cards", "notes", "sessions", "milestones", "routes"] as const;
+const USER_TABLES = ["push_subscriptions", "reminder_log", "checkins", "reviews", "cards", "notes", "sessions", "milestones", "routes", "user_settings"] as const;
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
