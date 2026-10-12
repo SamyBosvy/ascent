@@ -30,8 +30,10 @@ function download(name: string, content: string, type: string) {
   const a = document.createElement("a");
   a.href = url;
   a.download = name;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 const csvCell = (s: string | null) => `"${(s ?? "").replace(/"/g, '""')}"`;
@@ -45,6 +47,8 @@ function Settings() {
   const online = useOnline();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { submitting: deleting, submit: submitDelete } = useSubmission();
+  const { submitting: exportingJson, submit: submitJson } = useSubmission();
+  const { submitting: exportingCsv, submit: submitCsv } = useSubmission();
 
   async function signOut() {
     await qc.cancelQueries();
