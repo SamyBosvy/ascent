@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cardState, fetchPaged, isLive, localDate, useRefresh, useRoutes, type Card, type CardState } from "@/lib/data";
 import { deleteCardWithUndo, deleteCards, setCardsState } from "@/lib/cardActions";
+import { safeTerm } from "@/lib/search";
 import { CardDialog } from "@/components/app/CardDialog";
 import { CardText } from "@/components/app/CardText";
 import { Empty, NativeSelect } from "@/components/app/fields";
