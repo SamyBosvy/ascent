@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SessionPill, StaleSessionPrompt } from "@/components/app/SessionPill";
 import { MobileNavigation } from "@/components/app/MobileNavigation";
+import { TimezoneBanner } from "@/components/app/TimezoneBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { QuickCapture } from "@/components/app/QuickCapture";
 import { CommandPalette } from "@/components/app/CommandPalette";
@@ -187,6 +188,7 @@ function Shell() {
             {online ? `Syncing ${pending} change${pending === 1 ? "" : "s"}…` : `Offline — changes will sync${pending ? ` (${pending} waiting)` : ""}`}
           </div>
         )}
+        <TimezoneBanner />
         <main id="main" tabIndex={-1} className={`authenticated-main mx-auto w-full max-w-4xl flex-1 px-4 pt-6 md:px-10 md:pt-10 ${/^\/routes\/[^/]+\/?$/.test(location.pathname) ? "lg:max-w-6xl lg:px-6" : ""}`}>
           <Outlet />
         </main>
