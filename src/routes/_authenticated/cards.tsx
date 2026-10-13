@@ -48,8 +48,6 @@ const BADGE: Record<CardState, { label: string; variant: "default" | "secondary"
   scheduled: { label: "Scheduled", variant: "outline" },
 };
 
-/** Strip characters that have meaning in PostgREST filter syntax / ilike patterns. */
-const safeTerm = (s: string) => s.replace(/[,()%*\\:"']/g, " ").trim();
 
 function CardsPage() {
   const search = Route.useSearch();
