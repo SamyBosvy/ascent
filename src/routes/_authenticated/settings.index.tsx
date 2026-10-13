@@ -12,6 +12,7 @@ import { requireOnline, syncNow, useOnline, usePendingCount } from "@/lib/sync";
 import { ImportBackup } from "@/components/app/ImportBackup";
 import { AccountSection } from "@/components/app/AccountSection";
 import { Preferences } from "@/components/app/Preferences";
+import { unsubscribeThisDevice } from "@/lib/push";
 import { useSubmission } from "@/hooks/use-submission";
 import { SectionTitle } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
@@ -49,12 +50,16 @@ function Settings() {
   const { submitting: deleting, submit: submitDelete } = useSubmission();
   const { submitting: exportingJson, submit: submitJson } = useSubmission();
   const { submitting: exportingCsv, submit: submitCsv } = useSubmission();
+  const { submitting: signingOut, submit: submitSignOut } = useSubmission();
 
   async function signOut() {
-    await qc.cancelQueries();
-    qc.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/", replace: true });
+    await submitSignOut(async () => {
+      await unsubscribeThisDevice();
+      await qc.cancelQueries();
+      qc.clear();
+      await supabase.auth.signOut();
+      navigate({ to: "/", replace: true });
+    });
   }
 
   async function exportJson() {
@@ -199,7 +204,7 @@ function Settings() {
         </div>
       </section>
 
-      <Button variant="ghost" className="h-12" onClick={signOut}><LogOut className="h-4 w-4" /> Sign out</Button>
+      <Button variant="ghost" className="h-12" disabled={signingOut} onClick={signOut}><LogOut className="h-4 w-4" /> {signingOut ? "Signing out…" : "Sign out"}</Button>
     </div>
   );
 }

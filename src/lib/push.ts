@@ -45,6 +45,22 @@ export async function enablePush(prepare?: () => Promise<unknown>) {
   try { await saveSubscription(subscription); } catch (error) { await subscription.unsubscribe(); throw error; }
   return "enabled" as const;
 }
+/** Removes this device's push subscription before sign-out so reminders stop arriving. Never throws, never blocks sign-out. */
+export async function unsubscribeThisDevice(): Promise<void> {
+  if (!("serviceWorker" in navigator)) return;
+  const withTimeout = <T,>(p: Promise<T>, ms: number) => Promise.race([p, new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), ms))]);
+  try {
+    await withTimeout((async () => {
+      const registration = await navigator.serviceWorker.getRegistration("/");
+      if (!registration) return;
+      const subscription = await registration.pushManager.getSubscription();
+      if (!subscription) return;
+      try { await deleteSubscription(subscription.endpoint); } catch { /* keep going: the browser unsubscribe must still run */ }
+      try { await subscription.unsubscribe(); } catch { /* already gone is fine */ }
+    })(), 3000);
+  } catch { /* sign-out must never be blocked by push cleanup */ }
+}
+
 export async function disablePush() {
   const registration = await navigator.serviceWorker.getRegistration("/");
   const subscription = await registration?.pushManager.getSubscription();
