@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cardState, fetchPaged, isLive, localDate, useRefresh, useRoutes, type Card, type CardState } from "@/lib/data";
 import { deleteCardWithUndo, deleteCards, setCardsState } from "@/lib/cardActions";
+import { safeTerm } from "@/lib/search";
 import { CardDialog } from "@/components/app/CardDialog";
 import { CardText } from "@/components/app/CardText";
 import { Empty, NativeSelect } from "@/components/app/fields";
@@ -48,8 +49,6 @@ const BADGE: Record<CardState, { label: string; variant: "default" | "secondary"
   scheduled: { label: "Scheduled", variant: "outline" },
 };
 
-/** Strip characters that have meaning in PostgREST filter syntax / ilike patterns. */
-const safeTerm = (s: string) => s.replace(/[,()%*\\:"']/g, " ").trim();
 
 function CardsPage() {
   const search = Route.useSearch();

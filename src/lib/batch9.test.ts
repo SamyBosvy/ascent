@@ -115,7 +115,7 @@ describe("pacing", () => {
 import { addTags, prefixTsQuery, safeTerm } from "./search";
 describe("search helpers", () => {
   it("builds a safe prefix tsquery", () => {
-    expect(prefixTsQuery("  café  ser:vice & (x)")).toBe("café:* & service:* & x:*");
+    expect(prefixTsQuery("  café  ser:vice & (x)")).toBe("café:* & ser:* & vice:* & x:*");
     expect(prefixTsQuery("!!! ")).toBe("");
   });
   it("strips PostgREST-significant characters", () => expect(safeTerm("a,(b)*%c")).toBe("a b c"));

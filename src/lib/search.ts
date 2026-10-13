@@ -1,9 +1,9 @@
 /** Words safe for a prefix tsquery ('simple' config): letters/digits only, each matched as a prefix. */
 export function prefixTsQuery(q: string) {
-  return q.split(/\s+/).map((w) => w.replace(/[^\p{L}\p{N}_]/gu, "")).filter(Boolean).map((w) => `${w}:*`).join(" & ");
+  return q.split(/[^\p{L}\p{N}_]+/u).filter(Boolean).map((w) => `${w}:*`).join(" & ");
 }
 /** Strip characters with meaning in PostgREST filters / ilike patterns. */
-export const safeTerm = (s: string) => s.replace(/[,()%*\\:"'.]/g, " ").replace(/\s+/g, " ").trim();
+export const safeTerm = (s: string) => s.replace(/['’‘.:]/g, "_").replace(/[,()%*\\"\\]/g, " ").replace(/\s+/g, " ").trim();
 
 /** Normalise a tag the way the database does: trimmed, lowercase, max 30 chars. */
 export const normalizeTag = (t: string) => t.trim().toLowerCase().replace(/\s+/g, " ");
