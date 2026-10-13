@@ -12,9 +12,22 @@ self.addEventListener('notificationclick', (event) => {
   const path = /^\/routes\/[0-9a-f-]{36}$/.test(event.notification.data?.url ?? '') ? event.notification.data.url : '/today';
   const url = new URL(path, self.location.origin).href;
   event.waitUntil((async () => {
-    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const existing = windows.find((client) => new URL(client.url).origin === self.location.origin);
-    if (existing) { await existing.navigate(url); await existing.focus(); }
-    else await self.clients.openWindow(url);
+    try {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const existing = windows.find((client) => new URL(client.url).origin === self.location.origin);
+      if (existing) {
+        try { await existing.focus(); } catch { /* focus not guaranteed */ }
+        // postMessage is enough for the app to route itself; navigate() can reject
+        // or resolve null for uncontrolled clients, so it is best-effort only.
+        try { existing.postMessage({ type: 'ascent:navigate', path }); } catch { /* ignore */ }
+        if ('navigate' in existing) {
+          try { await existing.navigate(url); } catch { /* ignore */ }
+        }
+      } else {
+        await self.clients.openWindow(url);
+      }
+    } catch {
+      try { await self.clients.openWindow(url); } catch { /* nothing more to do */ }
+    }
   })());
 });

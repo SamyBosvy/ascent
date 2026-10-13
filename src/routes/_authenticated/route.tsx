@@ -135,6 +135,19 @@ function Shell() {
     void navigate({ to: location.pathname, search: {} as never, replace: true });
   }, [location.searchStr, location.pathname, navigate]);
 
+  // A push notification tap routes an already-open window from the service worker.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      const path = event.data?.path;
+      if (event.data?.type !== "ascent:navigate" || typeof path !== "string") return;
+      if (!/^\/routes\/[0-9a-f-]{36}$/.test(path) && path !== "/today") return;
+      void navigate({ to: path });
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [navigate]);
+
   return (
     <div className="min-h-screen md:flex">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-background focus:p-3 focus:text-foreground focus:outline-none focus:ring-2 focus:ring-ring">Skip to content</a>
