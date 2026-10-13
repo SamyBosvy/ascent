@@ -54,8 +54,8 @@ describe("unsubscribeThisDevice", () => {
     vi.useFakeTimers();
     Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: { getRegistration: () => new Promise(() => {}) } });
     const pending = unsubscribeThisDevice();
-    const result = await vi.waitFor(() => { vi.advanceTimersByTime(3000); return pending; });
-    expect(result).toBeUndefined();
+    await vi.advanceTimersByTimeAsync(3000);
+    await expect(pending).resolves.toBeUndefined();
     expect(mocks.remove).not.toHaveBeenCalled();
     vi.useRealTimers();
   });
