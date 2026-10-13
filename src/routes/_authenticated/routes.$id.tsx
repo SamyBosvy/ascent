@@ -325,7 +325,7 @@ function RouteDetail() {
                   <Check className="h-4 w-4" /> Check in
                 </Button>
               ) : (
-                <span className="body-text text-primary-strong">Done for now</span>
+                <span className="body-text text-primary-strong">Target met this week</span>
               )}
               {checkinTick.active === id && <SuccessTick className="text-primary-strong" />}
             </div>

@@ -151,7 +151,7 @@ function Today() {
                       <Check className="h-4 w-4" /> Check in
                     </Button>
                   ) : (
-                    <span className="flex h-12 items-center gap-1 px-3 body-text text-primary-strong"><Check className="h-4 w-4" /> Done</span>
+                    <span className="flex h-12 items-center gap-1 px-3 body-text text-primary-strong"><Check className="h-4 w-4" /> Target met this week</span>
                   )}
                 </li>
               );
