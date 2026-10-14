@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fuzzInterval, schedule, type Rating } from "./srs";
+import { EASE_DELTA, fuzzInterval, schedule, type Rating } from "./srs";
 
 afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers(); });
 const now = new Date("2026-10-07T12:00:00Z");
 describe("schedule", () => {
   for (const [state, card, intervals, eases] of [
-    ["new", { ease: 2.5, interval_days: 0, reps: 0 }, [0, 1, 1, 1], [1.96, 2.36, 2.5, 2.6]],
-    ["mature", { ease: 2.5, interval_days: 30, reps: 4 }, [0, 36, 75, 101], [1.96, 2.36, 2.5, 2.6]],
+    ["new", { ease: 2.5, interval_days: 0, reps: 0 }, [0, 1, 1, 1], [2.3, 2.35, 2.5, 2.65]],
+    ["mature", { ease: 2.5, interval_days: 30, reps: 4 }, [0, 36, 75, 103], [2.3, 2.35, 2.5, 2.65]],
   ] as const) {
     for (const rating of [0, 1, 2, 3] as Rating[]) {
       it(`${state} card, rating ${rating}: ease, interval, reps and exact due time`, () => {
