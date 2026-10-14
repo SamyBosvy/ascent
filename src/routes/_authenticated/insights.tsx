@@ -7,7 +7,7 @@ import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContai
 import { usePrefersReducedMotion } from "@/lib/motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPaged, useRouteStats, useRoutes, weekStartDate } from "@/lib/data";
+import { fetchPaged, isLive, useRouteStats, useRoutes, weekStartDate } from "@/lib/data";
 import { getPrefs } from "@/lib/prefs";
 import { addDays, shortDate, zonedMidnight } from "@/lib/time";
 import { habitConsistency } from "@/lib/camp";
