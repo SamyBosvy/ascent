@@ -120,6 +120,13 @@
       "when": 1791936297808,
       "tag": "0016_add_route_id_indexes_and_drop_duplicate",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791946961940,
+      "tag": "0017_point_habit_reminders_at_published_domain",
+      "breakpoints": true
     }
   ]
 }
