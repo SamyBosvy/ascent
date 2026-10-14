@@ -12,6 +12,7 @@ import { NativeSelect } from "./fields";
 import { CardText } from "./CardText";
 import { Checkbox } from "@/components/ui/checkbox";
 import { hasCloze } from "@/lib/cardText";
+import { ChevronDown } from "lucide-react";
 import { haptic } from "@/lib/feedback";
 import { successFeedback } from "./SuccessTick";
 
@@ -42,6 +43,7 @@ export function CardDialog({
   const [example, setExample] = useState("");
   const [pron, setPron] = useState("");
   const [reverse, setReverse] = useState(false);
+  const [tipsOpen, setTipsOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -50,6 +52,7 @@ export function CardDialog({
       setExample(card?.example ?? "");
       setPron(card?.pronunciation ?? "");
       setReverse(false);
+      setTipsOpen(false);
       setRouteId(card?.route_id ?? fixedRoute ?? data?.routes[0]?.id ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -126,7 +129,19 @@ export function CardDialog({
               </div>
             </>
           )}
-          <p className="meta-text text-muted-foreground">Markdown works: **bold**, *italics*, lists, `code`. Cloze: {"{{c1::answer}}"} or {"{{c1::answer::hint}}"} in the front.</p>
+          <div>
+            <Button type="button" variant="ghost" aria-expanded={tipsOpen} onClick={() => setTipsOpen((v) => !v)} className="meta-text min-h-12 w-full justify-start px-2 text-left text-muted-foreground">
+              Formatting tips
+              <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${tipsOpen ? "rotate-180" : ""}`} />
+            </Button>
+            {tipsOpen && (
+              <div className="space-y-1 px-2 pb-1">
+                <p className="meta-text text-muted-foreground">**word** for bold, *word* for italics</p>
+                <p className="meta-text text-muted-foreground">Start lines with - for a bullet list</p>
+                <p className="meta-text text-muted-foreground">Hide a word to fill in: write {"{{c1::word}}"} on the front. Add a hint with {"{{c1::word::hint}}"}.</p>
+              </div>
+            )}
+          </div>
           {!card && (
             <label htmlFor="card-reverse" className="flex min-h-12 items-center gap-3 label-text">
               <Checkbox id="card-reverse" checked={reverse} disabled={hasCloze(front)} onCheckedChange={(v) => setReverse(!!v)} /> Also create reverse card
