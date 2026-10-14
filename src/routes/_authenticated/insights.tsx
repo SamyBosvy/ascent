@@ -7,7 +7,7 @@ import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContai
 import { usePrefersReducedMotion } from "@/lib/motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPaged, useRouteStats, useRoutes, weekStartDate } from "@/lib/data";
+import { fetchPaged, isLive, useRouteStats, useRoutes, weekStartDate } from "@/lib/data";
 import { getPrefs } from "@/lib/prefs";
 import { addDays, shortDate, zonedMidnight } from "@/lib/time";
 import { habitConsistency } from "@/lib/camp";
@@ -92,7 +92,7 @@ function Insights() {
     return { week: shortDate(w.day), retention: rs.length ? Math.round((rs.filter((r) => r.rating >= 2).length / rs.length) * 100) : null };
   });
 
-  const habits = routes.filter((r) => r.type === "habit");
+  const habits = routes.filter((r) => r.type === "habit" && isLive(r));
   const summits = routes.filter((r) => r.summited_at).sort((a, b) => b.summited_at!.localeCompare(a.summited_at!));
   const axis = { stroke: "var(--muted-foreground)", fontSize: 12 };
 

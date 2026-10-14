@@ -39,7 +39,7 @@ function Summits() {
                   <dl className="mt-4 grid grid-cols-3 gap-2 body-text">
                     <div><dt className="meta-text text-muted-foreground">Started</dt><dd>{format(new Date(r.created_at), "MMM d, yy")}</dd></div>
                     <div><dt className="meta-text text-muted-foreground">Summited</dt><dd>{format(new Date(r.summited_at!), "MMM d, yy")}</dd></div>
-                    <div><dt className="meta-text text-muted-foreground">Hours</dt><dd className="stat-text">{minutesLabel(mins)}</dd></div>
+                    <div><dt className="meta-text text-muted-foreground">Time</dt><dd className="stat-text">{minutesLabel(mins)}</dd></div>
                   </dl>
                 </Link>
               </li>
