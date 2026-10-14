@@ -11,7 +11,7 @@ export function sm2(
   let { ease, interval_days: interval, reps } = card;
   ease = Math.max(1.3, ease + EASE_DELTA[rating]);
   let due: Date;
-  if (rating < 3) {
+  if (rating === 0) {
     reps = 0;
     interval = 0;
     due = new Date(now.getTime() + 10 * 60 * 1000);
