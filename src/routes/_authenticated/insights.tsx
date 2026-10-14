@@ -92,7 +92,7 @@ function Insights() {
     return { week: shortDate(w.day), retention: rs.length ? Math.round((rs.filter((r) => r.rating >= 2).length / rs.length) * 100) : null };
   });
 
-  const habits = routes.filter((r) => r.type === "habit");
+  const habits = routes.filter((r) => r.type === "habit" && isLive(r));
   const summits = routes.filter((r) => r.summited_at).sort((a, b) => b.summited_at!.localeCompare(a.summited_at!));
   const axis = { stroke: "var(--muted-foreground)", fontSize: 12 };
 
