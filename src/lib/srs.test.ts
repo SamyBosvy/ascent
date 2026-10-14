@@ -28,9 +28,23 @@ describe("schedule", () => {
       expect(c.ease).toBe(1.3);
     }
   });
-  it("preserves SM-2's uncapped ease: easy adds 0.1 even above 2.5", () => {
+  it("preserves uncapped ease: easy adds 0.15 even above 2.5", () => {
     vi.spyOn(Math, "random").mockReturnValue(0.5);
-    expect(schedule({ ease: 3, interval_days: 1, reps: 0 }, 3, now).ease).toBeCloseTo(3.1);
+    expect(schedule({ ease: 3, interval_days: 1, reps: 0 }, 3, now).ease).toBeCloseTo(3.15);
+  });
+  it("uses the fixed Anki-style ease deltas from 2.5", () => {
+    for (const r of [0, 1, 2, 3] as Rating[])
+      expect(schedule({ ease: 2.5, interval_days: 1, reps: 0 }, r, now).ease).toBeCloseTo(2.5 + EASE_DELTA[r]);
+    expect(EASE_DELTA).toEqual({ 0: -0.2, 1: -0.15, 2: 0, 3: 0.15 });
+  });
+  it("floors ease at exactly 1.3 when againing a near-floor card", () => {
+    expect(schedule({ ease: 1.35, interval_days: 1, reps: 2 }, 0, now).ease).toBe(1.3);
+  });
+  it("keeps the step intervals: reps 0 Good = 1, reps 1 Good = 6, reps 1 Hard = 3", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    expect(schedule({ ease: 2.5, interval_days: 0, reps: 0 }, 2, now).interval_days).toBe(1);
+    expect(schedule({ ease: 2.5, interval_days: 1, reps: 1 }, 2, now).interval_days).toBe(6);
+    expect(schedule({ ease: 2.5, interval_days: 1, reps: 1 }, 1, now).interval_days).toBe(3);
   });
   it("second repetition uses 3 days for hard and 6 for good/easy before fuzz", () => {
     vi.spyOn(Math, "random").mockReturnValue(0.5);
