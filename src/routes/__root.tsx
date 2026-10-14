@@ -18,6 +18,7 @@ import { clearPersisted } from "../lib/persist";
 import { stopSync } from "../lib/sync";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { THEME_BOOT_SCRIPT, watchSystemTheme } from "../lib/prefs";
+import { registerServiceWorker } from "../lib/pwa";
 
 function NotFoundComponent() {
   return (
@@ -122,6 +123,7 @@ function RootComponent() {
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
   useEffect(() => watchSystemTheme(), []);
+  useEffect(() => { void registerServiceWorker(); }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
