@@ -102,11 +102,11 @@ function Insights() {
       <section>
         <SectionTitle>Hours per route, by week</SectionTitle>
         <div role="group" aria-label="Hours spent per route each week, over the last eight weeks" className={routeIds.length ? "surface h-72 p-3" : ""}>
-          <table className="sr-only">
+          <div className="sr-only"><table>
             <caption>Hours per route, by week</caption>
             <thead><tr><th scope="col">Week</th>{routeIds.map(rid => <th key={rid} scope="col">{name(rid)} (hours)</th>)}</tr></thead>
             <tbody>{timeData.map(row => <tr key={row["week"]}><th scope="row">{row["week"]}</th>{routeIds.map(rid => <td key={rid}>{row[rid]}</td>)}</tr>)}</tbody>
-          </table>
+          </table></div>
           {routeIds.length ? (
             <div aria-hidden="true" className="h-full">
             <ResponsiveContainer>
@@ -126,11 +126,11 @@ function Insights() {
       <section>
         <SectionTitle>Flashcard retention</SectionTitle>
         <div role="group" aria-label="Weekly flashcard retention percentage over the last eight weeks" className={retention.every(r => r.retention == null) ? "" : "surface h-64 p-3"}>
-          <table className="sr-only">
+          <div className="sr-only"><table>
             <caption>Flashcard retention</caption>
             <thead><tr><th scope="col">Week</th><th scope="col">Retention (%)</th></tr></thead>
             <tbody>{retention.map(row => <tr key={row.week}><th scope="row">{row.week}</th><td>{row.retention == null ? "No reviews" : `${row.retention}%`}</td></tr>)}</tbody>
-          </table>
+          </table></div>
           {retention.every((r) => r.retention == null) ? (
             <Empty illustration="cards" title="No recent reviews" description="Your recall over the last eight weeks will appear here." primaryAction={<Button asChild><Link to="/review">Open review</Link></Button>} />
           ) : (
