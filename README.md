@@ -1,24 +1,32 @@
-# Ascent 
+# Ascent
 
-Implement exactly the screenshot and nothing else
+**Every skill is a mountain. Climb it one camp at a time.**
 
-This project was built with [Lovable](https://lovable.dev).
+## What Ascent is
 
-## Build with Lovable
+Ascent is a private, invite-only app for tracking what you're learning. Each goal is a route (a book, language, skill, course, paper or habit), and you climb it from Base Camp through Camp 1, 2 and 3 to the Summit. Progress comes from what you actually do: milestones ticked, study time logged, pages read, habit check-ins and flashcard reviews. Notes and spaced-repetition cards live with each route, and Insights shows how the climb is going over time.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/993c1849-0b89-4816-a04c-7d703d69d4ec).
+## Access
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+Ascent is invite-only. Public sign-up is disabled. The owner manages invites from **Settings > Access** (owner account only), and only invited emails can create an account. The owner role comes from a server secret, never from being the first account.
+
+## Stack
+
+- TanStack Start + React, Tailwind CSS
+- Lovable Cloud (Supabase: auth, Postgres with row-level security)
+- Installable PWA with offline support, an offline write queue and web push habit reminders
+
+## Data
+
+Each account's data is isolated with row-level security, including from the owner. Routes can be archived (hidden, data kept) or deleted with an undo window before they're permanently removed. Backup export and import are available in **Settings**.
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+    bun install      # or npm install
+    bun run dev      # or npm run dev - start the dev server
+    bun run test     # or npm run test - run the full test suite (vitest)
+    bun run lint     # or npm run lint
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+## Architecture rules
+
+Before making any change, read the architecture rules in AGENTS.md, plus src/components/app/AGENTS.md before touching components. In particular: accounts are created only through the registerAccount server function, nothing writes to the database from render or effects, summits need explicit user confirmation, and every query excludes soft-deleted routes.
