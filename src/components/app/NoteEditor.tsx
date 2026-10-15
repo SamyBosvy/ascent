@@ -279,7 +279,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
           </NativeSelect>
         </div>
       )}
-      <Input aria-label="Note title" value={title} onChange={(e) => { setTitle(e.target.value); edit(); }} placeholder="Title" className="h-14 border-0 px-0 page-title shadow-none focus-visible:ring-0" />
+      <Input name="note-title" aria-label="Note title" value={title} onChange={(e) => { setTitle(e.target.value); edit(); }} placeholder="Title" className="h-14 border-0 px-0 page-title shadow-none focus-visible:ring-0" />
       <div className="space-y-1">
         <label htmlFor="note-tags" className="sr-only">Tags</label>
         <div className="flex flex-wrap items-center gap-2">
@@ -290,7 +290,7 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
             </span>
           ))}
           {tags.length < 10 && (
-            <Input id="note-tags" value={tagInput} placeholder={tags.length ? "Add tag" : "Add tags (comma or Enter)"} maxLength={300}
+            <Input id="note-tags" name="note-tags" value={tagInput} placeholder={tags.length ? "Add tag" : "Add tags (comma or Enter)"} maxLength={300}
               className="h-10 w-48 border-dashed" aria-describedby="note-tags-help"
               onChange={(e) => { const v = e.target.value; if (v.includes(",")) commitTags(v); else setTagInput(v); }}
               onKeyDown={(e) => {

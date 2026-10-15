@@ -92,16 +92,16 @@ export function QuickCapture({ open, onOpenChange, initialKind = 'note', initial
             {kind === "session" && (
               <div className="space-y-2">
                 <Label htmlFor="qc-min">Minutes</Label>
-                <Input id="qc-min" type="number" inputMode="numeric" min={1} max={SESSION_MAX_MINUTES} value={minutes} onChange={(e) => setMinutes(e.target.value)} className="h-12" aria-invalid={!!minutesErr} aria-describedby={minutesErr ? "qc-min-err" : undefined} />
+                <Input id="qc-min" name="session-minutes" type="number" inputMode="numeric" min={1} max={SESSION_MAX_MINUTES} value={minutes} onChange={(e) => setMinutes(e.target.value)} className="h-12" aria-invalid={!!minutesErr} aria-describedby={minutesErr ? "qc-min-err" : undefined} />
                 {minutesErr && <p id="qc-min-err" className="meta-text text-destructive-strong">{minutesErr}</p>}
               </div>
             )}
             <div className="space-y-2">
               <Label htmlFor="qc-text">{kind === "note" ? "Note (markdown)" : "One-line note (optional)"}</Label>
               {kind === "note" ? (
-                <Textarea id="qc-text" autoFocus required rows={5} value={text} onChange={(e) => setText(e.target.value)} />
+                <Textarea id="qc-text" name="quick-capture" autoFocus required rows={5} value={text} onChange={(e) => setText(e.target.value)} />
               ) : (
-                <Input id="qc-text" value={text} onChange={(e) => setText(e.target.value)} className="h-12" />
+                <Input id="qc-text" name="quick-capture" value={text} onChange={(e) => setText(e.target.value)} className="h-12" />
               )}
             </div>
           </form>

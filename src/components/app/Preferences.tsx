@@ -88,18 +88,18 @@ export function Preferences() {
         </div>
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="pref-tz">Timezone</Label>
-          <Input id="pref-tz" list="pref-tz-list" className="h-12" value={tz} onChange={(e) => setTz(e.target.value)} aria-invalid={!tzOk} aria-describedby="pref-tz-help" autoComplete="off" />
+          <Input id="pref-tz" name="timezone" list="pref-tz-list" className="h-12" value={tz} onChange={(e) => setTz(e.target.value)} aria-invalid={!tzOk} aria-describedby="pref-tz-help" autoComplete="off" />
           <datalist id="pref-tz-list">{zones.map((z) => <option key={z} value={z} />)}</datalist>
           <p id="pref-tz-help" className="meta-text text-muted-foreground">{tzOk ? "Sets when your day starts for check-ins, new cards and goals." : "Pick a timezone from the list, e.g. Europe/Paris."}</p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="pref-goal">Daily review goal (cards)</Label>
-          <Input id="pref-goal" inputMode="numeric" className="h-12" placeholder="Off" value={goal} onChange={(e) => setGoal(e.target.value)} aria-invalid={!goalOk} aria-describedby="pref-goal-help" />
+          <Input id="pref-goal" name="daily-goal" inputMode="numeric" className="h-12" placeholder="Off" value={goal} onChange={(e) => setGoal(e.target.value)} aria-invalid={!goalOk} aria-describedby="pref-goal-help" />
           <p id="pref-goal-help" className="meta-text text-muted-foreground">{goalOk ? "Leave empty to turn it off." : "Enter a whole number from 1 to 1000, or leave empty."}</p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="npd">New cards per day</Label>
-          <Input id="npd" inputMode="numeric" className="h-12" value={npd} onChange={(e) => setNpd(e.target.value)} aria-invalid={!npdOk} aria-describedby="npd-help" />
+          <Input id="npd" name="new-per-day" inputMode="numeric" className="h-12" value={npd} onChange={(e) => setNpd(e.target.value)} aria-invalid={!npdOk} aria-describedby="npd-help" />
           <p id="npd-help" className="meta-text text-muted-foreground">{npdOk ? "Due reviews always come first; new cards fill in after them." : "Enter a whole number from 0 to 1000."}</p>
         </div>
         <div className="sm:col-span-2">

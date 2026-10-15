@@ -67,7 +67,7 @@ function Notes() {
       <div className="grid gap-2 sm:grid-cols-[1fr_16rem]">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="h-12 pl-9" aria-label="Search notes" placeholder="Search all notes" value={q} onChange={(e) => setQ(e.target.value)} aria-busy={isFetching} />
+          <Input name="note-search" className="h-12 pl-9" aria-label="Search notes" placeholder="Search all notes" value={q} onChange={(e) => setQ(e.target.value)} aria-busy={isFetching} />
         </div>
         <NativeSelect aria-label="Filter notes by route" value={route ?? ""} onChange={(e) => nav({ to: "/notes", search: { route: e.target.value || undefined, tag } })}>
           <option value="">All routes</option>

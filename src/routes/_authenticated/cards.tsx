@@ -129,7 +129,7 @@ function CardsPage() {
       <div className="grid gap-2 sm:grid-cols-[1fr_12rem]">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="h-12 pl-9" aria-label="Search cards" placeholder="Search front, back or example" value={q} onChange={(e) => setQ(e.target.value)} />
+          <Input name="card-search" className="h-12 pl-9" aria-label="Search cards" placeholder="Search front, back or example" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <NativeSelect value={search.route ?? ""} onChange={(e) => set({ route: e.target.value || undefined })} aria-label="Route">
           <option value="">All routes</option>

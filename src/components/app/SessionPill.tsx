@@ -79,7 +79,7 @@ export function StaleSessionPrompt() {
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); void save(); }}>
           <div className="space-y-2">
             <Label htmlFor="stale-min">Minutes</Label>
-            <Input id="stale-min" type="number" inputMode="numeric" min={1} max={SESSION_MAX_MINUTES} required className="h-12" value={minutes} onChange={(e) => setMinutes(e.target.value)} aria-invalid={!!err} aria-describedby={err ? "stale-min-err" : undefined} />
+            <Input id="stale-min" name="session-minutes" type="number" inputMode="numeric" min={1} max={SESSION_MAX_MINUTES} required className="h-12" value={minutes} onChange={(e) => setMinutes(e.target.value)} aria-invalid={!!err} aria-describedby={err ? "stale-min-err" : undefined} />
             {err && <p id="stale-min-err" className="meta-text text-destructive-strong">{err}</p>}
             {capped && <p className="meta-text text-muted-foreground">Capped at 24 hours. Change it if you studied less.</p>}
           </div>

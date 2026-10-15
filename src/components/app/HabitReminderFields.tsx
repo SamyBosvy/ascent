@@ -10,7 +10,7 @@ export function HabitReminderFields({ enabled, time, onEnabled, onTime, disabled
   const { data: settings } = useUserSettings();
   return <div className="space-y-3">
     <div className="flex min-h-12 items-center justify-between gap-3"><Label htmlFor={`${id}-on`}>Reminder</Label><div className="flex min-h-12 min-w-12 items-center justify-center"><Switch id={`${id}-on`} checked={enabled} onCheckedChange={onEnabled} disabled={disabled} /></div></div>
-    <div className="space-y-2"><Label htmlFor={`${id}-time`}>Reminder time</Label><Input id={`${id}-time`} type="time" className="h-12" value={time.slice(0,5)} onChange={(event) => onTime(event.target.value)} disabled={disabled || !enabled} required={enabled} /></div>
+    <div className="space-y-2"><Label htmlFor={`${id}-time`}>Reminder time</Label><Input id={`${id}-time`} name="reminder-time" type="time" className="h-12" value={time.slice(0,5)} onChange={(event) => onTime(event.target.value)} disabled={disabled || !enabled} required={enabled} /></div>
     {settings && <p className="meta-text text-muted-foreground">Reminders use your timezone: {settings.timezone}. <Link to="/settings" hash="pref-tz" className="inline-flex min-h-12 items-center text-primary-strong underline">Preferences</Link></p>}
   </div>;
 }
