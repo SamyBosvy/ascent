@@ -168,7 +168,7 @@ export function AccountSection({ email: initialEmail }: { email: string }) {
         <form onSubmit={changeDisplayName} className="surface space-y-4 p-4">
           <div className="space-y-2">
             <Label htmlFor="display-name">Display name</Label>
-            <Input id="display-name" autoComplete="nickname" maxLength={50} value={displayName}
+            <Input id="display-name" name="display-name" autoComplete="off" maxLength={50} value={displayName}
               disabled={submittingName} aria-invalid={!!nameErr} aria-describedby={nameErr ? 'display-name-error' : undefined}
               onChange={(e) => setDisplayName(e.target.value)} className="h-12" />
           </div>

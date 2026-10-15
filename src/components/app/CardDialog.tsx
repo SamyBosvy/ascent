@@ -111,21 +111,21 @@ export function CardDialog({
           )}
           <div className="space-y-2">
             <Label htmlFor="cf">Front</Label>
-            <Textarea id="cf" required rows={2} value={front} onChange={(e) => setFront(e.target.value)} />
+            <Textarea id="cf" name="card-front" required rows={2} value={front} onChange={(e) => setFront(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="cb">Back</Label>
-            <Textarea id="cb" required rows={2} value={back} onChange={(e) => setBack(e.target.value)} />
+            <Textarea id="cb" name="card-back" required rows={2} value={back} onChange={(e) => setBack(e.target.value)} />
           </div>
           {isLang && (
             <>
               <div className="space-y-2">
                 <Label htmlFor="ce">Example sentence (optional)</Label>
-                <Input id="ce" className="h-12" value={example} onChange={(e) => setExample(e.target.value)} />
+                <Input id="ce" name="card-example" className="h-12" value={example} onChange={(e) => setExample(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cp">Pronunciation (optional)</Label>
-                <Input id="cp" className="h-12" value={pron} onChange={(e) => setPron(e.target.value)} />
+                <Input id="cp" name="card-pronunciation" className="h-12" value={pron} onChange={(e) => setPron(e.target.value)} />
               </div>
             </>
           )}

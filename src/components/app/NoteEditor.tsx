@@ -327,6 +327,8 @@ export function NoteEditor({ note, initialRoute }: { note?: Note; initialRoute?:
       {mode === "write" ? (
         <textarea
           aria-label="Note body"
+          name="note-body"
+          autoComplete="off"
           ref={ta}
           value={body}
           onChange={(e) => { setBody(e.target.value); edit(); }}

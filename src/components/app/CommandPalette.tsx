@@ -120,7 +120,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: { open: b
           <Command shouldFilter={false} label="Search and commands" className="flex flex-col">
             <div className="flex items-center gap-2 border-b px-3">
               <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-              <Command.Input value={q} onValueChange={setQ} placeholder="Search or type a command…" className="h-14 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground" />
+              <Command.Input name="command-search" autoComplete="off" value={q} onValueChange={setQ} placeholder="Search or type a command…" className="h-14 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground" />
             </div>
             <label className="flex items-center justify-end gap-2 border-b px-3 py-2 meta-text text-muted-foreground">
               <Switch checked={archived} onCheckedChange={setArchived} aria-label="Show archived" />

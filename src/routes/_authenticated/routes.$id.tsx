@@ -487,6 +487,7 @@ function BookPages({ current, total, onSave }: { current: number; total: number;
         <Button variant="outline" className="h-12 w-12" aria-label="Previous page" disabled={current <= 0} onClick={() => commit(current - 1)}><Minus className="h-4 w-4" /></Button>
         <Input
           id="book-current-page"
+          name="current-page"
           type="number"
           inputMode="numeric"
           className="h-12 w-24 text-center"
