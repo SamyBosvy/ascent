@@ -73,7 +73,7 @@ function Access() {
       <section>
         <SectionTitle>Invite</SectionTitle>
         <form onSubmit={invite} className="flex gap-2">
-          <Input id="invite-email" aria-label="Invite email" type="email" required className="h-12" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input id="invite-email" name="invite-email" aria-label="Invite email" type="email" required className="h-12" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Button disabled={submittingInvite} type="submit" className="h-12">Add</Button>
         </form>
       </section>

@@ -175,7 +175,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
         <form id={formId} onSubmit={save} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="rn">Name</Label>
-            <Input id="rn" className="h-12" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Designing Data-Intensive Applications" aria-invalid={!!show("name")} />
+            <Input id="rn" name="route-name" className="h-12" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Designing Data-Intensive Applications" aria-invalid={!!show("name")} />
             {err("name")}
           </div>
           <div className="space-y-2">
@@ -195,13 +195,13 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
               {!editing && (
                 <div className="space-y-2">
                   <Label htmlFor="rc">Chapters</Label>
-                  <Input id="rc" inputMode="numeric" className="h-12" value={chapters} onChange={(e) => setChapters(e.target.value)} placeholder="Auto-create" aria-invalid={!!show("chapters")} />
+                  <Input id="rc" name="chapters" inputMode="numeric" className="h-12" value={chapters} onChange={(e) => setChapters(e.target.value)} placeholder="Auto-create" aria-invalid={!!show("chapters")} />
                   {err("chapters")}
                 </div>
               )}
               <div className="space-y-2">
                 <Label htmlFor="rp">Total pages</Label>
-                <Input id="rp" inputMode="numeric" className="h-12" value={pages} onChange={(e) => setPages(e.target.value)} aria-invalid={!!show("pages")} />
+                <Input id="rp" name="total-pages" inputMode="numeric" className="h-12" value={pages} onChange={(e) => setPages(e.target.value)} aria-invalid={!!show("pages")} />
                 {err("pages")}
               </div>
             </div>
@@ -219,7 +219,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
               {freq === "x_per_week" && (
                 <div className="space-y-2">
                   <Label htmlFor="rx">Times per week</Label>
-                  <Input id="rx" inputMode="numeric" className="h-12" value={times} onChange={(e) => setTimes(e.target.value)} aria-invalid={!!show("times")} />
+                  <Input id="rx" name="times-per-week" inputMode="numeric" className="h-12" value={times} onChange={(e) => setTimes(e.target.value)} aria-invalid={!!show("times")} />
                   {err("times")}
                 </div>
               )}
@@ -228,7 +228,7 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
           {type === "language" && (
             <div className="space-y-2">
               <Label htmlFor="rl">Speech language (optional)</Label>
-              <Input id="rl" list="speech-langs" className="h-12" value={lang} onChange={(e) => setLang(e.target.value)} placeholder="e.g. es-ES, fr-FR, ja-JP" aria-invalid={!!show("lang")} />
+              <Input id="rl" name="speech-lang" list="speech-langs" className="h-12" value={lang} onChange={(e) => setLang(e.target.value)} placeholder="e.g. es-ES, fr-FR, ja-JP" aria-invalid={!!show("lang")} />
               <datalist id="speech-langs">{SPEECH_LANGS.map((l) => <option key={l} value={l} />)}</datalist>
               {err("lang")}
             </div>
@@ -236,11 +236,11 @@ export function RouteDialog({ open, onOpenChange, route }: { open: boolean; onOp
           {type === "habit" && <><HabitReminderFields enabled={reminderEnabled} time={reminderTime} onEnabled={(next) => { if (!next) { setReminderEnabled(false); return; } void submitSave(async () => { if (!requireOnline("Enabling a reminder")) return; await ensureReminderTimezone(qc); setReminderEnabled(true); }); }} onTime={setReminderTime} disabled={busy || submittingSave} />{err("reminder")}</>}
           <div className="space-y-2">
             <Label htmlFor="rd">Description (optional)</Label>
-            <Textarea id="rd" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Textarea id="rd" name="route-description" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="rtd">Target date (optional)</Label>
-            <Input id="rtd" type="date" className="h-12" value={target} onChange={(e) => setTarget(e.target.value)} />
+            <Input id="rtd" name="target-date" type="date" className="h-12" value={target} onChange={(e) => setTarget(e.target.value)} />
           </div>
         </form>
     </ResponsiveDialog>

@@ -365,7 +365,7 @@ function RouteDetail() {
           ))}
         </ul>
         <form onSubmit={addMs} className="mt-3 flex gap-2">
-          <Input id="new-milestone" aria-label="New milestone" className="h-12" placeholder="Add a milestone" value={newMs} onChange={(e) => setNewMs(e.target.value)} />
+          <Input id="new-milestone" name="milestone-title" aria-label="New milestone" className="h-12" placeholder="Add a milestone" value={newMs} onChange={(e) => setNewMs(e.target.value)} />
           <Button disabled={submittingMilestone} type="submit" variant="outline" className="h-12 w-12" aria-label="Add"><Plus className="h-4 w-4" /></Button>
         </form>
       </section>
@@ -487,6 +487,7 @@ function BookPages({ current, total, onSave }: { current: number; total: number;
         <Button variant="outline" className="h-12 w-12" aria-label="Previous page" disabled={current <= 0} onClick={() => commit(current - 1)}><Minus className="h-4 w-4" /></Button>
         <Input
           id="book-current-page"
+          name="current-page"
           type="number"
           inputMode="numeric"
           className="h-12 w-24 text-center"
@@ -647,9 +648,9 @@ function SessionsSection({ routeId, routeName, totalMinutes }: { routeId: string
           onSubmit={(e) => { e.preventDefault(); if (manual && !manualErr) void save(parseInt(manual, 10), routeId, loggedAtFor(day)); }}
         >
           <div className="flex flex-wrap gap-2">
-            <Input id="session-minutes" className="h-12 w-28" type="number" inputMode="numeric" min={1} max={MAX_MIN} placeholder="Minutes" aria-label="Minutes" value={manual} onChange={(e) => setManual(e.target.value)} aria-invalid={!!manualErr} />
-            <Input className="h-12 w-40" type="date" aria-label="Date" value={day} max={localDate()} onChange={(e) => setDay(e.target.value && e.target.value > localDate() ? localDate() : e.target.value)} />
-            <Input aria-label="Session note (optional)" className="h-12 min-w-40 flex-1" placeholder="One-line note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+            <Input id="session-minutes" name="session-minutes" className="h-12 w-28" type="number" inputMode="numeric" min={1} max={MAX_MIN} placeholder="Minutes" aria-label="Minutes" value={manual} onChange={(e) => setManual(e.target.value)} aria-invalid={!!manualErr} />
+            <Input name="session-date" className="h-12 w-40" type="date" aria-label="Date" value={day} max={localDate()} onChange={(e) => setDay(e.target.value && e.target.value > localDate() ? localDate() : e.target.value)} />
+            <Input name="session-note" aria-label="Session note (optional)" className="h-12 min-w-40 flex-1" placeholder="One-line note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
             <Button type="submit" variant="outline" className="h-12" disabled={submittingSession || !manual || !!manualErr}>Log</Button>
           </div>
           {manualErr && <p className="meta-text text-destructive-strong">{manualErr}</p>}
@@ -733,17 +734,17 @@ function EditSessionDialog({ session, onClose, onSaved }: { session: Session | n
         <form id={formId} onSubmit={save} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="sm">Minutes</Label>
-            <Input id="sm" className="h-12" type="number" inputMode="numeric" min={1} max={MAX_MIN} value={minutes} onChange={(e) => setMinutes(e.target.value)} aria-invalid={!!errs.minutes} />
+            <Input id="sm" name="session-minutes" className="h-12" type="number" inputMode="numeric" min={1} max={MAX_MIN} value={minutes} onChange={(e) => setMinutes(e.target.value)} aria-invalid={!!errs.minutes} />
             {errs.minutes && <p className="meta-text text-destructive-strong">{errs.minutes}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="sw">Date and time</Label>
-            <Input id="sw" className="h-12" type="datetime-local" max={maxWhen} value={when} onChange={(e) => setWhen(e.target.value)} aria-invalid={!!errs.when} />
+            <Input id="sw" name="session-when" className="h-12" type="datetime-local" max={maxWhen} value={when} onChange={(e) => setWhen(e.target.value)} aria-invalid={!!errs.when} />
             {errs.when && <p className="meta-text text-destructive-strong">{errs.when}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="sn">Note (optional)</Label>
-            <Input id="sn" className="h-12" value={note} onChange={(e) => setNote(e.target.value)} />
+            <Input id="sn" name="session-note" className="h-12" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
         </form>
     </ResponsiveDialog>
