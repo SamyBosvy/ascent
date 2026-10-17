@@ -107,3 +107,7 @@
 
 # Navigation latency
 - [x] Measure 600ms latency before/after; cache identity verification; verify expiry, account changes and revocation; full tests (353 passing). Automatic build checks pass; standalone typecheck not run under workspace restrictions.
+
+# App download
+- [ ] Permanent public/Settings buttons and native/platform instructions
+- [ ] Verify published installation support, small-screen themes and full tests
