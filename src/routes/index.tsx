@@ -9,6 +9,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DownloadApp } from "@/components/app/DownloadApp";
 
 export const Route = createFileRoute("/")({
   validateSearch: z.object({
@@ -240,6 +241,7 @@ function Landing() {
             </>
           )}
         </form>
+        <div className="mt-4 mb-6"><DownloadApp /></div>
       </div>
     </main>
   );

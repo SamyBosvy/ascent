@@ -20,6 +20,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { THEME_BOOT_SCRIPT, watchSystemTheme } from "../lib/prefs";
 import { registerServiceWorker } from "../lib/pwa";
 import { identityCache } from "../lib/verifiedIdentity";
+import { initializeInstall } from "../lib/install";
 
 function NotFoundComponent() {
   return (
@@ -126,6 +127,7 @@ function RootComponent() {
   }, [router, queryClient]);
   useEffect(() => watchSystemTheme(), []);
   useEffect(() => { void registerServiceWorker(); }, []);
+  useEffect(() => { initializeInstall(); }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

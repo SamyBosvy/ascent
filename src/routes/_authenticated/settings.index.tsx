@@ -12,6 +12,7 @@ import { requireOnline, syncNow, useOnline, usePendingCount } from "@/lib/sync";
 import { ImportBackup } from "@/components/app/ImportBackup";
 import { AccountSection } from "@/components/app/AccountSection";
 import { Preferences } from "@/components/app/Preferences";
+import { DownloadApp } from "@/components/app/DownloadApp";
 import { unsubscribeThisDevice } from "@/lib/push";
 import { useSubmission } from "@/hooks/use-submission";
 import { SectionTitle } from "@/components/app/fields";
@@ -122,6 +123,7 @@ function Settings() {
       <div>
         <h1 className="page-title">Settings</h1>
         <p className="mt-1 body-text text-muted-foreground">{user.email} · {role === "owner" ? "Owner" : "Member"}</p>
+        <div className="mt-4"><DownloadApp /></div>
       </div>
 
       {role === "owner" && (

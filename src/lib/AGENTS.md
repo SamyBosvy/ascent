@@ -18,3 +18,4 @@
 - Scheduler tokens: the cron job reads its bearer from public.scheduler_tokens (RLS, no policies, no anon/authenticated grants) at run time — no secret appears in job text, migrations or agent output.
 
 - Authenticated navigation uses a session-id-matched in-memory identity cache for ten minutes, invalidated by identity auth events; expiry/foreground rechecks run in the background — avoids distant-client round trips without changing server/RLS enforcement.
+- Installation prompt capture and installed-state detection share install.ts at the root; public and Settings buttons share DownloadApp — navigation cannot lose the prompt and dismissal never removes access.

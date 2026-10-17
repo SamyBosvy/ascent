@@ -107,3 +107,7 @@
 
 # Navigation latency
 - [x] Measure 600ms latency before/after; cache identity verification; verify expiry, account changes and revocation; full tests (353 passing). Automatic build checks pass; standalone typecheck not run under workspace restrictions.
+
+# App download
+- [x] Permanent public/Settings buttons and native/platform instructions; hidden only in standalone mode
+- [x] Published Chrome reports no installability errors; real taps at 320×568 and 390×844 in both themes, AA contrast, no owner data changes; 368 tests pass, build OK. Buttons await publishing.
