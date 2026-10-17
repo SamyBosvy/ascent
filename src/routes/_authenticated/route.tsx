@@ -1,5 +1,5 @@
 import { ScreenSkeleton } from "@/components/app/ScreenSkeleton";
-import { createFileRoute, Link, Outlet, redirect, useLocation, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, isRedirect, Link, Outlet, redirect, useLocation, useNavigate } from "@tanstack/react-router";
 import { BarChart3, BookOpen, Layers, Library, Mountain, Plus, Search, Settings, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,29 +17,28 @@ import { startSync, syncNow, useOnline, usePendingCount } from "@/lib/sync";
 import { startPersisting } from "@/lib/persist";
 import { applyUpdate, onUpdateReady, registerServiceWorker } from "@/lib/pwa";
 import { CloudOff } from "lucide-react";
+import { identityCache } from "@/lib/verifiedIdentity";
+import { refreshIdentity } from "@/lib/identityCache";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
     const offline = await offlineIdentity();
     if (offline) return offline;
-    const { data, error } = await supabase.auth.getUser();
-    if (error && isNetworkError(error)) {
-      const fallback = await offlineIdentity(true);
-      if (fallback) return fallback;
+    const { data } = await supabase.auth.getSession();
+    const cached = identityCache.read(data.session?.user.id ?? null);
+    if (cached) {
+      if (identityCache.expired) void backgroundVerification.run?.();
+      return cached;
     }
-    if (error || !data.user) throw redirect({ to: "/" });
-    const { data: role, error: roleError } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id).maybeSingle();
-    if (roleError && isNetworkError(roleError)) {
-      const fallback = await offlineIdentity(true);
-      if (fallback) return fallback;
+    try {
+      const identity = await identityCache.verify(verifyIdentity);
+      if (!identity) throw redirect({ to: "/" });
+      return identity;
+    } catch (error) {
+      if (error instanceof OfflineVerification) return error.identity;
+      throw error;
     }
-    if (!role) {
-      await supabase.auth.signOut();
-      throw redirect({ to: "/", search: { revoked: true } });
-    }
-    rememberIdentity(data.user, role.role);
-    return { user: data.user, role: role.role };
   },
   pendingComponent: () => <main className="mx-auto max-w-4xl px-4 py-10"><ScreenSkeleton screen="today" /></main>,
   component: Shell,
@@ -49,6 +48,30 @@ export const Route = createFileRoute("/_authenticated")({
 // session (and the role last confirmed online, display only — the database enforces access).
 const IDENTITY_KEY = "ascent:identity";
 type Identity = { user: User; role: string };
+const backgroundVerification: { run?: () => Promise<void> } = {};
+class OfflineVerification extends Error {
+  constructor(readonly identity: Identity) { super("Offline verification fallback"); }
+}
+async function verifyIdentity(): Promise<Identity> {
+    const { data, error } = await supabase.auth.getUser();
+    if (error && isNetworkError(error)) {
+      const fallback = await offlineIdentity(true);
+      if (fallback) throw new OfflineVerification(fallback);
+    }
+    if (error || !data.user) throw redirect({ to: "/" });
+    const { data: role, error: roleError } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id).maybeSingle();
+    if (roleError && isNetworkError(roleError)) {
+      const fallback = await offlineIdentity(true);
+      if (fallback) throw new OfflineVerification(fallback);
+    }
+    if (!role) {
+      await supabase.auth.signOut();
+      throw redirect({ to: "/", search: { revoked: true } });
+    }
+    rememberIdentity(data.user, role.role);
+    return { user: data.user, role: role.role };
+}
+
 function isNetworkError(e: { message?: string | undefined; name?: string | undefined; status?: number | undefined; code?: string | undefined }) {
   return e.name === "AuthRetryableFetchError" || e.status === 0 || /fetch|network|load failed/i.test(e.message ?? "");
 }
@@ -128,6 +151,33 @@ function Shell() {
 
   // Manifest shortcut: /today?capture=1 opens Quick capture.
   const navigate = useNavigate();
+  useEffect(() => {
+    let active = true;
+    const refresh = async () => {
+      if (!navigator.onLine) return;
+      await refreshIdentity(identityCache, {
+        sessionUserId: async () => (await supabase.auth.getSession()).data.session?.user.id ?? null,
+        verify: verifyIdentity,
+        isRevoked: isRedirect,
+        onRevoked: async () => {
+          await supabase.auth.signOut();
+          if (active) await navigate({ to: "/", search: { revoked: true }, replace: true });
+        },
+      });
+    };
+    backgroundVerification.run = refresh;
+    const foreground = () => { if (document.visibilityState === "visible") void refresh(); };
+    const expiry = window.setInterval(() => {
+      if (identityCache.expired && document.visibilityState === "visible") void refresh();
+    }, 30_000);
+    document.addEventListener("visibilitychange", foreground);
+    return () => {
+      active = false;
+      if (backgroundVerification.run === refresh) delete backgroundVerification.run;
+      window.clearInterval(expiry);
+      document.removeEventListener("visibilitychange", foreground);
+    };
+  }, [navigate]);
   useEffect(() => {
     const sp = new URLSearchParams(location.searchStr);
     if (sp.get("capture") !== "1") return;

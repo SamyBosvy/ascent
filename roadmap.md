@@ -104,3 +104,6 @@
 # Batch 25
 - [x] Match route detail DOM/mobile order; desktop grid placement with sticky progress and actions last
 - [x] DOM-order regression, 293 tests and typography pass; build clean; 390px/1280px habit checks in light/dark pass without overflow; temporary routes removed; settings/metadata unchanged
+
+# Navigation latency
+- [x] Measure 600ms latency before/after; cache identity verification; verify expiry, account changes and revocation; full tests (353 passing). Automatic build checks pass; standalone typecheck not run under workspace restrictions.

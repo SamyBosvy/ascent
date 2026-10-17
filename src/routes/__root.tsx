@@ -19,6 +19,7 @@ import { stopSync } from "../lib/sync";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { THEME_BOOT_SCRIPT, watchSystemTheme } from "../lib/prefs";
 import { registerServiceWorker } from "../lib/pwa";
+import { identityCache } from "../lib/verifiedIdentity";
 
 function NotFoundComponent() {
   return (
@@ -111,6 +112,7 @@ function RootComponent() {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      identityCache.clear();
       if (event === "SIGNED_OUT") {
         stopSync();
         void clearPersisted();
