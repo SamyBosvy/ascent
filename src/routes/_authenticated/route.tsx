@@ -173,7 +173,7 @@ function Shell() {
     document.addEventListener("visibilitychange", foreground);
     return () => {
       active = false;
-      if (backgroundVerification.run === refresh) backgroundVerification.run = undefined;
+      if (backgroundVerification.run === refresh) delete backgroundVerification.run;
       window.clearInterval(expiry);
       document.removeEventListener("visibilitychange", foreground);
     };
